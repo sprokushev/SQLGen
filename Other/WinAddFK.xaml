@@ -1,0 +1,104 @@
+﻿<Window x:Name="winAddFK" x:Class="SQLGen.WinAddFK"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="WinAddFK" Height="480" Width="1000" Activated="winAddFK_Activated" Closed="winAddFK_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
+        >
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+        <Label Content="Список полей таблицы:" HorizontalAlignment="Left" Margin="10,7,0,0" VerticalAlignment="Top"/>
+
+        <Grid HorizontalAlignment="Left" Height="360" Margin="10,35,0,0" VerticalAlignment="Top" Width="300">
+            <DataGrid x:Name="dgFields" 
+                              ToolTip="Поля таблицы" 
+                              AutoGenerateColumns="False" 
+                              CanUserSortColumns="False" 
+                              VerticalScrollBarVisibility="Visible" 
+                              CanUserDeleteRows="False" 
+                              CanUserAddRows="False" 
+                              SelectionMode="Single" 
+                              MouseDoubleClick="dgFields_MouseDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn x:Name="TableFieldOrder" Header="№" Width="40" IsReadOnly="True" Binding="{Binding Path=Order}" />
+                    <DataGridTextColumn x:Name="TableFieldName" Header="Наименование" Width="250" IsReadOnly="True" Binding="{Binding Path=Name}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Label Content="Наименование констрейна:" HorizontalAlignment="Left" Margin="350,7,0,0" Height="26" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbFKName" HorizontalAlignment="Left" Height="24" Margin="520,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+
+        <Label Content="Тип констрейна:" Margin="350,35,0,0" HorizontalAlignment="Left" Width="108" Height="26" VerticalAlignment="Top"/>
+
+        <RadioButton x:Name="rbFKOther" GroupName="FKType" Content="Foreign Key" HorizontalAlignment="Left" Margin="520,40,0,0" VerticalAlignment="Top" Checked="rbFKOther_Checked" Unchecked="rbFKOther_Unchecked"/>
+        <RadioButton x:Name="rbCHECK" GroupName="FKType" Content="CHECK" HorizontalAlignment="Left" Margin="660,40,0,0" VerticalAlignment="Top" Checked="rbCHECK_Checked" Unchecked="rbCHECK_Unchecked"/>
+
+        <Label x:Name="lbFKTable" Content="Таблица FOREIGN KEY:" HorizontalAlignment="Left" Margin="350,63,0,0" Height="26" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbFKTable" HorizontalAlignment="Left" Height="24" Margin="520,65,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="350" LostFocus="tbFKTable_LostFocus"/>
+        <Button x:Name="btChooseFKTable" Content="Найти" Margin="880,67,0,0" VerticalAlignment="Top" Click="btChooseFKTable_Click" HorizontalAlignment="Left" Width="100"/>
+
+        <Label x:Name="lbFieldsLink" Content="Связь полей:" HorizontalAlignment="Left" Margin="350,95,0,0" Height="26" VerticalAlignment="Top"/>
+
+        <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="815,95,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="/Images/up.png"></Image>
+        </Button>
+
+        <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="847,95,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="/Images/down.png"></Image>
+        </Button>
+
+        <Button x:Name="btRight" ToolTip="Добавить поле" Click="btRight_Click" HorizontalAlignment="Left" Margin="318,145,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="/Images/right.png"></Image>
+        </Button>
+
+        <Button x:Name="btLeft" ToolTip="Убрать поле" Click="btLeft_Click" HorizontalAlignment="Left" Margin="318,175,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="/Images/left.png"></Image>
+        </Button>
+
+        <Grid HorizontalAlignment="Left" Height="117" Margin="350,125,0,0" VerticalAlignment="Top" Width="600">
+            <DataGrid Grid.Row="0" x:Name="dgFieldsLink" 
+                      ToolTip="Связь полей" 
+                      AutoGenerateColumns="False" 
+                      CanUserSortColumns="False" 
+                      VerticalScrollBarVisibility="Visible" 
+                      CanUserDeleteRows="False" 
+                      CanUserAddRows="False" 
+                      SelectionMode="Single" 
+                      Margin="0,1,0,-1" 
+                      MouseDoubleClick="dgFieldsLink_MouseDoubleClick" LostFocus="dgFieldsLink_LostFocus" MouseDown="dgFieldsLink_MouseDown"
+                      >
+                <DataGrid.Columns>
+                    <DataGridTextColumn x:Name="FKOrder" Header="№" Width="40" Binding="{Binding Path=FKOrder}"/>
+                    <DataGridComboBoxColumn x:Name="FieldName" Header="Поле внешнего ключа" Width="250" 
+                                            SelectedValueBinding="{Binding FieldName}"  
+                                            DisplayMemberPath="{Binding FieldName}" >
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="{x:Type ComboBox}">
+                                <EventSetter Event="SelectionChanged" Handler="FieldName_SelectionChanged" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
+                        <DataGridComboBoxColumn x:Name="FKField" Header="PK таблицы внешнего ключа" Width="250"
+                                            SelectedValueBinding="{Binding FKField}"
+                                            SelectedValuePath="Name"
+                                            DisplayMemberPath="DisplayName"
+                                            SortMemberPath="Order">
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="{x:Type ComboBox}">
+                                <EventSetter Event="SelectionChanged" Handler="FKField_SelectionChanged" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Label x:Name="lbCHECK" Content="Текст CHECK:" HorizontalAlignment="Left" Margin="350,245,0,0" Height="26" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbCHECK" HorizontalAlignment="Left" Margin="350,275,0,0" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" Height="120" VerticalAlignment="Top" Width="600" LostFocus="tbCHECK_LostFocus" />
+
+        <Button x:Name="btSave" Content="Сохранить" Margin="233,416,0,0" Click="btSave_Click" HorizontalAlignment="Left" Width="210" VerticalAlignment="Top"/>
+        <Button x:Name="btCancel" Content="Отмена" Margin="545,416,0,0" Click="btCancel_Click" HorizontalAlignment="Left" Width="210" VerticalAlignment="Top"/>
+    </Grid>
+</Window>

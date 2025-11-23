@@ -1,0 +1,215 @@
+﻿<Window x:Name="winReleaseCron" x:Class="SQLGen.WinReleaseCron"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="Сборка заданий релиза" Height="800" Width="1500" Activated="winReleaseCron_Activated" Closed="winReleaseCron_Closed" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <converters:ValueColorConverter_YMLFile2 x:Key="colorconverter_ymlfile"/>
+        <converters:ValueColorConverter_Unknown x:Key="colorconverter_unknown"/>
+        <converters:ValueColorConverter_YMLOrder x:Key="colorconverter_ymlorder"/>
+        <converters:ValueColorConverter_Merged x:Key="colorconverter_merged"/>
+        <converters:ValueColorConverter_LastCommit x:Key="colorconverter_lastcommit"/>
+    </Window.Resources>
+
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+
+        <Label Content="Релизная задача:" Margin="15,10,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="110"/>
+        <TextBox x:Name="tbReleaseTaskNumber" HorizontalAlignment="Left" Height="22" Margin="140,12,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+        <Button x:Name="btSaveTask" Content="Сохранить задачу" HorizontalAlignment="Left" Margin="357,12,0,0" VerticalAlignment="Top" Width="130" Click="btSaveTask_Click" ToolTip="Сохранить рабочую информацию по сборке версии"/>
+
+        <Label Content="Номер версии:" HorizontalAlignment="Left" Margin="15,40,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbNumVersion" HorizontalAlignment="Left" Height="22" Margin="140,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191"  IsReadOnly="True"/>
+
+        <Button x:Name="btGitPull" Content="GIT PULL" HorizontalAlignment="Left" Margin="15,72,0,0" VerticalAlignment="Top" Width="80" Click="btGitPull_Click"/>
+
+        <Label Content="Проект GIT:" Margin="103,70,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="73"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="200,72,0,0" VerticalAlignment="Top" Width="208" SelectionChanged="cbGITProject_SelectionChanged" IsReadOnly="True" IsEditable="True"/>
+
+        <Label Content="Ветка:" HorizontalAlignment="Left" Margin="430,70,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbBranch" HorizontalAlignment="Left" Height="22" Margin="480,72,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+
+        <Button x:Name="btGitPush" Content="GIT PUSH" HorizontalAlignment="Left" Margin="700,72,0,0" VerticalAlignment="Top" Width="80" Click="btGitPush_Click"/>
+
+        <Button x:Name="btGitChangeBranch" Content="Переключиться на ветку prmd.X.X.X.X" HorizontalAlignment="Left" Margin="200,102,0,0" VerticalAlignment="Top" Width="250" Click="btGitChangeBranch_Click" ToolTip="Переключиться на существующую ветку версии"/>
+
+        <Label Content="Имя файла версии:" HorizontalAlignment="Left" Margin="15,130,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbCronFileVersion" HorizontalAlignment="Left" Height="22" Margin="140,132,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" TextChanged="tbCronFileVersion_TextChanged"/>
+
+        <TextBox x:Name="tbCronGITVersion" HorizontalAlignment="Left" Height="22" Margin="15,162,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbCronGITVersion_MouseDoubleClick"/>
+
+        <Button x:Name="btCopyCronGITVersion" HorizontalAlignment="Left" Margin="680,162,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyCronGITVersion_Click" Height="21" VerticalAlignment="Top" >
+            <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
+        </Button>
+
+        <TextBox x:Name="tbDeploymentConfVersion" HorizontalAlignment="Left" Height="22" Margin="15,192,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbDeploymentConfVersion_MouseDoubleClick"/>
+
+        <Button x:Name="btCopyDeploymentConfVersion" HorizontalAlignment="Left" Margin="680,192,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyDeploymentConfVersion_Click" Height="21" VerticalAlignment="Top" >
+            <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
+        </Button>
+
+
+        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="15,220,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btGenerate_Click">
+            <TextBlock x:Name="tbGenerateText" Text="Собрать json-файл заданий релиза" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Сгенерировать json-файл заданий релиза"/>
+        </Button>
+
+        <Button x:Name="btCronEdit" HorizontalAlignment="Left" Margin="155,220,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btCronEdit_Click">
+            <TextBlock x:Name="tbCronEditText" Text="Редактировать задания" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Отредактировать задания релиза"/>
+        </Button>
+
+        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="295,220,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
+        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="410,220,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+
+        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="520,220,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
+
+        <Label x:Name="lbCount" Content="Всего задач: 0 из них включаем в релиз: 0" HorizontalAlignment="Left" Margin="15,278,0,0" VerticalAlignment="Top" Width="368"/>
+
+        <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="15,310,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="../Images/up.png"></Image>
+        </Button>
+
+        <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="55,310,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="../Images/down.png"></Image>
+        </Button>
+
+        <DataGrid x:Name="dgJSONFiles" SelectionMode = "Single" Margin="10,340,387,10" AutoGenerateColumns="False" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CurrentCellChanged="dgJSONFiles_CurrentCellChanged" MouseDoubleClick="dgJSONFiles_MouseDoubleClick" KeyDown="dgJSONFiles_KeyDown" SelectionChanged="dgJSONFiles_SelectionChanged" PreviewKeyDown="dgJSONFiles_PreviewKeyDown" MouseDown="dgJSONFiles_MouseDown">
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="YMLOrder" Header="N п/п" Width="45" Binding="{Binding YMLOrder}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding isUpdated}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding isUpdated, Converter={StaticResource colorconverter_ymlorder}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridCheckBoxColumn x:Name="IsAddRelease" Header="Вкл?" Width="40" Binding="{Binding IsAddRelease}" IsReadOnly="false"/>
+                <DataGridTextColumn x:Name="TaskNumber" Header="Релизная задача" Width="130" Binding="{Binding TaskNumber}" IsReadOnly="true">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding ErrorInfo}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding ErrorInfo, Converter={StaticResource colorconverter_unknown}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="BranchName" Header="Ветка" Width="140" Binding="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="true" />
+
+                <DataGridTextColumn x:Name="PathInGIT" Header="Папка" Width="100" Binding="{Binding PathInGIT}" IsReadOnly="true" />
+
+                <DataGridTextColumn x:Name="YMLFile_dev_PG" Header="dev__promed__pg" Width="160" Binding="{Binding YMLFile_dev_PG}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_PG_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_MS" Header="dev__pormed__ms" Width="160" Binding="{Binding YMLFile_dev_MS}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_MS_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+
+
+                <DataGridTextColumn x:Name="YMLFile_dev_userportal_pg" Header="dev__userportal__pg" Width="160" Binding="{Binding YMLFile_dev_userportal_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_userportal_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_userportal_ms" Header="dev__userportal__ms" Width="160" Binding="{Binding YMLFile_dev_userportal_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_userportal_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_smp2_pg" Header="dev__smp2__pg" Width="160" Binding="{Binding YMLFile_dev_smp2_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_smp2_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_bi" Header="dev__bi" Width="160" Binding="{Binding YMLFile_dev_bi}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_bi_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+
+
+                <DataGridTextColumn x:Name="YMLFile_unknown" Header="Неизвестный" Width="160" Binding="{Binding YMLFile_unknown}" IsReadOnly="true">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_unknown, Converter={StaticResource colorconverter_unknown}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_unknown}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Удалить выбранную задачу" Click="dgJSONFiles_MenuItemDelete" />
+                    <Separator/>
+                    <MenuItem Header="Текст ошибки в отдельном окне" Click="dgJSONFiles_MenuItemShowError" />
+                    <MenuItem Header="Текст json в версии" Click="dgJSONFiles_MenuItemShowJSONinVer" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+
+        <Rectangle Fill="#FFE5E5E5" Margin="10,7,10,10" Stroke="Black" HorizontalAlignment="Right" Width="370"/>
+
+        <Label Content="Номер задачи:" Margin="10,10,270,10" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskNum" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,14,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False" />
+
+        <Label Content="Статус задачи:" Margin="10,37,270,10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbTaskStatus" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,41,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False" Text="{Binding LogFile, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Content="Версия:" Margin="10,64,270,10" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskVersion" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,68,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False"/>
+
+        <Label Content="Регион:" HorizontalAlignment="Right" Margin="10,91,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskRegion" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,117,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+        <TextBox x:Name="tbTaskBaseRegion" IsReadOnly="True" HorizontalAlignment="Right" Margin="4,220,14,14" VerticalAlignment="Top" Width="360" IsTabStop="False" FontWeight="Bold" Foreground="Red"/>
+
+        <TextBox x:Name="tbTaskDT" IsReadOnly="True" HorizontalAlignment="Right" Margin="4,245,14,14" VerticalAlignment="Top" Width="360" FontWeight="Bold" IsTabStop="False" Foreground="Red" />
+
+        <Label Content="Данные в БД:" HorizontalAlignment="Right" Margin="10,265,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskDataBD" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,290,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Объекты БД:" HorizontalAlignment="Right" Margin="10,390,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskObjectsBD" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,415,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Действия при обновлении:" HorizontalAlignment="Right" Margin="10,517,190,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskUpdActions" IsReadOnly="True" HorizontalAlignment="Right" Height="125" Margin="4,542,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Значение выбранной ячейки:" HorizontalAlignment="Right" Margin="10,670,170,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbSelectedCell" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="4,695,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" IsTabStop="False"/>
+    </Grid>
+</Window>

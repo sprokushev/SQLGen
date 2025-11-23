@@ -1,0 +1,70 @@
+﻿<Window x:Name="winCronBuilder" x:Class="SQLGen.WinCronBuilder"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        xmlns:wpfCronExpressionUi="clr-namespace:WpfCronExpressionUI;assembly=WpfCronExpressionUI"
+        mc:Ignorable="d"
+        Title="Калькулятор cron" Height="750" Width="750" Activated="winCronBuilder_Activated" Closed="winCronBuilder_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
+        >
+    <Window.DataContext>
+        <local:CronBuilderViewModel />
+    </Window.DataContext>
+
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+        <Label Content="Шаблоны" HorizontalAlignment="Left" Margin="583,32,0,0" VerticalAlignment="Top" Width="95"/>
+        <Button x:Name="btDefault1Day" Margin="570,67,0,0" Click="btDefault1Day_Click" HorizontalAlignment="Left" Width="120" VerticalAlignment="Top" Height="45">
+            <TextBlock Text="Ежедневно 1 раз в день в 20:00" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+        <Button x:Name="btDefault1Hour" Margin="570,117,0,0" Click="btDefault1Hour_Click" HorizontalAlignment="Left" Width="120" VerticalAlignment="Top" Height="45">
+            <TextBlock Text="Ежедневно 1 раз в час с 19:00 по 06:00" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+        <Button x:Name="btDefault30Min" Margin="570,167,0,0" Click="btDefault30Min_Click" HorizontalAlignment="Left" Width="120" VerticalAlignment="Top" Height="55">
+            <TextBlock Text="Ежедневно 1 раз в 30 минут с 19:00 по 06:30" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+        <Button x:Name="btDefault10Min" Margin="570,227,0,0" Click="btDefault10Min_Click" HorizontalAlignment="Left" Width="120" VerticalAlignment="Top" Height="55">
+            <TextBlock Text="Ежедневно 1 раз в 10 минут с 19:00 по 06:50" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+        <Button x:Name="btDefault1Min" Margin="570,287,0,0" Click="btDefault1Min_Click" HorizontalAlignment="Left" Width="120" VerticalAlignment="Top" Height="55">
+            <TextBlock Text="Ежедневно 1 раз в минуту с 19:00 по 06:59" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+
+        <wpfCronExpressionUi:WpfCronExpressionUIView 
+            x:Name="WpfCronBuilder"
+            ShowYearTab="False"
+            ShowSecondTab="False"
+            MinimumSeconds="1"
+            MinimumMinutes="1"
+            MinimumHours="1"
+            HorizontalAlignment="Left" 
+            Margin="10,42,0,0" 
+            VerticalAlignment="Top" 
+            Height="450" 
+            Width="550" 
+            OverridesDefaultStyle="True" 
+            CronExpression="{Binding Path=CronFromBuilder, Mode=TwoWay}"
+            ShowSecondsSpecificSeconds="False" 
+            ShowSecondsSecondRange="False" 
+            ShowSecondsEveryXSeconds="False" 
+            ShowYearsEveryXYears="False" 
+            ShowYearsSpecificYears="False" 
+            ShowYearsYearRange="False"
+            ShowCronExpression="True" 
+            ShowDaysEveryXWeekDays="False"
+            ShowDaysDaysBeforeEndOfMonth="False"
+            ShowDaysLastDayOfMonth="False"
+            ShowDaysLastWeekDayOfMonth="False"
+            ShowDaysLastXDayOfMonth="False"
+        />
+        
+        <Button x:Name="btClear" Content="Очистить" Margin="10,10,0,0" Click="btClear_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top"/>
+
+        <TextBox x:Name="lbCronExpressionText" HorizontalAlignment="Left" Margin="10,500,0,0" VerticalAlignment="Top" Width="270" Height="147" TextWrapping="Wrap" IsReadOnly="True" Text="{Binding CronFromBuilderByRus, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
+
+        <TextBox x:Name="lbCronExamples" HorizontalAlignment="Left" Margin="290,500,0,0" VerticalAlignment="Top" Width="270" Height="147" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Visible" Text="{Binding CronExamples, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
+
+        <Button x:Name="btSave" Content="Сохранить" Margin="70,665,0,0" Click="btSave_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top"/>
+        <Button x:Name="btCancel" Content="Отмена" Margin="359,665,0,0" Click="btCancel_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top"/>
+    </Grid>
+</Window>

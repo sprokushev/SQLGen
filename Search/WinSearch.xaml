@@ -1,0 +1,45 @@
+﻿<Window x:Name="winSearch" x:Class="SQLGen.WinSearch"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="WinSearch" Height="790" Width="1580" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Activated="winSearch_Activated" Closed="winSearch_Closed" >
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+
+        <Label Content="Что искать:" HorizontalAlignment="Left" Margin="11,5,0,0" Height="24" VerticalAlignment="Top"/>
+        <local:HistoryTextBox x:Name="tbSearch" Height="24" Margin="140,6,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="492" KeyDown="tbSearch_KeyDown" DropDownClosed="tbSearch_DropDownClosed" LostFocus="tbSearch_LostFocus" SelectionChanged="tbSearch_SelectionChanged"/>
+        <Button x:Name="btSearch" Content="Искать" HorizontalAlignment="Left" Margin="640,6,0,0" VerticalAlignment="Top" Width="69" Height="25" Click="btSearch_Click" />
+        <CheckBox x:Name="cbWithAutogen" Content="включая AUTOGEN" HorizontalAlignment="Left" Margin="720,11,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <CheckBox x:Name="cbWithRegistry" Content="искать в объектах, у которых есть registry в названии" HorizontalAlignment="Left" Margin="877,11,0,0" VerticalAlignment="Top" IsChecked="False" Width="Auto"/>
+
+        <Label x:Name="lbConnectSQL" Content="Подключение:" HorizontalAlignment="Left" Margin="11,30,0,0" Height="25" VerticalAlignment="Top" Width="95"/>
+        <ComboBox x:Name="cbConnectSQL" HorizontalAlignment="Left" Margin="140,33,0,0" Width="408" VerticalAlignment="Top" Height="22" SelectionChanged="cbConnectSQL_SelectionChanged"/>
+        <Button x:Name="btAddConnectSQL" HorizontalAlignment="Left" Margin="550,33,0,0" Width="20" ToolTip="Добавить новое подключение или переоткрыть текущее" Click="btAddConnectSQL_Click" Height="20" VerticalAlignment="Top">
+            <Image Source="../Images/plus.png"></Image>
+        </Button>
+
+        <Label x:Name="lbGITProject" Content="Проект GIT:" Margin="11,30,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="124"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="140,33,0,0" VerticalAlignment="Top" Width="408" SelectionChanged="cbGITProject_SelectionChanged"/>
+        <Label x:Name="lbGITBranch" Content="Текущая ветка GIT:" HorizontalAlignment="Left" Margin="580,30,0,0" VerticalAlignment="Top" Width="274"/>
+        <TextBox x:Name="tbFolder" Height="24" Margin="877,30,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="412" IsEnabled="False" />
+        <Button x:Name="btFolder" Content="Каталог" HorizontalAlignment="Left" Margin="1300,30,0,0" VerticalAlignment="Top" Width="69" Height="25" Click="btFolder_Click" />
+
+        <Label Content="Фильтр в найденном:" HorizontalAlignment="Left" Margin="11,56,0,0" Height="24" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbFilter" Height="24" Margin="140,59,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="492" KeyDown="tbFilter_KeyDown" />
+        <Button x:Name="btFilter" Content="Фильтр" HorizontalAlignment="Left" Margin="640,59,0,0" VerticalAlignment="Top" Width="69" Height="25" Click="btFilter_Click" />
+
+        <DataGrid x:Name="dgSearchGrid" Margin="0,95,0,40" RowHeight="20" IsReadOnly="True" SelectionMode="Single" CanUserSortColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" VerticalScrollBarVisibility="Visible" MouseDoubleClick="dgSearchGrid_MouseDoubleClick" SelectionUnit="Cell">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Посмотреть" Click="btView_Click" />
+                    <MenuItem Header="Запрос" Click="btViewSQL_Click" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="10,0,0,10" Width="126" Click="btExcel_Click" Height="20" VerticalAlignment="Bottom"/>
+        <Button x:Name="btViewText" Content="Посмотреть текст запроса" HorizontalAlignment="Left" Margin="150,0,0,10" Width="181" Height="20" VerticalAlignment="Bottom" Click="btViewText_Click"/>
+
+    </Grid>
+</Window>

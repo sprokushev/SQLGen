@@ -1,0 +1,252 @@
+﻿<Window x:Name="winDeployment" x:Class="SQLGen.WinDeployment"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="WinDeployment" Height="800" Width="1800" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Activated="winDeployment_Activated" Closed="winDeployment_Closed" >
+    <Grid x:Name="mainGrid">
+        <TabControl x:Name="tabControl">
+            <TabItem x:Name="tiDeploymentMS" Header="Deployment Plan для MS SQL (Промед)" KeyDown="tiDeploymentMS_KeyDown" GotFocus="tiDeploymentMS_GotFocus">
+                <Grid Background="#FFE5E5E5">
+                    <TabControl x:Name="tabControlMS">
+                        <TabItem x:Name="tiListMS" Header="Список" KeyDown="tiDeploymentMS_KeyDown">
+                            <Grid Background="#FFE5E5E5">
+                                <Button x:Name="btUpMS" ToolTip="Поднять строку выше" Click="btUpMS_Click" HorizontalAlignment="Left" Margin="10,12,0,0" VerticalAlignment="Top" Width="23" Height="23">
+                                    <Image Source="../Images/up.png"></Image>
+                                </Button>
+
+                                <Button x:Name="btDownMS" ToolTip="Опустить строку ниже" Click="btDownMS_Click" HorizontalAlignment="Left" Margin="40,12,0,0" VerticalAlignment="Top" Width="23" Height="23">
+                                    <Image Source="../Images/down.png"></Image>
+                                </Button>
+
+                                <Button x:Name="btAddFirstMS" Content="Добавить в начало" HorizontalAlignment="Left" Margin="70,10,0,0" Width="130" Height="25" VerticalAlignment="Top" Click="btAddFirst_Click"/>
+                                <Button x:Name="btInsertMS" Content="Вставить" HorizontalAlignment="Left" Margin="210,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btInsert_Click"/>
+                                <Button x:Name="btAddLastMS" Content="Добавить в конец" HorizontalAlignment="Left" Margin="300,10,0,0" Width="130" Height="25" VerticalAlignment="Top" Click="btAddLast_Click"/>
+                                <Button x:Name="btCopyMS" Content="Клонировать" HorizontalAlignment="Left" Margin="440,10,0,0" Width="90" Height="25" VerticalAlignment="Top" Click="btCopy_Click" />
+                                <Button x:Name="btEditMS" Content="Изменить" HorizontalAlignment="Left" Margin="540,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btEdit_Click"/>
+                                <Button x:Name="btDelMS" Content="Удалить" HorizontalAlignment="Left" Margin="630,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btDel_Click" />
+                                <Button x:Name="btGenJSON_MS" Content="Сгенерировать JSON (F5)" HorizontalAlignment="Left" Margin="720,10,0,0" Width="200" Height="25" VerticalAlignment="Top" Click="btGenJSON_MS_Click"/>
+                                <Button x:Name="btLoadJSON_MS" Content="Загрузить JSON" HorizontalAlignment="Left" Margin="930,10,0,0" Width="120" Height="25" VerticalAlignment="Top" Click="btLoadJSON_MS_Click"/>
+
+                                <DataGrid x:Name="dgDeploymentMS"
+                                          AutoGenerateColumns="False" 
+                                          Margin="0,50,0,0" 
+                                          CanUserSortColumns="False" 
+                                          HorizontalScrollBarVisibility="Visible" 
+                                          VerticalScrollBarVisibility="Visible" 
+                                          CanUserDeleteRows="False" 
+                                          CanUserAddRows="False" 
+                                          IsReadOnly="True" 
+                                          SelectionChanged="dgDeploymentMS_SelectionChanged" 
+                                          MouseDoubleClick="dgDeployment_MouseDoubleClick" 
+                                          RowHeight="20" 
+                                          SelectionMode="Single"
+                                >
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn x:Name="orderMS" Header="N п\п" Width="45" Binding="{Binding Path=order}" />
+                                        <DataGridTextColumn x:Name="taskMS" Header="Задача" Width="150" Binding="{Binding Path=task}" />
+                                        <DataGridTextColumn x:Name="positionMS" Header="Когда?" Width="70" Binding="{Binding Path=position}" />
+                                        <DataGridTextColumn x:Name="typeMS" Header="Тип автоматизации" Width="120" Binding="{Binding Path=type}" />
+                                        <DataGridTextColumn x:Name="script_fileMS" Header="Скрипт\Файл" Width="300" Binding="{Binding Path=script_file}" />
+                                        <DataGridTextColumn x:Name="databaseMS" Header="Целевая БД" Width="90" Binding="{Binding Path=database}" />
+                                        <DataGridTextColumn x:Name="stageMS" Header="Тип БД" Width="60" Binding="{Binding Path=stage}" />
+                                        <DataGridTextColumn x:Name="regions_strMS" Header="Регионы" Width="150" Binding="{Binding Path=regions_str}" />
+                                        <DataGridTextColumn x:Name="exclude_regions_strMS" Header="Кроме регионов" Width="150" Binding="{Binding Path=exclude_regions_str}" />
+                                        <DataGridTextColumn x:Name="timeoutMS" Header="Таймаут,сек" Width="80" Binding="{Binding Path=timeout}" />
+                                        <DataGridTextColumn x:Name="when_failed_actionMS" Header="Действие(ошибка)" Width="70" Binding="{Binding Path=when_failed.action}" />
+                                        <DataGridTextColumn x:Name="when_failed_nameMS" Header="Наименование задания(ошибка)" Width="150" Binding="{Binding Path=when_failed.name}" />
+                                        <DataGridTextColumn x:Name="when_failed_jobMS" Header="Команда(ошибка)" Width="150" Binding="{Binding Path=when_failed.job}" />
+                                        <DataGridTextColumn x:Name="when_failed_scheduleMS" Header="Расписание(ошибка)" Width="150" Binding="{Binding Path=when_failed.schedule}" />
+                                        <DataGridTextColumn x:Name="when_failed_scriptMS" Header="Скрипт(ошибка)" Width="150" Binding="{Binding Path=when_failed.script}" />
+                                        <DataGridTextColumn x:Name="when_failed_script_afterMS" Header="Скрипт после(ошибка)" Width="150" Binding="{Binding Path=when_failed.script_after}" />
+                                        <DataGridTextColumn x:Name="when_timeout_actionMS" Header="Действие(таймаут)" Width="70" Binding="{Binding Path=when_timeout.action}" />
+                                        <DataGridTextColumn x:Name="when_timeout_nameMS" Header="Наименование задания(таймаут)" Width="150" Binding="{Binding Path=when_timeout.name}" />
+                                        <DataGridTextColumn x:Name="when_timeout_jobMS" Header="Команда(таймаут)" Width="150" Binding="{Binding Path=when_timeout.job}" />
+                                        <DataGridTextColumn x:Name="when_timeout_scheduleMS" Header="Расписание(таймаут)" Width="150" Binding="{Binding Path=when_timeout.schedule}" />
+                                        <DataGridTextColumn x:Name="when_timeout_scriptMS" Header="Скрипт(таймаут)" Width="150" Binding="{Binding Path=when_timeout.script}" />
+                                        <DataGridTextColumn x:Name="when_timeout_script_afterMS" Header="Скрипт после(таймаут)" Width="150" Binding="{Binding Path=when_timeout.script_after}" />
+                                    </DataGrid.Columns>
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Добавить в начало" Click="btAddFirst_Click" />
+                                            <MenuItem Header="Вставить" Click="btInsert_Click" />
+                                            <MenuItem Header="Добавить в конец" Click="btAddLast_Click" />
+                                            <MenuItem Header="Клонировать действие" Click="btCopy_Click" />
+                                            <MenuItem Header="Изменить действие" Click="btEdit_Click" />
+                                            <MenuItem Header="Удалить действие" Click="btDel_Click" />
+                                            <Separator/>
+                                            <MenuItem Header="Сгенерировать JSON" Click="btGenJSON_MS_Click" />
+                                            <MenuItem Header="Загрузить JSON" Click="btLoadJSON_MS_Click" />
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                </DataGrid>
+                            </Grid>
+                        </TabItem>
+            
+                        <TabItem x:Name="tiMS" Header="JSON" KeyDown="tiMS_KeyDown">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="25"></RowDefinition>
+                                </Grid.RowDefinitions>
+
+                                <DockPanel Grid.Row="0">
+
+                                    <ToolBar x:Name="toolbarSaveMS" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                                        <Button x:Name="btSaveMS" HorizontalAlignment="Left" Height="24" Width="175" ToolTip="Сохранить в файл (F8)" Click="btSaveMS_Click" >
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="../Images/SaveSQL.png"></Image>
+                                                <TextBlock>Сохранить в файл (F8)</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button x:Name="btClipboardMS" HorizontalAlignment="Left" Height="24" Width="150" ToolTip="В буфер обмена" Click="btClipboardMS_Click" >
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="../Images/clipboard.png"></Image>
+                                                <TextBlock>В буфер обмена</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Separator/>
+                                    </ToolBar>
+
+                                    <ToolBar x:Name="toolbarToolsMS" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                                        <ComboBox Name="cbMSFontFamily" Width="150" Focusable="False" IsTabStop="False"/>
+                                        <ComboBox Name="cbMSFontSize" Width="50" IsEditable="True" Focusable="False" IsTabStop="False"/>
+                                    </ToolBar>
+                                    <Label x:Name="lbMSFilename" Content="" DockPanel.Dock="Top" Visibility="Collapsed"/>
+                                    <local:SQLEditor x:Name="tbMSJson"/>
+                                </DockPanel>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="tiDeploymentPG" Header="Deployment Plan для PostgreSQL (ЕЦП)" KeyDown="tiDeploymentPG_KeyDown" GotFocus="tiDeploymentPG_GotFocus">
+                <Grid Background="#FFE5E5E5">
+                    <TabControl x:Name="tabControlPG">
+                        <TabItem x:Name="tiListPG" Header="Список" KeyDown="tiDeploymentPG_KeyDown">
+                            <Grid Background="#FFE5E5E5">
+
+                                <Button x:Name="btUpPG" ToolTip="Поднять строку выше" Click="btUpPG_Click" HorizontalAlignment="Left" Margin="10,12,0,0" VerticalAlignment="Top" Width="23" Height="23">
+                                    <Image Source="../Images/up.png"></Image>
+                                </Button>
+
+                                <Button x:Name="btDownPG" ToolTip="Опустить строку ниже" Click="btDownPG_Click" HorizontalAlignment="Left" Margin="40,12,0,0" VerticalAlignment="Top" Width="23" Height="23">
+                                    <Image Source="../Images/down.png"></Image>
+                                </Button>
+
+                                <Button x:Name="btAddFirstPG" Content="Добавить в начало" HorizontalAlignment="Left" Margin="70,10,0,0" Width="130" Height="25" VerticalAlignment="Top" Click="btAddFirst_Click"/>
+                                <Button x:Name="btInsertPG" Content="Вставить" HorizontalAlignment="Left" Margin="210,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btInsert_Click"/>
+                                <Button x:Name="btAddLastPG" Content="Добавить в конец" HorizontalAlignment="Left" Margin="300,10,0,0" Width="130" Height="25" VerticalAlignment="Top" Click="btAddLast_Click"/>
+                                <Button x:Name="btCopyPG" Content="Клонировать" HorizontalAlignment="Left" Margin="440,10,0,0" Width="90" Height="25" VerticalAlignment="Top" Click="btCopy_Click" />
+                                <Button x:Name="btEditPG" Content="Изменить" HorizontalAlignment="Left" Margin="540,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btEdit_Click"/>
+                                <Button x:Name="btDelPG" Content="Удалить" HorizontalAlignment="Left" Margin="630,10,0,0" Width="80" Height="25" VerticalAlignment="Top" Click="btDel_Click" />
+                                <Button x:Name="btGenJSON_PG" Content="Сгенерировать JSON (F5)" HorizontalAlignment="Left" Margin="720,10,0,0" Width="200" Height="25" VerticalAlignment="Top" Click="btGenJSON_PG_Click"/>
+                                <Button x:Name="btLoadJSON_PG" Content="Загрузить JSON" HorizontalAlignment="Left" Margin="930,10,0,0" Width="120" Height="25" VerticalAlignment="Top" Click="btLoadJSON_PG_Click"/>
+
+                                <DataGrid x:Name="dgDeploymentPG"
+                                    AutoGenerateColumns="False" 
+                                    Margin="0,50,0,0" 
+                                    CanUserSortColumns="False" 
+                                    HorizontalScrollBarVisibility="Visible" 
+                                    VerticalScrollBarVisibility="Visible" 
+                                    CanUserDeleteRows="False" 
+                                    CanUserAddRows="False" 
+                                    IsReadOnly="True" 
+                                    SelectionChanged="dgDeploymentPG_SelectionChanged" 
+                                    MouseDoubleClick="dgDeployment_MouseDoubleClick" 
+                                    RowHeight="20" 
+                                    SelectionMode="Single"
+                                >
+
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn x:Name="orderPG" Header="N п\п" Width="45" Binding="{Binding Path=order}" />
+                                        <DataGridTextColumn x:Name="taskPG" Header="Задача" Width="150" Binding="{Binding Path=task}" />
+                                        <DataGridTextColumn x:Name="positionPG" Header="Когда?" Width="70" Binding="{Binding Path=position}" />
+                                        <DataGridTextColumn x:Name="typePG" Header="Тип автоматизации" Width="120" Binding="{Binding Path=type}" />
+                                        <DataGridTextColumn x:Name="script_filePG" Header="Скрипт\Файл" Width="300" Binding="{Binding Path=script_file}" />
+                                        <DataGridTextColumn x:Name="databasePG" Header="Целевая БД" Width="90" Binding="{Binding Path=database}" />
+                                        <DataGridTextColumn x:Name="stagePG" Header="Тип БД" Width="60" Binding="{Binding Path=stage}" />
+                                        <DataGridTextColumn x:Name="regions_strPG" Header="Регионы" Width="150" Binding="{Binding Path=regions_str}" />
+                                        <DataGridTextColumn x:Name="exclude_regions_strPG" Header="Кроме регионов" Width="150" Binding="{Binding Path=exclude_regions_str}" />
+                                        <DataGridTextColumn x:Name="timeoutPG" Header="Таймаут,сек" Width="80" Binding="{Binding Path=timeout}" />
+                                        <DataGridTextColumn x:Name="when_failed_actionPG" Header="Действие" Width="70" Binding="{Binding Path=when_failed.action}" />
+                                        <DataGridTextColumn x:Name="when_failed_namePG" Header="Наименование задания" Width="150" Binding="{Binding Path=when_failed.name}" />
+                                        <DataGridTextColumn x:Name="when_failed_jobPG" Header="Команда" Width="150" Binding="{Binding Path=when_failed.job}" />
+                                        <DataGridTextColumn x:Name="when_failed_schedulePG" Header="Расписание" Width="150" Binding="{Binding Path=when_failed.schedule}" />
+                                        <DataGridTextColumn x:Name="when_failed_scriptPG" Header="Скрипт(ошибка)" Width="150" Binding="{Binding Path=when_failed.script}" />
+                                        <DataGridTextColumn x:Name="when_failed_script_afterPG" Header="Скрипт после(ошибка)" Width="150" Binding="{Binding Path=when_failed.script_after}" />
+                                        <DataGridTextColumn x:Name="when_timeout_actionPG" Header="Действие(таймаут)" Width="70" Binding="{Binding Path=when_timeout.action}" />
+                                        <DataGridTextColumn x:Name="when_timeout_namePG" Header="Наименование задания(таймаут)" Width="150" Binding="{Binding Path=when_timeout.name}" />
+                                        <DataGridTextColumn x:Name="when_timeout_jobPG" Header="Команда(таймаут)" Width="150" Binding="{Binding Path=when_timeout.job}" />
+                                        <DataGridTextColumn x:Name="when_timeout_schedulePG" Header="Расписание(таймаут)" Width="150" Binding="{Binding Path=when_timeout.schedule}" />
+                                        <DataGridTextColumn x:Name="when_timeout_scriptPG" Header="Скрипт(таймаут)" Width="150" Binding="{Binding Path=when_timeout.script}" />
+                                        <DataGridTextColumn x:Name="when_timeout_script_afterPG" Header="Скрипт после(таймаут)" Width="150" Binding="{Binding Path=when_timeout.script_after}" />
+                                    </DataGrid.Columns>
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Добавить в начало" Click="btAddFirst_Click" />
+                                            <MenuItem Header="Вставить" Click="btInsert_Click" />
+                                            <MenuItem Header="Добавить в конец" Click="btAddLast_Click" />
+                                            <MenuItem Header="Клонировать действие" Click="btCopy_Click" />
+                                            <MenuItem Header="Изменить действие" Click="btEdit_Click" />
+                                            <MenuItem Header="Удалить действие" Click="btDel_Click" />
+                                            <Separator/>
+                                            <MenuItem Header="Сгенерировать JSON" Click="btGenJSON_PG_Click" />
+                                            <MenuItem Header="Загрузить JSON" Click="btLoadJSON_PG_Click" />
+
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                </DataGrid>
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem x:Name="tiPG" Header="JSON" KeyDown="tiPG_KeyDown">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="25"></RowDefinition>
+                                </Grid.RowDefinitions>
+
+                                <DockPanel Grid.Row="0">
+
+                                    <ToolBar x:Name="toolbarSavePG" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                                        <Button x:Name="btSavePG" HorizontalAlignment="Left" Height="24" Width="175" ToolTip="Сохранить в файл (F8)" Click="btSavePG_Click" >
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="../Images/SaveSQL.png"></Image>
+                                                <TextBlock>Сохранить в файл (F8)</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button x:Name="btClipboardPG" HorizontalAlignment="Left" Height="24" Width="150" ToolTip="В буфер обмена" Click="btClipboardPG_Click" >
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="../Images/clipboard.png"></Image>
+                                                <TextBlock>В буфер обмена</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Separator/>
+                                    </ToolBar>
+
+                                    <ToolBar x:Name="toolbarToolsPG" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                                        <ComboBox Name="cbPGFontFamily" Width="150" Focusable="False" IsTabStop="False"/>
+                                        <ComboBox Name="cbPGFontSize" Width="50" IsEditable="True" Focusable="False" IsTabStop="False"/>
+                                    </ToolBar>
+                                    <Label x:Name="lbPGFilename" Content="" DockPanel.Dock="Top" Visibility="Collapsed"/>
+                                    <local:SQLEditor x:Name="tbPGJson"/>
+                                </DockPanel>
+                            </Grid>
+                        </TabItem>
+
+                    </TabControl>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

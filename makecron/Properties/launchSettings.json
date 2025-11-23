@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "makecron": {
+      "commandName": "Project",
+      "commandLineArgs": "E:\\Projects\\dev_promed_ms\\cron E:\\Projects\\dev_promed_ms\\cron\\cron.json"
+    }
+  }
+}

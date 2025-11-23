@@ -1,0 +1,276 @@
+﻿<Fluent:RibbonWindow x:Name="winMain" x:Class="SQLGen.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        xmlns:Fluent="urn:fluent-ribbon"
+        Title ="SQLGen" Height="1000" Width="1600" Activated="winMain_Activated" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Closed="winMain_Closed" HorizontalAlignment="Left" >
+
+  <Fluent:RibbonWindow.Resources>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabItem.Background" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabItem.ActiveTabBackground" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabItem.Foreground" Color="Black" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabItem.BorderBrush" Color="White" />
+
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Background" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.ActiveTabBackground" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Foreground" Color="Black" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.BorderBrush" Color="White" />
+
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Content.Background" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Content.Foreground" Color="Black" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Content.BorderBrush" Color="White" />
+
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.TabsGrid.Background" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.TabsGrid.Foreground" Color="Black" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.TabsGrid.BorderBrush" Color="White" />
+
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonGroupBox.Background" Color="#FFE5E5E5" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonGroupBox.Foreground" Color="Black" />
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonGroupBox.BorderBrush" Color="White" />
+
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.GroupSeparator.Background" Color="White" />
+  </Fluent:RibbonWindow.Resources>
+
+  <Grid x:Name="mainGrid">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <Fluent:StatusBar Grid.Row="1" Background="#FFE5E5E5" >
+      <Fluent:StatusBarItem x:Name="tbStatusLeft" Title="" HorizontalAlignment="Left" Foreground="Black" Value="" Margin="10,0,9.8,0"/>
+      <Fluent:StatusBarItem x:Name="tbStatusRight" Title="" HorizontalAlignment="Right" Foreground="Black" Value=""/>
+    </Fluent:StatusBar>
+
+    <TabControl x:Name="tabControl" Grid.Row="0">
+      <TabItem x:Name="tabTask" Header="Задача">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+
+          <Fluent:Ribbon x:Name="RibbonTask" Grid.Row="0" CanQuickAccessLocationChanging="False" CanCustomizeQuickAccessToolBarItems="False" IsQuickAccessToolBarMenuDropDownVisible="False" ShowQuickAccessToolBarAboveRibbon="False" IsQuickAccessToolBarVisible="False">
+            <!--Tabs-->
+            <Fluent:RibbonTabItem x:Name="rbTask" ActiveTabBackground="#FFE5E5E5" ActiveTabBorderBrush="#FFE5E5E5">
+              <!-- Task group-->
+              <Fluent:RibbonGroupBox x:Name="rbTaskGroup" Header="Задача" >
+                <Fluent:Button  x:Name="btNewTask" LargeIcon="Images/newdoc.png" Header="Новая задача" Click="miNewTask_Click" ToolTip="Очистить все поля и подготовить все для новой задачи" />
+                <Fluent:Button  x:Name="btSaveTask" LargeIcon="Images/savedoc.png" Header="Сохранить задачу" Click="miSaveTask_Click" ToolTip="Сохранить существующую задачу" />
+                <Fluent:Button  x:Name="rbOpenTask" LargeIcon="Images/opendoc.png" Header="Открыть задачу" Click="miOpenTask_Click" ToolTip="Вызвать диалоговое окно для поиска и открытия ранее созданной задачи" />
+              </Fluent:RibbonGroupBox>
+              <Fluent:RibbonGroupBox x:Name="rbGITGroup" Header="GIT" >
+                <Fluent:Button  x:Name="btGitPullAll" LargeIcon="Images/refresh.png" Header="GIT PULL ALL" Click="btGitPullAll_Click" ToolTip="Выполнить git pull для всех клонированных проектов и переключиться на ветку master"/>
+                <Fluent:Button  x:Name="btGitSwitch" LargeIcon="Images/switch.png" Header="Новая ветка" Click="btGitSwitch_Click" ToolTip="Создать новую ветку по номеру задачи или переключиться на существующую"/>
+                <Fluent:Button  x:Name="btAddScript" LargeIcon="Images/addfile.png" Header="Добавить скрипт" Click="AddScript_Click" ToolTip="Добавить скрипт в список для последующей оправки в GIT" />
+                <Fluent:Button  x:Name="btDelScript" LargeIcon="Images/deletefile.png" Header="Удалить скрипт" Click="DeleteScript_Click" ToolTip="Удалить скрипт из списка для последующей отправки в GIT" />
+                <Fluent:Button  x:Name="btSendGIT" LargeIcon="Images/send.png" Header="Собрать YML для GIT" Click="btSendGIT_Click" ToolTip="Создать и переключиться на ветку задачи, создать YML-файлы, проверить наличие и скопировать скрипты для последующей отправки в GIT" />
+                <Fluent:Button  x:Name="btTortoiseGIT" LargeIcon="Images/turtle.png" Header="Отправить в GIT" Click="btTortoiseGIT_Click" ToolTip="добавление новых файлов в локальный индекс GIT + COMMIT + PUSH + Merge Request" />
+                <Fluent:Button  x:Name="btToDev" LargeIcon="Images/merge.png" Header="Влить в dev" Click="btToDev_Click" ToolTip="влить ветку задачи в ветку dev с разрешением конфликтов" />
+                <Fluent:Button  x:Name="btDeployment" LargeIcon="Images/report.png" Header="Действия при обновлении" ToolTip="Собрать JSON-файл с действиями при обновлении" Click="btDeployment_Click" />
+                <Fluent:Button  x:Name="btCron" LargeIcon="Images/report.png" Header="Задания" ToolTip="Собрать JSON-файл с заданиями" Click="btCron_Click" />
+                <Fluent:Button  x:Name="btForJira" LargeIcon="Images/jira.png" Header="Данные для Jira" Click="btForJira_Click" ToolTip="Собрать информацию по задаче для заполнения полей в Jira" />
+                <!--Fluent:Button  x:Name="btUploadYML" LargeIcon="Images/upload.png" Header="Загрузить YML/SQL" Click="UploadYML_Click" ToolTip="Взять из GIT скрипты для включения в yml-файл задачи" /-->
+              </Fluent:RibbonGroupBox>
+              <!-- Action group-->
+              <Fluent:RibbonGroupBox x:Name="rbDevelopGroup" Header="Разработка" >
+                <Fluent:Button  x:Name="btNewQuery" LargeIcon="Images/sql.png" Header="SQL-запрос" Click="btNewQuery_Click" ToolTip="Генератор sql-скриптов по данным" />
+                <Fluent:Button  x:Name="btNewStructure" LargeIcon="Images/table.png" Header="Таблица или индекс" Click="btNewStructure_Click" ToolTip="Генератор sql-скриптов по изменению структуры" />
+                <Fluent:Button  x:Name="btFreeDocMarker" LargeIcon="Images/freedocmarker.png" Header="Спецмаркеры" Click="btFreeDocMarker_Click" Height="68" VerticalAlignment="Top" ToolTip="Генератор sql-скриптов для спецмаркеров"  />
+              </Fluent:RibbonGroupBox>
+              <Fluent:RibbonGroupBox x:Name="rbReleaseGroup" Header="Релиз" >
+                <Fluent:Button  x:Name="btBuildRelease" LargeIcon="Images/versions.png" Header="Собрать релиз" Click="btBuildRelease_Click" ToolTip="Сборка релиза" />
+                <Fluent:Button  x:Name="btBuildReleaseDeployment" LargeIcon="Images/versions.png" Header="Собрать Deployment Plan" Click="btBuildReleaseDeployment_Click" ToolTip="Сборка Deployment Plan релиза" />
+                <Fluent:Button  x:Name="btBuildReleaseCron" LargeIcon="Images/versions.png" Header="Собрать Cron" Click="btBuildReleaseCron_Click" ToolTip="Сборка Cron релиза" />
+                <Fluent:Button  x:Name="btToMaster" LargeIcon="Images/merge.png" Header="Влить в master" Click="btToMaster_Click" ToolTip="влить ветку версии в ветки master и dev с разрешением конфликтов" />
+              </Fluent:RibbonGroupBox>
+              <Fluent:RibbonGroupBox x:Name="rbActionGroup" Header="Прочие сценарии использования" >
+                <Fluent:DropDownButton x:Name="btUpload" LargeIcon="Images/export.png" Header="Выгрузить" ToolTip="Выгрузить скрипты" >
+                <Fluent:MenuItem  x:Name="btUnloadFromBD" Icon="Images/export.png" Header="Выгрузить объекты из БД" Click="btUnloadFromBD_Click" ToolTip="Выгрузить из БД скрипты таблиц, хранимок, представлений и т.п." />
+                <Fluent:MenuItem  x:Name="btUnloadFromGIT" Icon="Images/export.png" Header="Выгрузить объекты из GIT" Click="btUnloadFromGIT_Click" ToolTip="Выгрузить из GIT скрипты таблиц, хранимок, представлений и т.п." />
+                </Fluent:DropDownButton>
+                <Fluent:Button  x:Name="btProcScript" Icon="Images/script.png" Header="Разобрать файл с хранимками" Click="btProcScript_Click" ToolTip="Разобрать на части результат работы генераторов скриптов" />
+                <Fluent:Button  x:Name="btMaxId" LargeIcon="Images/max.png" Header="Максимальный ID" Height="68" VerticalAlignment="Top" ToolTip="Определить максимальный ID во всех выбранных базах" Click="btMaxId_Click"  />
+                <!--Fluent:DropDownButton x:Name="btReport" LargeIcon="Images/report.png" Header="Отчеты" ToolTip="Отчеты" -->
+                  <!--Fluent:MenuItem x:Name="btReportTaskNotRelease" Icon="Images/report.png" Header="Список задач (таблицы, вьюхи, хранимки) - не вошли в релиз и нет в DEV-проекте" Click="btReportTaskNotRelease_Click" /-->
+                  <!--Fluent:MenuItem x:Name="btReportReleaseTaskNotInDev" Icon="Images/report.png" Header="Список задач (таблицы, вьюхи, хранимки) - вошли в релиз, но нет в ветке dev" Click="btReportReleaseTaskNotInDev_Click" /-->
+                  <!--Fluent:MenuItem x:Name="btReportDevTaskInMaster" Icon="Images/report.png" Header="Задачи, которые есть в master, но не вошли в релиз" Click="btReportDevTaskInMaster_Click" /-->
+                  <!--Fluent:MenuItem x:Name="btReportReleaseTaskNotInMaster" Icon="Images/report.png" Header="Список задач (таблицы, вьюхи, хранимки) - вошли в релиз, но нет в ветке master" Click="btReportReleaseTaskNotInMaster_Click" /-->
+                <!--/Fluent:DropDownButton-->
+                <Fluent:Button x:Name="btSearch" LargeIcon="Images/search.png" Header="Поиск" ToolTip="Поиск информации" Click="btSearch_Click" />
+                <Fluent:DropDownButton x:Name="btOther" LargeIcon="Images/other.png" Header="Прочие" ToolTip="Прочие, редко используемые, пункты меню" >
+                  <Fluent:Button  x:Name="btSplitFile" Icon="Images/splitfile.png" Header="Разделить файл на части" Click="btSplitFile_Click" ToolTip="Разделить файл на части необходимого размера"  />
+                  <Fluent:Button  x:Name="btWinChangesetInGIT" Icon="Images/github.png" Header="Изменить файлы в проекте GIT" Click="btWinChangesetInGIT_Click" ToolTip="Массовое изменение строк в файлах в проекте GIT, например changeset"  />
+                  <Fluent:Button  x:Name="btForLiquibase4" Icon="Images/liquibase.png" Header="Изменить файлы для совместимости с Liquibase 4" Click="btForLiquibase4_Click" ToolTip="Массовое изменение строк в yml-файлах в проекте GIT для совместимости с Liquibase 4"  />
+                  <Fluent:Button  x:Name="btLoadCron" Icon="Images/schedule.png" Header="Загрузить xls-список cron" ToolTip="Загрузить xls-список cron, взятый с confluence, и заполнить папку cron" Click="btLoadCron_Click"  />
+                </Fluent:DropDownButton>
+
+              </Fluent:RibbonGroupBox>
+              <!-- Info group-->
+              <Fluent:RibbonGroupBox x:Name="rbInfoGroup" Header="Help" >
+                <Fluent:DropDownButton x:Name="btAbout" LargeIcon="Images/help.png" Header="" ToolTip="Информация о программе" >
+                  <Fluent:Button  x:Name="btHelp" LargeIcon="Images/help.png" Header="Инструкция" Click="btHelp_Click" />
+                  <Fluent:Button  x:Name="btChangelog" LargeIcon="Images/changelog.png" Header="Changelog" Click="btChangelog_Click" />
+                  <Fluent:Button  x:Name="btFeedback" LargeIcon="Images/feedback.png" Header="Обратная связь" Click="btFeedback_Click" />
+                </Fluent:DropDownButton>
+              </Fluent:RibbonGroupBox>
+            </Fluent:RibbonTabItem>
+          </Fluent:Ribbon>
+
+          <Grid Background="#FFE5E5E5"  Grid.Row="1" >
+            <Label Content="Подключение:" HorizontalAlignment="Left" Margin="10,5,0,0" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="cbMainConnect" SelectionChanged="cbMainConnect_SelectionChanged" IsEditable="False" HorizontalAlignment="Left" Height="23" Margin="139,5,0,0" VerticalAlignment="Top" Width="392" />
+            <Button x:Name="btAddMainConnect" ToolTip="Добавить новое подключение" Click="btAddMainConnect_Click" HorizontalAlignment="Left" Margin="537,5,0,0" VerticalAlignment="Top" Width="23" Height="23">
+              <Image Source="Images/plus.png"></Image>
+            </Button>
+            <Label Content="Номер задачи:" HorizontalAlignment="Left" Margin="10,35,0,0" Height="26" VerticalAlignment="Top"/>
+            <local:HistoryTextBox x:Name="tbTaskNumber" HorizontalAlignment="Left" Margin="139,35,0,0" VerticalAlignment="Top" Width="333" IsEditable="True" Height="25" KeyDown="tbTaskNumber_KeyDown" LostFocus="tbTaskNumber_LostFocus" SelectionChanged="tbTaskNumber_SelectionChanged" IsTextSearchEnabled="False" IsSynchronizedWithCurrentItem="False" DropDownClosed="tbTaskNumber_DropDownClosed"/>
+            <Button x:Name="btOpenTask" Content="Выбрать" HorizontalAlignment="Left" Margin="480,37,0,0" VerticalAlignment="Top" Width="80" Height="23" Click="miOpenTask_Click"/>
+
+            <Label Content="Каталог задачи:" HorizontalAlignment="Left" Margin="10,65,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbTaskPath" HorizontalAlignment="Left" Height="23" Margin="139,67,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="470" IsReadOnly="True" IsEnabled="False" Text="{Binding TaskPath, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button x:Name="btOpenTaskPath" Content="Открыть" HorizontalAlignment="Left" Margin="618,67,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="btOpenTaskPath_Click"/>
+
+            <Label Content="Лог-файл задачи:" HorizontalAlignment="Left" Margin="10,95,0,0" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="cbLogFile" HorizontalAlignment="Left" Height="23" Margin="139,97,0,0" VerticalAlignment="Top" Width="470" IsEditable="False" />
+            <Button x:Name="btOpenLogFile" Content="Открыть" HorizontalAlignment="Left" Margin="618,97,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="btOpenLogFile_Click"/>
+
+            <Label Content="URL задачи:" HorizontalAlignment="Left" Margin="10,125,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbTaskUrl" HorizontalAlignment="Left" Height="23" Margin="139,127,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="470" IsReadOnly="True" IsEnabled="False" Text="{Binding TaskUrl, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button x:Name="btGoUrl" Content="Открыть" HorizontalAlignment="Left" Margin="618,127,0,0" VerticalAlignment="Top" Width="81" Click="btGoUrl_Click" Height="23"/>
+
+            <Label Content="Описание задачи:" HorizontalAlignment="Left" Margin="720,35,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbTaskDesc" HorizontalAlignment="Left" Height="115" Margin="720,65,0,0" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" VerticalAlignment="Top" Width="520" TextChanged="tbTaskDesc_TextChanged" />
+            <Button x:Name="btFromJira" HorizontalAlignment="Left" Margin="840,35,0,0" VerticalAlignment="Top" Width="120" Height="23" Click="btFromJira_Click">
+              <TextBlock Text="Обновить из Jira" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+
+            <Label Content="Исполнитель:" HorizontalAlignment="Left" Margin="10,155,0,0" Height="26" VerticalAlignment="Top" />
+            <TextBox x:Name="tbTaskExecutor" HorizontalAlignment="Left" Height="23" Margin="139,157,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="470" Text="{Binding TaskExecutor, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Label Content="YML-файл:" HorizontalAlignment="Left" Margin="10,185,0,0" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="tbYMLFile" HorizontalAlignment="Left" Margin="139,187,0,0" VerticalAlignment="Top" Width="470" IsEditable="True" Height="23" IsTextSearchEnabled="False" IsSynchronizedWithCurrentItem="False" TextBoxBase.TextChanged="tbYMLFile_TextChanged"/>
+            <Button x:Name="btCopyYMLtoTASK" Content="Скопировать из GIT в каталог задачи" HorizontalAlignment="Left" Height="23" Margin="618,187,0,0" VerticalAlignment="Top" Width="249" Click="btCopyYMLtoTASK_Click" ToolTip="Выбрать ветку, скопировать yml и sql, проверить скрипты на ошибки"/>
+            <CheckBox x:Name="isCheck" Content="проверить на ошибки при копировании ?" HorizontalAlignment="Left" Margin="880,187,0,0" VerticalAlignment="Top"/>
+            <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 при копировании ?" HorizontalAlignment="Left" Margin="880,203,0,0" VerticalAlignment="Top"/>
+            <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="880,219,0,0" VerticalAlignment="Top"/>
+            <!--Button x:Name="btCopyYMLtoDEV" Content="Перенос задачи из GIT в DEV" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btCopyYMLtoDEV_Click"/-->
+            <Button x:Name="btExecuteYML" Content="Выполнить YML-файл" HorizontalAlignment="Left" Height="23" Margin="1175,187,0,0" VerticalAlignment="Top" Width="196" Click="btExecuteYML_Click"/>
+
+            <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="1175,220,0,0" VerticalAlignment="Top" Width="23" Height="23">
+              <Image Source="Images/up.png"></Image>
+            </Button>
+              
+            <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="1210,220,0,0" VerticalAlignment="Top" Width="23" Height="23">
+              <Image Source="Images/down.png"></Image>
+            </Button>
+              
+            <Label Content="Проект GIT:" HorizontalAlignment="Left" Margin="10,215,0,0" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="139,217,0,0" VerticalAlignment="Top" Width="300" Height="23" SelectionChanged="cbGITProject_SelectionChanged"/>
+            <Label x:Name="lbGITBranch" Content="Текущая ветка GIT:" HorizontalAlignment="Left" Margin="450,215,0,0" VerticalAlignment="Top" Width="Auto"/>
+            <Label x:Name="lbGITCount" Content="Кол-во:" HorizontalAlignment="Left" Margin="750,215,0,0" VerticalAlignment="Top" Width="Auto"/>
+
+            <DataGrid x:Name="dgScriptsInTask" AutoGenerateColumns="False" Margin="0,250,0,0" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgScriptsInTask_MouseDoubleClick">
+              <DataGrid.Columns>
+                <DataGridTextColumn x:Name="GITOrder" Binding="{Binding Path=GITOrder}" Width="45" Header="N п\п" IsReadOnly="false" />
+                <DataGridTextColumn x:Name="GITScriptname" Binding="{Binding Path=GITScriptname}" Width="400" Header="Исходный файл" IsReadOnly="true" />
+                <DataGridTextColumn x:Name="GITProject" Binding="{Binding Path=GITProject}" Width="130" Header="Проект GIT" IsReadOnly="true" />
+                <DataGridTextColumn x:Name="GITTypeObject" Binding="{Binding Path=GITTypeObject}" Width="80" Header="Тип объекта" IsReadOnly="true" />
+                <DataGridTextColumn x:Name="GITShemaObject" Binding="{Binding Path=GITShemaObject}" Width="80" Header="Схема" IsReadOnly="true" />
+                <DataGridTextColumn x:Name="GITNameObject" Binding="{Binding Path=GITNameObject}" Width="250" Header="Имя объекта" IsReadOnly="true" />
+                <DataGridTextColumn x:Name="GITFilename" Binding="{Binding Path=GITFilename}" Width="300" Header="Имя файла для GIT" IsReadOnly="false" />
+                <DataGridTextColumn x:Name="FirstChangesetName" Binding="{Binding Path=FirstChangesetName}" Width="200" Header="Первый changeset" IsReadOnly="true" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </Grid>
+        </Grid>
+      </TabItem>
+
+      <TabItem x:Name="tabSettings" Header="Настройка параметров" Height="20" VerticalAlignment="Top">
+        <Grid Background="#FFE5E5E5">
+
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+
+          <Fluent:Ribbon x:Name="RibbonSettings" Grid.Row="0" CanQuickAccessLocationChanging="False" CanCustomizeQuickAccessToolBarItems="False" IsQuickAccessToolBarMenuDropDownVisible="False" IsQuickAccessToolBarVisible="False" ShowQuickAccessToolBarAboveRibbon="False">
+            <Fluent:RibbonTabItem x:Name="rbSettings" ActiveTabBackground="#FFE5E5E5" ActiveTabBorderBrush="#FFE5E5E5">
+              <Fluent:RibbonGroupBox x:Name="rbSettingsGroup" Header="Параметры" >
+                <Fluent:Button  x:Name="btSaveSettings" LargeIcon="Images/savedoc.png" Header="Сохранить настройки" Click="btSaveSettings_Click" />
+              </Fluent:RibbonGroupBox>
+            </Fluent:RibbonTabItem>
+          </Fluent:Ribbon>
+
+          <Grid Background="#FFE5E5E5"  Grid.Row="1" >
+            <Label Content="Каталог для задач:" HorizontalAlignment="Left" Margin="6,5,0,0" Height="26" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+            <TextBox x:Name="tbTaskFolder" HorizontalAlignment="Left" Height="23" Margin="133,7,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="485" LostFocus="tbTaskFolder_LostFocus" KeyDown="tbTaskFolder_KeyDown"/>
+            <Button x:Name="btTaskFolder" Content="Выбрать" HorizontalAlignment="Left" Height="23" Margin="630,7,0,0" VerticalAlignment="Top" Width="92" Click="btTaskFolder_Click"/>
+
+            <Label Content="Каталог GIT:" HorizontalAlignment="Left" Margin="6,35,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbGITFolder" HorizontalAlignment="Left" Height="23" Margin="133,37,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="485" LostFocus="tbGITFolder_LostFocus" KeyDown="tbGITFolder_KeyDown"/>
+            <Button x:Name="btGITFolder" Content="Выбрать" HorizontalAlignment="Left" Height="23" Margin="630,37,0,0" VerticalAlignment="Top" Width="92" Click="btGITFolder_Click"/>
+
+            <Label Content="Редактор файлов:" HorizontalAlignment="Left" Margin="6,65,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbFileEditor" HorizontalAlignment="Left" Height="23" Margin="133,67,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="485" LostFocus="tbFileEditor_LostFocus" KeyDown="tbFileEditor_KeyDown"/>
+            <Button x:Name="btFileEditor" Content="Выбрать" HorizontalAlignment="Left" Height="23" Margin="630,67,0,0" VerticalAlignment="Top" Width="92" Click="btFileEditor_Click"/>
+
+            <Label Content="Редактор папок:" HorizontalAlignment="Left" Margin="6,95,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbDirectoryEditor" HorizontalAlignment="Left" Height="23" Margin="133,97,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="485" LostFocus="tbDirectoryEditor_LostFocus" KeyDown="tbDirectoryEditor_KeyDown"/>
+            <Button x:Name="btDirectoryEditor" Content="Выбрать" HorizontalAlignment="Left" Height="23" Margin="630,97,0,0" VerticalAlignment="Top" Width="92" Click="btDirectoryEditor_Click"/>
+
+            <Label Content="Масштаб по оси X:" HorizontalAlignment="Left" Margin="6,125,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbScaleX" HorizontalAlignment="Left" Height="23" Margin="133,127,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85" LostFocus="tbScaleX_LostFocus" />
+            <Label Content="Масштаб по оси Y:" HorizontalAlignment="Left" Margin="236,125,0,0" Height="26" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbScaleY" HorizontalAlignment="Left" Height="23" Margin="362,127,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85" LostFocus="tbScaleY_LostFocus" />
+            <Button x:Name="btResetScale" Content="Сбросить масштаб и размеры окон на значения по умолчанию и завершить программу" HorizontalAlignment="Left" Height="23" Margin="470,127,0,0" VerticalAlignment="Top" Width="558" Click="btResetScale_Click"/>
+
+            <Label Content="Шрифт по умолчанию для редакторов:" HorizontalAlignment="Left" Margin="740,5,0,0" Height="26" VerticalAlignment="Top"/>
+            <ComboBox x:Name="cbDefaultFontFamily" HorizontalAlignment="Left" Margin="980,5,0,0" VerticalAlignment="Top" Width="150" Height="23" SelectionChanged="cbDefaultFontFamily_SelectionChanged"/>
+            <ComboBox x:Name="cbDefaultFontSize" HorizontalAlignment="Left" Width="50" Height="23" IsEditable="True" VerticalAlignment="Top" Margin="1140,5,0,0" TextBoxBase.TextChanged="cbDefaultFontSize_TextChanged"/>
+            <Button x:Name="btChangeFont" Content="Сменить шрифт во всех окнах на выбранный" HorizontalAlignment="Left" Height="23" Margin="1200,7,0,0" VerticalAlignment="Top" Width="355" Click="btChangeFont_Click"/>
+            <Button x:Name="btResetFont" Content="Сбросить шрифт во всех окнах на значение по умолчанию" HorizontalAlignment="Left" Height="23" Margin="1200,37,0,0" VerticalAlignment="Top" Width="355" Click="btResetFont_Click"/>
+            <TextBox x:Name="tbExampleFont" Text="Образец шрифта, Font example, 1234567890" HorizontalAlignment="Left" Height="54" Margin="745,37,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="445" IsReadOnly="True" />
+            <CheckBox x:Name="isExtendedLog" Content="Расширенное логирование" HorizontalAlignment="Left" Margin="750,102,0,0" VerticalAlignment="Top" Checked="isExtendedLog_Checked" Unchecked="isExtendedLog_Unchecked"/>
+            <CheckBox x:Name="isImproveSQLinVersion" Content="Улучшать скрипты релиза (метки, changeset и пр.)" HorizontalAlignment="Left" Margin="950,102,0,0" VerticalAlignment="Top" Checked="isImproveSQLinVersion_Checked" Unchecked="isImproveSQLinVersion_Unchecked"/>
+            <CheckBox x:Name="isUseNewFunc" Content="Использовать p__SetNotNull и p__FKCreate" HorizontalAlignment="Left" Margin="1290,102,0,0" VerticalAlignment="Top" Checked="isUseNewFunc_Checked" Unchecked="isUseNewFunc_Unchecked"/>
+
+            <DataGrid x:Name="dgListGITProjects" AutoGenerateColumns="False" Margin="0,160,0,0" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CanUserDeleteRows="False" >
+               <DataGrid.Columns>
+                 <DataGridTextColumn x:Name="colDEVProject" Header="Проект GIT" Width="150" Binding="{Binding Path=DEVProject}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVProjectFolder" Header="Папка проекта" Width="150" Binding="{Binding Path=DEVProjectFolder}" />
+                 <DataGridTextColumn x:Name="colDEVUrl" Header="URL проекта" Width="500" Binding="{Binding Path=DEVUrl}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVUrlAlt" Header="альтернативный URL проекта" Width="500" Binding="{Binding Path=DEVUrlAlt}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVYMLField" Header="Поле на форме релиза" Width="200" Binding="{Binding Path=DEVYMLField}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDBType" Header="Тип БД" Width="90" Binding="{Binding Path=DBType}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDBAlias" Header="Алиас БД" Width="90" Binding="{Binding Path=DBAlias}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colPrefixFileSQL" Header="Префикс SQL" Width="90" Binding="{Binding Path=PrefixFileSQL}" />
+                 <DataGridTextColumn x:Name="colPrefixFileRelease" Header="Префикс YML" Width="90" Binding="{Binding Path=PrefixFileRelease}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colPostfixFileRelease" Header="Постфикс YML" Width="100" Binding="{Binding Path=PostfixFileRelease}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVDataFolder" Header="Папка для данных" Width="120" Binding="{Binding Path=DEVDataFolder}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVisSingleScriptStruct" Header="Единый файл (структура)" Width="150" Binding="{Binding Path=DEVisSingleScriptStruct}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVisSingleScriptCode" Header="Единый файл (код)" Width="150" Binding="{Binding Path=DEVisSingleScriptCode}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVisSingleScriptData" Header="Единый файл (данные)" Width="150" Binding="{Binding Path=DEVisSingleScriptData}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colDEVStartVer" Header="Начальная версия" Width="150" Binding="{Binding Path=DEVStartVer}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colCumulativeGap" Header="Разрывы кумулятивности" Width="160" Binding="{Binding Path=CumulativeGap}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colisEvnInherit" Header="События через INHERIT" Width="150" Binding="{Binding Path=isEvnInherit}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasOld" Header="Алиас бота старый" Width="90" Binding="{Binding Path=LuquibotAliasOld}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasOldUfa" Header="Алиас бота старый Уфа" Width="90" Binding="{Binding Path=LuquibotAliasOldUfa}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasSP" Header="Алиас бота для SP" Width="90" Binding="{Binding Path=LuquibotAliasSP}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasSPUfa" Header="Алиас бота для SP Уфа" Width="90" Binding="{Binding Path=LuquibotAliasSPUfa}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasHF" Header="Алиас бота для HF" Width="90" Binding="{Binding Path=LuquibotAliasHF}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasHFUfa" Header="Алиас бота для HF Уфа" Width="90" Binding="{Binding Path=LuquibotAliasHFUfa}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasEHF1" Header="Алиас бота для EHF1" Width="90" Binding="{Binding Path=LuquibotAliasEHF1}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasEHF1Ufa" Header="Алиас бота для EHF1 Уфа" Width="90" Binding="{Binding Path=LuquibotAliasEHF1Ufa}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasEHF2" Header="Алиас бота для EHF2" Width="90" Binding="{Binding Path=LuquibotAliasEHF2}" IsReadOnly="true" />
+                 <DataGridTextColumn x:Name="colLuquibotAliasEHF2Ufa" Header="Алиас бота для EHF2 Уфа" Width="90" Binding="{Binding Path=LuquibotAliasEHF2Ufa}" IsReadOnly="true" />
+               </DataGrid.Columns>
+            </DataGrid>
+          </Grid>
+        </Grid>
+      </TabItem>
+    </TabControl>
+  </Grid>
+</Fluent:RibbonWindow>

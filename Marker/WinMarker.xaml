@@ -1,0 +1,180 @@
+﻿<Window x:Name="winMarker" x:Class="SQLGen.WinMarker"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="WinMarker" Height="817" Width="1590" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Activated="winMarker_Activated" Closed="winMarker_Closed" >
+    <Grid x:Name="mainGrid">
+        <TabControl x:Name="tabControl" SelectionChanged="TabControl_SelectionChanged">
+            <TabItem x:Name="tiStructure" Header="Список маркеров" KeyDown="tiStructure_KeyDown">
+                <Grid Background="#FFE5E5E5">
+                    <Label Content="dbo.FreeDocMarker:" HorizontalAlignment="Left" Margin="11,4,0,0" Height="24" VerticalAlignment="Top"/>
+                    <local:HistoryTextBox x:Name="tbFilter" HorizontalAlignment="Left" Height="24" Margin="140,5,0,0" VerticalAlignment="Top" Width="416" KeyDown="tbFilter_KeyDown" SelectionChanged="tbFilter_SelectionChanged" LostFocus="tbFilter_LostFocus" DropDownClosed="tbFilter_DropDownClosed"/>
+                    <Button x:Name="btDelFilter" Content="X" HorizontalAlignment="Left" Height="23" Margin="563,5,0,0" VerticalAlignment="Top" Width="23" Click="btDelFilter_Click" ToolTip="Очистить фильтр"/>
+                    <Button x:Name="btFilter" Content="Фильтр" HorizontalAlignment="Left" Margin="595,5,0,0" Width="63" Height="25" VerticalAlignment="Top" Click="btFilter_Click"/>
+                    <CheckBox x:Name="cbChanged" Content="Измененные" HorizontalAlignment="Left" Margin="666,10,0,0" VerticalAlignment="Top" Checked="cbChanged_Checked" Unchecked="cbChanged_Unchecked"/>
+                    <CheckBox x:Name="cbError" Content="С ошибками" HorizontalAlignment="Left" Margin="767,10,0,0" VerticalAlignment="Top" Checked="cbError_Checked" Unchecked="cbError_Unchecked"/>
+                    <Button x:Name="btAdd" Content="Добавить" HorizontalAlignment="Left" Margin="865,5,0,0" Width="63" Height="25" VerticalAlignment="Top" Click="AddMarker_Click"/>
+                    <Button x:Name="btCopy" Content="Копия" HorizontalAlignment="Left" Margin="937,5,0,0" Width="63" Height="25" VerticalAlignment="Top" Click="btCopy_Click" />
+                    <Button x:Name="btEdit" Content="Изменить" HorizontalAlignment="Left" Margin="1010,5,0,0" Width="63" Height="25" VerticalAlignment="Top" Click="EditMarker_Click"/>
+                    <Button x:Name="btDel" Content="Удалить" HorizontalAlignment="Left" Margin="1082,5,0,0" Width="63" Height="25" VerticalAlignment="Top" Click="btDel_Click" />
+                    <Button x:Name="btSQL" Content="Собрать запрос" HorizontalAlignment="Left" Margin="1154,5,0,0" Width="103" Height="25" VerticalAlignment="Top" Click="QueryMarker_Click"/>
+                    <DataGrid x:Name="dgFreeDocMarkers" 
+                              AutoGenerateColumns="False" 
+                              Margin="0,40,0,280" 
+                              CanUserSortColumns="False" 
+                              HorizontalScrollBarVisibility="Visible" 
+                              VerticalScrollBarVisibility="Visible" 
+                              CanUserDeleteRows="False" 
+                              CanUserAddRows="False" 
+                              IsReadOnly="True" 
+                              SelectionChanged="dgFreeDocMarkers_SelectionChanged" 
+                              MouseDoubleClick="dgFreeDocMarkers_MouseDoubleClick" 
+                              RowHeight="20" 
+                              LoadingRow="dgFreeDocMarkers_LoadingRow" 
+                              SelectionMode="Single" >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="FreeDocMarker_id" Header="Идентификатор" Width="100" Binding="{Binding Path=FreeDocMarker_id}" />
+                            <DataGridTextColumn x:Name="EvnClass_SysNick" Header="Класс события" Width="120" Binding="{Binding Path=EvnClass_SysNick}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_Name" Header="Наименование маркера" Width="200" Binding="{Binding Path=FreeDocMarker_Name}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_TableAlias" Header="TableAlias" Width="200" Binding="{Binding Path=FreeDocMarker_TableAlias}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_Field" Header="Field" Width="180" Binding="{Binding Path=FreeDocMarker_Field}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_Query" Header="Query" Width="200" Binding="{Binding Path=FreeDocMarker_Query}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_Description" Header="Description" Width="200" Binding="{Binding Path=FreeDocMarker_Description}" />
+                            <DataGridCheckBoxColumn x:Name="FreeDocMarker_IsTableValue" Header="IsTableValue" Width="80" Binding="{Binding Path=FreeDocMarker_IsTableValue}" />
+                            <DataGridTextColumn x:Name="FreeDocMarker_Options" Header="Options" Width="200" Binding="{Binding Path=FreeDocMarker_Options}" />
+                        </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Добавить маркер" Click="AddMarker_Click" />
+                                <MenuItem Header="Скопировать маркер" Click="btCopy_Click" />
+                                <MenuItem Header="Изменить маркер" Click="EditMarker_Click" />
+                                <MenuItem Header="Удалить маркер" Click="btDel_Click" />
+                                <MenuItem Header="Собрать запрос" Click="QueryMarker_Click" />
+                                <MenuItem Header="Сгенерировать скрипт (выбранный маркер)" Click="btGenerateScriptMarker_Click" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                    </DataGrid>
+                    <Label Content="dbo.FreeDocRelationship:" HorizontalAlignment="Left" Margin="11,0,0,252" VerticalAlignment="Bottom" Height="25"/>
+                    <Button x:Name="btAddRel" Content="Добавить новую" HorizontalAlignment="Left" Margin="171,0,0,251" Width="115" Height="25" VerticalAlignment="Bottom" Click="AddRelation_Click"/>
+                    <Button x:Name="btAddExistRel" Content="Привязать источник данных" HorizontalAlignment="Left" Margin="293,0,0,251" Width="180" Height="25" VerticalAlignment="Bottom" Click="btAddExistRel_Click"/>
+                    <Button x:Name="btEditRel" Content="Изменить" HorizontalAlignment="Left" Margin="482,0,0,251" Width="66" Height="25" VerticalAlignment="Bottom" Click="EditRelation_Click"/>
+                    <Button x:Name="btDelRel" Content="Удалить" HorizontalAlignment="Left" Margin="557,0,0,251" Width="66" Height="25" VerticalAlignment="Bottom" Click="btDelRel_Click" />
+                    <CheckBox x:Name="cbAllRel" Content="Все связи" HorizontalAlignment="Left" Margin="634,0,0,255" VerticalAlignment="Bottom" Checked="cbAllRel_Checked" Unchecked="cbAllRel_Unchecked" />
+                    <Label Content="Подключение:" HorizontalAlignment="Left" Margin="9,0,0,39" Height="25" VerticalAlignment="Bottom" Width="95"/>
+                    <ComboBox x:Name="cbConnectSQL" HorizontalAlignment="Left" Margin="101,0,0,39" Width="468" VerticalAlignment="Bottom" Height="22" SelectionChanged="cbConnectSQL_SelectionChanged"/>
+                    <Button x:Name="btAddConnectSQL" HorizontalAlignment="Left" Margin="574,0,0,40" Width="20" ToolTip="Добавить новое подключение или переоткрыть текущее" Click="btAddConnectSQL_Click" Height="20" VerticalAlignment="Bottom">
+                        <Image Source="../Images/plus.png"></Image>
+                    </Button>
+                    <Button x:Name="btRefresh" Content="Обновить из БД и сбросить все изменения (F3)" HorizontalAlignment="Left" Margin="630,0,0,39" Width="308" Height="25" VerticalAlignment="Bottom" Click="btRefresh_Click"/>
+                    <Label Content="Целевой проект GIT:" Margin="9,0,0,8" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="124"/>
+                    <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="135,0,0,9" VerticalAlignment="Bottom" Width="275" SelectionChanged="cbGITProject_SelectionChanged"/>
+                    <CheckBox x:Name="isRegion" Content="Добавить проверку на региональность" HorizontalAlignment="Left" Margin="430,0,0,7" VerticalAlignment="Bottom" Width="Auto" Height="20"/>
+                    <ComboBox x:Name="cbRegion" HorizontalAlignment="Left" Margin="690,0,0,9" Width="248" VerticalAlignment="Bottom" Height="22" SelectionChanged="cbRegion_SelectionChanged"/>
+                    <Button x:Name="btGenerateScript" Content="Сгенерировать скрипт - по изменениям (F5)" HorizontalAlignment="Left" Margin="968,0,0,8" Width="279" Height="25" VerticalAlignment="Bottom" Click="btGenerateScript_Click"/>
+                    <Button x:Name="btGenerateScriptMarker" Content="Сгенерировать скрипт - выбранный маркер (F8)" HorizontalAlignment="Left" Margin="1264,0,0,8" Width="302" Height="25" VerticalAlignment="Bottom" Click="btGenerateScriptMarker_Click"/>
+                    <DataGrid x:Name="dgFreeDocRelationships" AutoGenerateColumns="False" Margin="0,0,0,70" CanUserSortColumns="False" Height="176" VerticalAlignment="Bottom" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" IsReadOnly="True" CanUserDeleteRows="False" CanUserAddRows="False" MouseDoubleClick="dgFreeDocRelationships_MouseDoubleClick" RowHeight="20" LoadingRow="dgFreeDocRelationships_LoadingRow" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="FreeDocRelationship_id" Header="Идентификатор" Width="100" Binding="{Binding FreeDocRelationship_id}" />
+                            <DataGridTextColumn x:Name="EvnClass_SysNick2" Header="Класс события" Width="120" Binding="{Binding EvnClass_SysNick}" />
+                            <DataGridTextColumn x:Name="FreeDocRelationship_AliasName" Header="AliasName" Width="200" Binding="{Binding FreeDocRelationship_AliasName}" />
+                            <DataGridTextColumn x:Name="FreeDocRelationship_AliasTable" Header="AliasTable" Width="200" Binding="{Binding FreeDocRelationship_AliasTable}" />
+                            <DataGridTextColumn x:Name="FreeDocRelationship_AliasQuery" Header="AliasQuery" Width="200" Binding="{Binding FreeDocRelationship_AliasQuery}" />
+                            <DataGridTextColumn x:Name="FreeDocRelationship_LinkedAlias" Header="LinkedAlias" Width="200" Binding="{Binding FreeDocRelationship_LinkedAlias}" />
+                            <DataGridTextColumn x:Name="FreeDocRelationship_LinkDescription" Header="LinkDescription" Width="200" Binding="{Binding FreeDocRelationship_LinkDescription}" />
+                        </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Добавить новую связь" Click="AddRelation_Click" />
+                                <MenuItem Header="Привязать источник данных" Click="btAddExistRel_Click" />
+                                <MenuItem Header="Изменить связь" Click="EditRelation_Click" />
+                                <MenuItem Header="Удалить связь" Click="btDelRel_Click" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="tiScript" Header="Script" KeyDown="tiScript_KeyDown">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="200"></RowDefinition>
+                        <RowDefinition Height="25"></RowDefinition>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0">
+
+                        <ToolBar x:Name="toolbarExecScript" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                            <Button x:Name="btSave" HorizontalAlignment="Left" Height="24" Width="175" ToolTip="Сохранить в файл (F8)" Click="btSave_Click" >
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="../Images/SaveSQL.png"></Image>
+                                    <TextBlock>Сохранить в файл (F8)</TextBlock>
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="btClipboard" HorizontalAlignment="Left" Height="24" Width="150" ToolTip="В буфер обмена" Click="btClipboard_Click" >
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="../Images/clipboard.png"></Image>
+                                    <TextBlock>В буфер обмена</TextBlock>
+                                </StackPanel>
+                            </Button>
+
+                            <Label Content="Подключение:" HorizontalAlignment="Left" Height="24" Width="95"/>
+                            <ComboBox x:Name="cbConnect" HorizontalAlignment="Left" Height="24" Width="450" SelectionChanged="cbConnect_SelectionChanged"/>
+                            <Button x:Name="btAddConnect" HorizontalAlignment="Left"  Height="24" Width="24" ToolTip="Добавить новое подключение или переоткрыть текущее" Click="btAddConnect_Click" >
+                                <Image Source="../Images/plus.png"></Image>
+                            </Button>
+
+                            <Separator/>
+
+                            <Button x:Name="btExecScript" HorizontalAlignment="Left" Height="24" Width="190" ToolTip="Выполнить скрипт (F5)" Click="btExecScript_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="../Images/Start.png"></Image>
+                                    <TextBlock>Выполнить скрипт (F5)</TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </ToolBar>
+                        
+                        <ToolBar x:Name="toolbarScript" DockPanel.Dock="Top" Background="#FFE5E5E5">
+                            <ComboBox Name="cbScriptFontFamily" Width="150" Focusable="False" IsTabStop="False"/>
+                            <ComboBox Name="cbScriptFontSize" Width="50" IsEditable="True" Focusable="False" IsTabStop="False"/>
+                        </ToolBar>
+                        <Label x:Name="lbScriptFilename" Content="" DockPanel.Dock="Top" Visibility="Collapsed"/>
+                        <local:SQLEditor x:Name="tbScript" TextChanged="tbScript_TextChanged" />
+                    </DockPanel>
+
+                    <GridSplitter Grid.Row="1" Height="3" HorizontalAlignment="Stretch" VerticalAlignment="Center" ShowsPreview="False" />
+
+                    <Grid Grid.Row="2" Background="#FFE5E5E5">
+                        <TabControl >
+                            <TabItem x:Name="tiScriptMessages" Header="Сообщения">
+                                <TextBox x:Name="tbScriptMessages" TextWrapping="Wrap" IsReadOnly="True"  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" />
+                            </TabItem>
+                            <TabItem x:Name="tiScriptResults" Header="Результаты">
+                                <DataGrid x:Name="dgScriptResults" 
+                                          IsReadOnly="False" 
+                                          CanUserSortColumns="False" 
+                                          CanUserReorderColumns="False" 
+                                          AutoGeneratingColumn="dgScriptResults_AutoGeneratingColumn" 
+                                          VerticalScrollBarVisibility="Visible" 
+                                          HorizontalScrollBarVisibility="Visible" 
+                                          CanUserAddRows="False" 
+                                          CanUserDeleteRows="False" 
+                                          ScrollViewer.CanContentScroll="True" 
+                                          SelectionUnit="Cell"
+                                          LoadingRow="DataGrid_LoadingRow"
+                                          />
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+
+                    <Label x:Name="lbScriptStatus" Grid.Row="3" Background="#FFE5E5E5" Content="Кол-во записей: " HorizontalContentAlignment="Right"/>
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

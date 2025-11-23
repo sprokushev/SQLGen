@@ -1,0 +1,655 @@
+﻿<Window x:Name="winRelease" x:Class="SQLGen.WinRelease"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        Title="Сборка релиза" Height="860" Width="1500" Activated="winRelease_Activated" Closed="winRelease_Closed" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <converters:ValueColorConverter_YMLFile2 x:Key="colorconverter_ymlfile"/>
+        <converters:ValueColorConverter_Unknown x:Key="colorconverter_unknown"/>
+        <converters:ValueColorConverter_YMLOrder x:Key="colorconverter_ymlorder"/>
+        <converters:ValueColorConverter_Merged x:Key="colorconverter_merged"/>
+        <converters:ValueColorConverter_LastCommit x:Key="colorconverter_lastcommit"/>
+    </Window.Resources>
+
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="60" Margin="389,7,0,0" VerticalAlignment="Top" Width="712"/>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="190" Margin="389,70,0,0" VerticalAlignment="Top" Width="712"/>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="180" Margin="389,275,0,0" VerticalAlignment="Top" Width="712"/>
+
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="105" Margin="10,275,0,0" VerticalAlignment="Top" Width="365"/>
+
+        <Label Content="Релизная задача:" Margin="394,9,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="110"/>
+        <TextBox x:Name="tbReleaseTaskNumber" HorizontalAlignment="Left" Height="22" Margin="522,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+        <Button x:Name="btGetNumVer" Content="Получить номер версии" HorizontalAlignment="Left" Margin="720,13,0,0" VerticalAlignment="Top" Width="156" Click="btGetNumVer_Click" ToolTip="Получить номер версии из релизной задачи в Jira"/>
+        <Button x:Name="btSaveTask" Content="Сохранить задачу" HorizontalAlignment="Left" Margin="890,13,0,0" VerticalAlignment="Top" Width="130" Click="btSaveTask_Click" ToolTip="Сохранить рабочую информацию по сборке версии"/>
+
+        <Button x:Name="btClearYMLFiles" HorizontalAlignment="Left" Margin="1030,12,0,0" Width="21" ToolTip="Сделать резервную копию и очистить список YML-файлов" Click="btClearYMLFiles_Click" Height="21" VerticalAlignment="Top">
+            <Image Source="../Images/newdoc.png" ToolTip="Сделать резервную копию и очистить список YML-файлов"/>
+        </Button>
+
+        <Button x:Name="btLoadYMLFiles" HorizontalAlignment="Left" Margin="1060,12,0,0" Width="21" ToolTip="Загрузить список YML-файлов из ранее сделанной резервной копии" Click="btLoadYMLFiles_Click" Height="21" VerticalAlignment="Top">
+            <Image Source="../Images/loadfile.png" ToolTip="Загрузить список YML-файлов из ранее сделанной резервной копии"/>
+        </Button>
+
+
+        <Label Content="Номер версии:" HorizontalAlignment="Left" Margin="394,38,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbNumVersion" HorizontalAlignment="Left" Height="22" Margin="523,41,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" LostFocus="tbNumVersion_LostFocus" TextChanged="tbNumVersion_TextChanged"/>
+        <Button x:Name="btSetNumVersion" Content="Сменить номер" HorizontalAlignment="Left" Margin="720,41,0,0" VerticalAlignment="Top" Width="156" Click="btSetNumVersion_Click" ToolTip="Нажми, если хочешь изменить номер версии"/>
+
+
+        <Label Content="Список задач Jira для включения в версию:" HorizontalAlignment="Left" Margin="11,9,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbTasks" HorizontalAlignment="Left" Height="230" Margin="11,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="364" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" TextChanged="tbTasks_TextChanged" ToolTip="Сюда копируем список задач, через запятую или в отдельных строках" LostFocus="tbTasks_LostFocus"/>
+
+        <!--CheckBox x:Name="cbPreCheck" Content="проводить предварительную проверку при парсинге" HorizontalAlignment="Left" Margin="19,285,0,0" VerticalAlignment="Top" IsChecked="false" Width="Auto"/-->
+        <Button x:Name="btFillURL" Content="https://jira.rtmis.ru/issues/?jql=fixVersion%20in%20" FontSize="10" HorizontalAlignment="Left" Margin="19,280,0,0" VerticalAlignment="Top" Width="348" Click="btFillURL_Click" ToolTip="Запускается парсинг списка задач по URL из Jira"/>
+        <Button x:Name="btFill" Content="Заполнить список YML-файлов" HorizontalAlignment="Left" Margin="19,305,0,0" VerticalAlignment="Top" Width="197" Click="btFill_Click" ToolTip="Запускается парсинг задач из Jira, по списку выше"/>
+        <Button x:Name="btRefreshJira" Content="Обновить из Jira" HorizontalAlignment="Left" Margin="231,305,0,0" VerticalAlignment="Top" Width="136" Click="btRefreshJira_Click" ToolTip="Заново выполнить парсинг из Jira (по списку задач из перечня ниже)"/>
+        <Button x:Name="btAddTask" Content="Добавить задачу в список" HorizontalAlignment="Left" Margin="19,330,0,0" VerticalAlignment="Top" Width="197" Click="btAddTask_Click" ToolTip="Добавить дополнительную задачу или задачи и выполнить их парсинг из Jira"/>
+        <Button x:Name="btTaskDoubles" HorizontalAlignment="Left" Margin="231,330,0,0" VerticalAlignment="Top" Width="136" Click="btTaskDoubles_Click" Height="45">
+            <TextBlock Text="Дубли (по задачам из Jira)" TextWrapping="Wrap" TextAlignment="Center" ToolTip="ПРОВЕРИТЬ есть ли скрипты обновляющие одни и те же объекты (по списку задач из перечня ниже)"/>
+        </Button>
+
+        <Button x:Name="btFindTaskInVersion" Content="Поиск задач в других версиях" HorizontalAlignment="Left" Margin="19,355,0,0" VerticalAlignment="Top" Width="197" Click="btFindTaskInVersion_Click" ToolTip="ПРОВЕРИТЬ присутствие задач в других версиях (по списку задач из перечня ниже)"/>
+
+        <Label x:Name="lbCount" Content="Всего задач: 0 из них включаем в релиз: 0" HorizontalAlignment="Left" Margin="8,380,0,0" VerticalAlignment="Top" Width="368"/>
+        <ProgressBar x:Name="pbProgressFill" HorizontalAlignment="Left" Height="15" Margin="11,410,0,0" VerticalAlignment="Top" Width="365"/>
+
+
+        <Label Content="Проект GIT:" Margin="394,70,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="73"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="523,74,0,0" VerticalAlignment="Top" Width="208" SelectionChanged="cbGITProject_SelectionChanged" IsReadOnly="True" IsEditable="True"/>
+        <Label Content="Ветка:" HorizontalAlignment="Left" Margin="735,70,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbBranch" HorizontalAlignment="Left" Height="22" Margin="780,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+
+        <CheckBox x:Name="isCumulative" Content="Кумулятивная версия ?" HorizontalAlignment="Left" Margin="890,43,0,0" VerticalAlignment="Top" IsChecked="True" Checked="isCumulative_Checked" Unchecked="isCumulative_Unchecked" ToolTip="Надо выбрать, кумулятивная версия или нет"/>
+
+        <Button x:Name="btGitPull" Content="GIT PULL" HorizontalAlignment="Left" Margin="394,100,0,0" VerticalAlignment="Top" Width="80" Click="btGitPull_Click"/>
+        <Button x:Name="btGitNewBranch" Content="Создать ветку prmd.X.X.X.X" HorizontalAlignment="Left" Margin="480,100,0,0" VerticalAlignment="Top" Width="250" Click="btGitNewBranch_Click" ToolTip="Создать новую ветку версии или переключиться на существующую"/>
+        <Button x:Name="btMergeTask" Content="Merge задач в версию" HorizontalAlignment="Left" Margin="735,100,0,0" VerticalAlignment="Top" Width="152" Click="btMergeTask_Click" ToolTip="Влить ветки задач в ветку версии (по списку задач из перечня ниже)"/>
+        <CheckBox x:Name="isCheckLastCommit" Content="Проверять последний коммит?" HorizontalAlignment="Left" Margin="895,103,0,0" VerticalAlignment="Top" Checked="isCheckLastCommit_Checked" Unchecked="isCheckLastCommit_Unchecked" ToolTip="Если вЫключен, проверка даты последнего коммита НЕ выполняется"/>
+
+        <!-- Button x:Name="btMergeTaskNext" Content="Продолжить Merge" HorizontalAlignment="Left" Margin="885,100,0,0" VerticalAlignment="Top" Width="120" Click="btMergeTaskNext_Click"/-->
+        <Button x:Name="btGitPush" Content="GIT PUSH" HorizontalAlignment="Left" Margin="1011,77,0,0" VerticalAlignment="Top" Width="80" Click="btGitPush_Click"/>
+
+        <Label x:Name="lbPrevVersion" Content="Предыдущая версия:" HorizontalAlignment="Left" Margin="394,130,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbPrevVersion" HorizontalAlignment="Left" Margin="524,127,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True"/>
+        <Button x:Name="btFindPrevVersion" Content="Найти" HorizontalAlignment="Left" Margin="949,127,0,0" VerticalAlignment="Top" Width="70" Click="btFindPrevVersion_Click"/>
+        <Button x:Name="btSetPrevVersion" Content="Сменить" HorizontalAlignment="Left" Margin="1024,127,0,0" VerticalAlignment="Top" Width="60" Click="btSetPrevVersion_Click" ToolTip="Сменить в yml-файле ссылку на предыдущий yml-файл"/>
+
+        <Label Content="Имя файла версии:" HorizontalAlignment="Left" Margin="394,150,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbFileVersion" HorizontalAlignment="Left" Height="22" Margin="524,152,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" TextChanged="tbFileVersion_TextChanged"/>
+        <TextBox x:Name="tbGITVersion" HorizontalAlignment="Left" Height="22" Margin="399,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbGITVersion_MouseDoubleClick"/>
+        <Button x:Name="btCopyGITVersion" HorizontalAlignment="Left" Margin="1064,177,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyGITVersion_Click" Height="21" VerticalAlignment="Top" >
+             <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
+        </Button>
+        <Label Content="Команда для бота:" HorizontalAlignment="Left" Margin="394,200,0,0" VerticalAlignment="Top"/>
+
+        <ComboBox x:Name="cbLiquibot" HorizontalAlignment="Left" Height="22" Margin="524,202,0,0" VerticalAlignment="Top" Width="490" IsEditable="true" IsReadOnly="true"/>
+                    
+        <Button x:Name="btCopyLiquibot" HorizontalAlignment="Left" Margin="1019,202,0,0" Width="21" ToolTip="Скопировать команду для ликвибота в буфер" Height="21" VerticalAlignment="Top" Click="btCopyLiquibot_Click" >
+            <Image Source="../Images/clipboard.png" ToolTip="Скопировать команду для ликвибота в буфер"/>
+        </Button>
+        <Button x:Name="btCopyAllLiquibot" Content="Все" HorizontalAlignment="Left" Margin="1044,202,0,0" VerticalAlignment="Top" Width="40" Click="btCopyAllLiquibot_Click" ToolTip="Скопировать все команды для ликвибота в буфер"/>
+
+        <Label x:Name="lbNextVersion" Content="Следующая версия" HorizontalAlignment="Left" Margin="394,225,0,0" VerticalAlignment="Top" Width="122"/>
+        <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="524,227,0,0" VerticalAlignment="Top" Width="305" IsReadOnly="True"/>
+        <Button x:Name="btFindNextVersion" Content="Найти" HorizontalAlignment="Left" Margin="839,227,0,0" VerticalAlignment="Top" Width="70" Click="btFindNextVersion_Click"/>
+        <Button x:Name="btSetNextVersion" Content="Сменить" HorizontalAlignment="Left" Margin="914,227,0,0" VerticalAlignment="Top" Width="65" Click="btSetNextVersion_Click" ToolTip="Сменить в yml-файле следующей версии ссылку на файл текущей версии"/>
+        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="984,227,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+
+
+        <Label Content="Фильтр 1:" HorizontalAlignment="Left" Margin="700,347,0,0" VerticalAlignment="Top" Width="66"/>
+        <ComboBox x:Name="cbFilterList1" HorizontalAlignment="Left" Margin="772,348,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList1_SelectionChanged"/>
+        <ComboBox x:Name="cbFilterList2" HorizontalAlignment="Left" Margin="772,374,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList2_SelectionChanged"/>
+        <Label Content="Фильтр 2:" HorizontalAlignment="Left" Margin="700,372,0,0" VerticalAlignment="Top" Width="68"/>
+        <ComboBox x:Name="cbFilterList3" HorizontalAlignment="Left" Margin="772,400,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList3_SelectionChanged"/>
+        <Label Content="Фильтр 3:" HorizontalAlignment="Left" Margin="700,397,0,0" VerticalAlignment="Top" Width="66"/>
+        <Label Content="Фильтр по значению:" HorizontalAlignment="Left" Margin="530,422,0,0" VerticalAlignment="Top" Width="158" HorizontalContentAlignment="Right"/>
+        <TextBox x:Name="tbFilterTask" HorizontalAlignment="Left" Height="22" Margin="696,426,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="312" KeyDown="tbFilterTask_KeyDown"/>
+
+        <Button x:Name="btClearFilter" HorizontalAlignment="Left" Margin="1016,348,0,0" VerticalAlignment="Top" Width="74" Height="70" Click="btClearFilter_Click">
+            <TextBlock Text="Очистить фильтр" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Button>
+        <Button x:Name="btFindTask" Content ="Искать" HorizontalAlignment="Left" Margin="1016,427,0,0" VerticalAlignment="Top" Width="74" Height="20" Click="btFindTask_Click"/>
+
+        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="399,423,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
+
+        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="398,280,0,0" VerticalAlignment="Top" Width="127" Height="50" Click="btGenerate_Click">
+            <TextBlock x:Name="btGenerateText" Text="Собрать yml-файл" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Собрать новый yml-файл версии"/>
+        </Button>
+
+        <Button x:Name="btGenerateAdd" HorizontalAlignment="Left" Margin="398,333,0,0" VerticalAlignment="Top" Width="127" Click="btGenerateAdd_Click" Height="55">
+            <TextBlock Text="Добавить в существующий yml-файл" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Добавить дополнительные задачи в конец yml-файла версии"/>
+        </Button>
+
+        <Button x:Name="btCodeReview" Content="Code Review" HorizontalAlignment="Left" Margin="398,391,0,0" VerticalAlignment="Top" Width="127" Height="29" Click="btCodeReview_Click" ToolTip="Выполнить code review версии"/>
+
+        <Button x:Name="btYmlDoubles" Content="Дубли (по задачам из yml)" HorizontalAlignment="Left" Margin="530,280,0,0" VerticalAlignment="Top" Width="171" Click="btYmlDoubles_Click" ToolTip="ПРОВЕРИТЬ есть ли скрипты обновляющие одни и те же объекты (из yml-файла версии)"/>
+        <Button x:Name="btFindTaskFromYMLInVersion" Content="Связи с другими версиями" HorizontalAlignment="Left" Margin="530,303,0,0" VerticalAlignment="Top" Width="170" Click="btFindTaskFromYMLInVersion_Click" ToolTip="ОБЯЗАТЕЛЬНО ПРОВЕРИТЬ корректность yml-файла версии, а также цепочку кумулятивности"/>
+        <Button x:Name="btCompileProc" Content="Список на компиляцию" HorizontalAlignment="Left" Margin="530,327,0,0" VerticalAlignment="Top" Width="170" Click="btCompileProc_Click" ToolTip="Получить список команд для компиляции на ПГ всех хранимок, которые меняются в версии"/>
+        <Button x:Name="btCheckTableInPrevVers" Content="История таблиц" HorizontalAlignment="Left" Margin="530,351,0,0" VerticalAlignment="Top" Width="170" Click="btCheckTableInPrevVers_Click" ToolTip="Получить историю таблиц - в каких версиях встречается скрипт таблицы в первый раз с момента разрыва кумулятивности"/>
+        <Button x:Name="btAddBreakCumulative" Content="Добавить разрыв кумулятивности" FontSize="10" HorizontalAlignment="Left" Margin="530,375,0,0" VerticalAlignment="Top" Width="170" Click="btAddBreakCumulative_Click" ToolTip="В ветке текущего релиза выбрать одну из предыдущих версий и добавить в нее разрыв кумулятивности"/>
+
+        <Button x:Name="btCheckYML" Content="Проверить скрипты" HorizontalAlignment="Left" Margin="706,280,0,0" VerticalAlignment="Top" Width="133" Click="btCheckYML_Click" ToolTip="ПРОВЕРИТЬ скрипты (из yml-файла версии)"/>
+        <!--Button x:Name="btTransfer" Content="Выполнить transfer.sh" HorizontalAlignment="Left" Margin="844,244,0,0" VerticalAlignment="Top" Width="136" Click="btTransfer_Click" ToolTip="Выполнить transfer.sh" /-->
+        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="985,280,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
+        <Button x:Name="btFormGIT" HorizontalAlignment="Left" Margin="985,303,0,0" VerticalAlignment="Top" Width="106" Click="btFormGIT_Click" Height="39">
+            <TextBlock Text="Скопировать из GIT" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Скопировать все скрипты версии в папку задачи"/>
+        </Button>
+
+        <CheckBox x:Name="isCorrectEncoding" Content="предлагать исправлять кодировку ?" HorizontalAlignment="Left" Margin="705,300,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 ?" HorizontalAlignment="Left" Margin="705,315,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="705,330,0,0" VerticalAlignment="Top"/>
+
+        <Button x:Name="btUp" Grid.Row="2" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="10,430,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="../Images/up.png"></Image>
+        </Button>
+
+        <Button x:Name="btDown" Grid.Row="2" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="40,430,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Image Source="../Images/down.png"></Image>
+        </Button>
+
+        <DataGrid x:Name="dgYMLFiles" SelectionMode = "Single" Margin="10,460,387,10" AutoGenerateColumns="False" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CurrentCellChanged="dgYMLFiles_CurrentCellChanged" MouseDoubleClick="dgYMLFiles_MouseDoubleClick" KeyDown="dgYMLFiles_KeyDown" SelectionChanged="dgYMLFiles_SelectionChanged" PreviewKeyDown="dgYMLFiles_PreviewKeyDown" MouseDown="dgYMLFiles_MouseDown">
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="YMLOrder" Header="N п/п" Width="45" Binding="{Binding YMLOrder}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding isUpdated}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding isUpdated, Converter={StaticResource colorconverter_ymlorder}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridCheckBoxColumn x:Name="IsAddRelease" Header="Вкл?" Width="40" Binding="{Binding IsAddRelease}" IsReadOnly="false"/>
+                <DataGridTextColumn x:Name="TaskNumber" Header="Релизная задача" Width="130" Binding="{Binding TaskNumber}" IsReadOnly="true">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding ErrorInfo}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding ErrorInfo, Converter={StaticResource colorconverter_unknown}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn x:Name="MergeStatus" Header="Merged ?" Width="60" Binding="{Binding MergeStatus}" IsReadOnly="true">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding MergeStatus, Converter={StaticResource colorconverter_merged}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                
+                <DataGridTextColumn x:Name="BranchName" Header="Ветка" Width="140" Binding="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="true" />
+
+                <DataGridTextColumn x:Name="PathInGIT" Header="Папка" Width="75" Binding="{Binding PathInGIT}" IsReadOnly="true" />
+
+                <DataGridTextColumn x:Name="TaskCommitDate" Header="Дата комита" Width="80" Binding="{Binding TaskCommitDate}" IsReadOnly="true">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding TaskCommitDate, Converter={StaticResource colorconverter_lastcommit}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_PG" Header="liquibase__project__new" Width="160" Binding="{Binding YMLFile_PG}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_PG_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_PG_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_PG" Header="dev__promed__pg" Width="160" Binding="{Binding YMLFile_dev_PG}" IsReadOnly="false">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_PG_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_PG_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_MS" Header="msdbupdate__new" Width="160" Binding="{Binding YMLFile_MS}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_MS_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_MS_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_MS" Header="dev__pormed__ms" Width="160" Binding="{Binding YMLFile_dev_MS}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_MS_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_MS_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_EMD" Header="emd" Width="160" Binding="{Binding YMLFile_EMD}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_EMD_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_EMD_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_EMD" Header="dev__emd__pg" Width="160" Binding="{Binding YMLFile_dev_EMD}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_EMD_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_EMD_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_LIS" Header="promedlistest2" Width="160" Binding="{Binding YMLFile_LIS}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_LIS_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_LIS_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_LIS" Header="dev__lis__pg" Width="160" Binding="{Binding YMLFile_dev_LIS}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_LIS_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_LIS_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_userportal_pg" Header="userportal(pg)" Width="160" Binding="{Binding YMLFile_userportal_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_userportal_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_userportal_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_userportal_pg" Header="dev__userportal__pg" Width="160" Binding="{Binding YMLFile_dev_userportal_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_userportal_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_userportal_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_userportal_ms" Header="userportal(ms)" Width="160" Binding="{Binding YMLFile_userportal_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_userportal_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_userportal_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_userportal_ms" Header="dev__userportal__ms" Width="160" Binding="{Binding YMLFile_dev_userportal_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_userportal_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_userportal_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_log_service_pg" Header="log__service(pg)" Width="160" Binding="{Binding YMLFile_log_service_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_log_service_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_log_service_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_log_service_pg" Header="dev__logservice__pg" Width="160" Binding="{Binding YMLFile_dev_log_service_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_log_service_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_log_service_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_log_service_ms" Header="log__service(ms)" Width="160" Binding="{Binding YMLFile_log_service_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_log_service_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_log_service_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_log_service_ms" Header="dev__logservice__ms" Width="160" Binding="{Binding YMLFile_dev_log_service_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_log_service_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_log_service_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_php_log_pg" Header="php__log(pg)" Width="160" Binding="{Binding YMLFile_php_log_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_php_log_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_php_log_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_php_log_pg" Header="dev__phplog__pg" Width="160" Binding="{Binding YMLFile_dev_php_log_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_php_log_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_php_log_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_php_log_ms" Header="php__log(ms)" Width="160" Binding="{Binding YMLFile_php_log_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_php_log_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_php_log_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_php_log_ms" Header="dev__phplog__ms" Width="160" Binding="{Binding YMLFile_dev_php_log_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_php_log_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_php_log_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_fer_log" Header="fer__log" Width="160" Binding="{Binding YMLFile_fer_log}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_fer_log_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_fer_log_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_fer_log" Header="dev__ferlog__pg" Width="160" Binding="{Binding YMLFile_dev_fer_log}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_fer_log_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_fer_log_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_ac_mlo_pg" Header="ac__mlo__pg" Width="160" Binding="{Binding YMLFile_ac_mlo_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_ac_mlo_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_ac_mlo_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_ac_mlo_pg" Header="dev__ac__mlo__pg" Width="160" Binding="{Binding YMLFile_dev_ac_mlo_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_ac_mlo_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_ac_mlo_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_ac_mlo_ms" Header="ac__mlo__ms" Width="160" Binding="{Binding YMLFile_ac_mlo_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_ac_mlo_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_ac_mlo_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_ac_mlo_ms" Header="dev__ac__mlo__ms" Width="160" Binding="{Binding YMLFile_dev_ac_mlo_ms}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_ac_mlo_ms_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_ac_mlo_ms_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_smp2_pg" Header="dev__smp2__pg" Width="160" Binding="{Binding YMLFile_dev_smp2_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_smp2_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_smp2_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_gar_pg" Header="dev__gar__pg" Width="160" Binding="{Binding YMLFile_dev_gar_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_gar_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_gar_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_dev_proxy_pg" Header="dev__proxy__pg" Width="160" Binding="{Binding YMLFile_dev_proxy_pg}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_proxy_pg_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_proxy_pg_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+
+                <DataGridTextColumn x:Name="YMLFile_dev_bi" Header="dev__bi" Width="160" Binding="{Binding YMLFile_dev_bi}" IsReadOnly="false">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_dev_bi_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_dev_bi_Comment}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn x:Name="YMLFile_unknown" Header="Неизвестный" Width="160" Binding="{Binding YMLFile_unknown}" IsReadOnly="true">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Background" Value="{Binding YMLFile_unknown, Converter={StaticResource colorconverter_unknown}}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{Binding YMLFile_unknown}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+
+            </DataGrid.Columns>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Удалить выбранную задачу" Click="dgYMLFiles_MenuItemDelete" />
+                    <Separator/>
+                    <MenuItem Header="Обновить из Jira выбранную задачу" Click="dgYMLFiles_MenuItemRefreshJira" />
+                    <MenuItem Header="Добавить YML или JSON в выбранную задачу" Click="dgYMLFiles_MenuItemAddFile" />
+                    <Separator/>
+                    <MenuItem Header="Изменить имя ветки" Click="dgYMLFiles_MenuItemChangeBranchName" />
+                    <MenuItem Header="Merge выбранной задачи" Click="dgYMLFiles_MenuItemMerge" />
+                    <!--Separator/-->
+                    <!--MenuItem x:Name="miTaskTransferSH" Header="transfer.sh выбранной задачи" Click="dgYMLFiles_MenuItemTransferSH" /-->
+                    <MenuItem x:Name="miTaskCheck" Header="Проверка скриптов выбранной задачи" Click="dgYMLFiles_MenuItemTaskCheck" />
+                    <Separator/>
+                    <MenuItem Header="Текст ошибки в отдельном окне" Click="dgYMLFiles_MenuItemShowError" />
+                    <MenuItem Header="Текст yml в версии" Click="dgYMLFiles_MenuItemShowYMLinVer" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+
+        <Rectangle Fill="#FFE5E5E5" Margin="10,7,10,10" Stroke="Black" HorizontalAlignment="Right" Width="370"/>
+
+        <Label Content="Номер задачи:" Margin="10,10,270,10" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskNum" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,14,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False" />
+
+        <Label Content="Статус задачи:" Margin="10,37,270,10" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbTaskStatus" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,41,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False" Text="{Binding LogFile, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Content="Версия:" Margin="10,64,270,10" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskVersion" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="10,68,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="250" IsTabStop="False"/>
+
+        <Label Content="Регион:" HorizontalAlignment="Right" Margin="10,91,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskRegion" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,117,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+        <TextBox x:Name="tbTaskBaseRegion" IsReadOnly="True" HorizontalAlignment="Right" Margin="4,220,14,14" VerticalAlignment="Top" Width="360" IsTabStop="False" FontWeight="Bold" Foreground="Red"/>
+
+        <TextBox x:Name="tbTaskDT" IsReadOnly="True" HorizontalAlignment="Right" Margin="4,245,14,14" VerticalAlignment="Top" Width="360" FontWeight="Bold" IsTabStop="False" Foreground="Red" />
+
+        <Label Content="Данные в БД:" HorizontalAlignment="Right" Margin="10,265,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskDataBD" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,290,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Объекты БД:" HorizontalAlignment="Right" Margin="10,390,270,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskObjectsBD" IsReadOnly="True" HorizontalAlignment="Right" Height="100" Margin="4,415,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Действия при обновлении:" HorizontalAlignment="Right" Margin="10,517,190,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbTaskUpdActions" IsReadOnly="True" HorizontalAlignment="Right" Height="125" Margin="4,542,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" VerticalScrollBarVisibility="Auto" IsTabStop="False"/>
+
+        <Label Content="Значение выбранной ячейки:" HorizontalAlignment="Right" Margin="10,670,170,10" VerticalAlignment="Top" />
+        <TextBox x:Name="tbSelectedCell" IsReadOnly="True" HorizontalAlignment="Right" Height="23" Margin="4,695,14,14" TextWrapping="Wrap" VerticalAlignment="Top" Width="360" IsTabStop="False"/>
+    </Grid>
+</Window>

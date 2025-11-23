@@ -1,0 +1,827 @@
+План по доработкам
+
+Если после перехода на Windows 11 SQLGen начнет при подключении к БД ругаться:
+MS: Экземпляр SQL Server, к которому устанавливалось подключение, требует шифрования, но оно не поддерживается этим компьютером.
+PG: Exception while performing SSL handshake
+то лечится это дополнительными параметрами подключения
+MS: Encrypt=False
+PG: SSL Mode=Disable
+
+
+OR dbo.GetDBType() = 'db_test' - срабатывает на тестовой и релизной БД Уфы
+
+
+Релиз: не давать вливать ветки с версией больше. Сейчас только спрашивает, но можно влить
+
+
+
+Релиз: 
+Локальные справочники: ручное заполнение + генерация файла версии в процессе сборки версии
+
+
+Кнопка - собрать логи для отправки разработчику
+
+
+
+
+
+https://jira.is-mis.ru/browse/PROMEDWEB-221392
+задача не попала в версию, добавить проверку при сборке поля "Объекты БД"
+
+
+
+для НЕ кумулятивной версии я для скриптов FUNCTION, PROCEDURE, VIEW, TRIGGER добавил чтобы к имени changeset дописывался номер версии
+при это строка changeset у меня собирается заново - сначала считываются все теги, проверяются и добавляются недостающие теги (в т.ч. labels) потом они в определенном порядке добавляются обратно и там у меня тег stripComments идет первым а runInTransaction после него
+видимо как-то зацепило и скрипты в data, хотя и не должно было
+имя changeset не меняется а вот порядок тегов - меняется
+
+
+
+
+после нажатия на кнопку "Отправить в GIT" почему-то не открывается окно для комита, ничего не происходит
+в логе появляется сообщение об ошибке git (скриншот)
+Причина в том, что среди изменившихся файлов из состава версии (автоматически добавился тег label) встретился файл, содержащий в своем имени слово error
+
+
+
+
+
+Динар Мусин (27.01.2025 16:35):
+я всегда когда собираю что-то между версиями кумулятивное перепроверяю скрипты по данным в дубущих версиях
+у меня могут быть в ehf апдейты строк, которые появляются только в sp
+Динар Мусин (27.01.2025 16:36):
+это все равно что порядок выполнения задач в рамках одной версии перепроверять. для этого же в основном создавали эту кнопку. искать пересечения
+
+
+
+
+
+
+проверка версии - сообщать если разрыв кумулятивности ссылается не на предыдущую кумулятивную версию
+
+
+
+
+
+
+добавить git pull проекта sqlgen при запуске программы
+
+
+на ПГ вместо TIMESTAMP тянется BYTEA
+
+
+Query История запросов - пропадает если длинный
+
+
+
+merge ветки в master - push dev и push master добавить запос на согласие
+
+
+
+
+
+на МС 
+	exec('ALTER TABLE dbo.EvnPS ADD CONSTRAINT fk_EvnPS_IsFinish
+		CHECK (EvnPS_IsFinish in (1,2))')
+
+
+при сохранении скрипта генератора evn ошибка про array
+
+
+
+в логах добавить имя функции в коде откуда был вызов (пока не знаю как)
+
+
+
+
+Релиз - проверка, если добавлялись новые задача, обязательно проверить что нажималась кнопка Собрать или Добавить
+
+
+(не смог воспроизвести) Релиз - визуально не меняется проект, обратно возвращается предыдущий номер версии, надо поэкспериментировать
+
+
+Динар Мусин (15.04.2024 12:47):
+предлагаю ещё при проверке пересечения объектов и данных добавить ямлы из будущих версий
+
+
+https://github.com/Tyrrrz/CliWrap
+
+
+btCopyYMLtoDEV_Click переделать на YMLStruct
+
+
+
+INSERT into dbo.surveytypelink
+(surveytypelink_id,SurveyType_id,UslugaComplex_id,SurveyTypeLink_From,SurveyTypeLink_To,DispClass_id,Sex_id,SurveyTypeLink_IsNeedUsluga,SurveyTypeLink_IsImpossible
+,region_id,surveytypelink_begdate
+,pmUser_insID,pmUser_updID,SurveyTypeLink_insDT,SurveyTypeLink_updDT)
+
+SELECT d.surveytypelink_id,d.SurveyType_id,d.UslugaComplex_id,d.SurveyTypeLink_From,d.SurveyTypeLink_To,d.DispClass_id,d.Sex_id,d.SurveyTypeLink_IsNeedUsluga,d.SurveyTypeLink_IsImpossible
+,58 region_id,cast('2023-12-01' as date) surveytypelink_begdate
+,1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
+from(values
+(4716614,2,3000212,'A01.30.026','Опрос (анкетирование) на выявление неинфекционных заболеваний и факторов риска их развития',18,39,35,NULL,2,NULL),
+(4716615,405,3000158,'B03.053.002','Спермограмма',18,39,35,1,NULL,NULL),
+(4716616,406,201609,'A09.05.078','Исследование уровня общего тестостерона в крови',18,39,35,1,2,NULL),
+(4716617,40,207149,'B04.053.002','Профилактический прием (осмотр, консультация) врача-уролога',18,39,35,1,2,NULL),
+(4716618,40,207157,'B04.057.002','Профилактический прием (осмотр, консультация) врача-хирурга',18,39,35,2,2,NULL),
+(4716619,407,206456,'B01.001.001','Прием (осмотр, консультация) врача-акушера-гинеколога первичный',18,39,35,2,2,NULL),
+(4716620,408,206457,'B01.001.002','Прием (осмотр, консультация) врача-акушера-гинеколога повторный',18,39,35,2,2,NULL),
+(4716621,20,4625369,'A08.20.017','Цитологическое исследование микропрепарата шейки матки',18,39,35,2,NULL,2),
+(4716622,409,3001942,'A26.20.009.004','Определение ДНК и типа вируса папилломы человека (Papilloma virus) высокого канцерогенного риска в отделяемом (соскобе) из цервикального канала методом ПЦР',18,39,35,2,2,2),
+(4716623,117,3000302,'A04.30.010','Ультразвуковое исследование органов малого таза комплексное (трансвагинальное и трансабдоминальное)',18,39,36,2,NULL,2), -- на релизной ПГ UslugaComplex_Name немного другое
+(4716624,235,200531,'A04.20.002','Ультразвуковое исследование молочных желез',18,39,36,2,NULL,2),
+(4716625,407,206456,'B01.001.001','Прием (осмотр, консультация) врача-акушера-гинеколога первичный',18,39,36,2,NULL,NULL),
+(4716626,408,206457,'B01.001.002','Прием (осмотр, консультация) врача-акушера-гинеколога повторный',18,39,36,2,NULL,NULL)
+)d(surveytypelink_id,SurveyType_id,UslugaComplex_id,UslugaComplex_code,UslugaComplex_name,SurveyTypeLink_From,SurveyTypeLink_To,DispClass_id,Sex_id,SurveyTypeLink_IsNeedUsluga,SurveyTypeLink_IsImpossible)
+inner join dbo.uslugacomplex uc on 
+d.uslugacomplex_id = uc.uslugacomplex_id
+and d.uslugacomplex_Code = uc.uslugacomplex_code --and d.UslugaComplex_name = uc.UslugaComplex_Name -- для подстраховки
+left join dbo.surveytypelink u on d.surveytypelink_id = u.surveytypelink_id 
+where u.surveytypelink_id is null 
+
+
+Релиз - merge одиночной задачи в последнюю версию - доливать master
+
+
+
+
+
+
+
+написать консольное приложение для проверки ошибок команды git для git_switch.bat
+
+добавить проекты dev_pharmacy1c
+
+Новая ветка - сделать выбор имени ветки
+
+
+
+запрос - если база-источник PG то при генерации под МС принудительно добавлять SET identity_insert
+на самом деле сделано, нужен конкретный пример когда не добавляется!!!
+
+
+
+
+reftableregistry - подтягивать существующую запись по oid
+искать во всех тестовых
+
+
+горячая кнопка на удаление скрипта или кнопка удаления всех скриптов
+
+
+
+
+По поводу "определить максимальный ID сразу в нескольких базах" в SQLGen
+Было бы прикольно, если бы выводилось, скажем, топ 10 записей из каждой бд
+А ещё лучше чтоб была возможность "выполнить запрос на нескольких базах" и разные шаблоны (в т.ч. определить максимальный ID)
+А самый топ - возможность выполнить запрос на всех продах. Но это, конечно же, анрил 
+А у тебя этот запрос выполняется в потоках? Параллельно? Или последовательно по выбранным БД?
+Если сделать параллельно - можно нагрузочное тестирование на продлайках мутить. Где долго выполняется - килять по таймауту
+
+
+- Запрос: альтернативный вариант генерации скрипта на INSERT+UPDATE (вариант от Эдуарда Чудинова)
+https://jira.is-mis.ru/browse/PROMEDWEB-145155
+
+- Запрос: запрос по шаблону вариант 2 как у Эдуарда в задаче https://jira.is-mis.ru/browse/PROMEDWEB-139251
+
+
+сделать курсор при ожидании крупнее и заметнее
+
+Кумулятивная версия - возвращается при смене проекта
+
+- Запрос - мастер по загрузке excel (выбор таблицы, сопоставление полей)
+
+
+- собрать yml - спрашивать про переименование yml-файла для каждого проекта
+
+
+- Отправка в GIT: редактирование списка, добавление существующих файлов
+- история просмотра в Таблица - сохранять без учета регистра
+- 
+- команда для liquibot для задачи и на форме сборки релиза
+
+
+
+- Сборка релиза, проверка - сделать список кандидатов на Downtime: большой объем, создание индексов, alter table
+
+- в окне "таблица", список полей пуст. Я добавляю поле, заполняю колонки - всё ок. Нажимаю добавить поле (чтобы добавить второе поле) и первое поле теряется (вижу одно поле). Предлагаю при нажатии на пункты меню с добавлением полей, предварительно делать post в датасете.
+- Релиз: добавить проверку на наличие индекса на foreign key
+
+
+не делаю (нет необходимости либо пока не знаю как):
+
+- в выгрузке объектов:
+
+2. добавить по результатам поиска возможность посмотреть в виде дерева все зависимости объекта (вверх и вниз) - по умолчанию не отображается, через контектсное меню "Показать дерево зависимостей", по каждому объекту возможность посмотреть скрипт (в т.ч. таблица через Table) и добавить выбранный объект в список выгрузки
+
+
+- внешний редактор файов раздельно для sql МС, sql ПГ и для остальных
+- формат имени для sql-файла в sqlgen.json
+- добавить дерево для просмотра списка задач (с правой стороны)
+- редактор соединений - с возможностью пользовательской группировки соединений в виде дерева (с левой стороны)
+- Fluent-дезайн интерфейса (как в MS Office) для остальных окон программы
+- Ошибка: нет INSERT внешних ключей из SQL-запроса, когда записей еще нет в таблице
+- Указать хранимую процедуру/вьюху и по ее тексту собрать в виде дерева все хранимки, вьюхи (имя и алиас) и таблицы (имя и алиас), которые она использует - и далее по дереву аналогично со всеми объектами 
+- Интеграция с vkteams - отправка сообщений для liquibot 
+
+Релиз - сканирование после transfer.sh (заполнение yml) - на случай, если transfer выполнен вне программы
+
+
+
+
+
+--dbo_lpusectionprofile_20220519_promedweb-110549_r35.sql
+--liquibase formatted sql
+--changeset ChudinovE:1 stripComments:false dbms:postgresql endDelimiter:;;
+--comment: PROMEDWEB-110549
+
+/*
+Необходимо подготовить скрипт для заполнения полей профилей отделений на портале.
+
+Таблица; dbo.lpusectionprofile
+Столбцы: profilespec_name, profilespec_name_vin, profilespec_name_rod, lpusectionprofile_mainid, lpusectionprofile_inetdontshow, lpusectionprofile_isarea
+
+
+Прод ЕЦП https://vologda.promedweb.ru/
+Прод портала https://k-vrachu.volmed.org.ru/
+ */
+
+do $$
+begin
+
+if dbo.getregion() = 35 or CURRENT_DATABASE() in('promedrelease' ,'promedadygea','promedtest')
+then
+
+CREATE TABLE if not EXISTS tmp.ed_PROMEDWEB_110549_LpuSectionProfile_20220519 as
+select * 
+from dbo.LpuSectionProfile
+where region_id = 35
+;
+
+with d(lpusectionprofile_id,lpusectionprofile_code,lpusectionprofile_name,lpusectionprofile_sysnick,lpusectionprofile_omscode,profilespec_name,profilespec_name_vin,profilespec_name_rod,lpusectionprofile_mainid,lpusectionprofile_inetdontshow,lpusectionprofile_isarea)
+as (
+values
+
+(402330,141,N'гигиеническому воспитанию',N'profil',N'141',NULL,NULL,NULL,NULL,NULL,NULL),
+(402372,134,N'Приемное отделение',N'priem',N'134',NULL,NULL,NULL,NULL,NULL,NULL),
+(402249,38,N'лабораторной диагностике',N'profil',N'38',NULL,NULL,NULL,NULL,NULL,NULL),
+(402305,103,N'транспортировке гемопоэтических стволовых клеток и костного мозга',N'profil',N'103',NULL,NULL,NULL,NULL,NULL,NULL),
+(402252,41,N'лечебной физкультуре и спортивной медицине',N'profil',N'41',NULL,NULL,NULL,NULL,NULL,NULL),
+(402313,111,N'функциональной диагностике',N'profil',N'111',NULL,NULL,NULL,NULL,NULL,NULL),
+(402319,117,N'экспертизе временной нетрудоспособности',N'profil',N'117',NULL,NULL,NULL,NULL,NULL,NULL),
+(402366,177,N'трансплантации костного мозга и гемопоэтических стволовых клеток',N'profil',N'177',NULL,NULL,NULL,NULL,NULL,NULL),
+(402289,84,N'скорой медицинской помощи',N'profil',N'84',NULL,NULL,NULL,NULL,NULL,NULL),
+(402332,143,N'забору, криоконсервации и хранению половых клеток и тканей репродуктивных органов',N'profil',N'143',NULL,NULL,NULL,NULL,NULL,NULL),
+(402260,50,N'медицинским осмотрам (предполетным, послеполетным)',N'profil',N'50',NULL,NULL,NULL,NULL,NULL,NULL),
+(402328,139,N'водолазной медицине',N'profil',N'139',NULL,NULL,NULL,NULL,NULL,NULL),
+(402362,173,N'однородной амбулаторной судебно-психиатрической экспертизе',N'profil',N'173',NULL,NULL,NULL,NULL,NULL,NULL),
+(402288,83,N'сестринскому делу в педиатрии',N'profil',N'83',NULL,NULL,NULL,NULL,NULL,NULL),
+(402373,184,N'акушерству и гинекологии (искусственному прерыванию беременности)',N'profil',N'184',NULL,NULL,NULL,NULL,NULL,NULL),
+(402340,151,N'медицинским осмотрам профилактическим',N'profil',N'151',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000302,189,N'Дневного пребывания в стационаре',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402365,176,N'комплексной стационарной судебно-психиатрической экспертизе (психолого-психиатрической, сексолого-психиатрической)',N'profil',N'176',NULL,NULL,NULL,NULL,NULL,NULL),
+(402361,172,N'судебно-медицинской экспертизе вещественных доказательств и исследованию биологических объектов (биохимической, генетической, медико-криминалистической, спектрографической, судебно-биологической, судебно-гистологической, судебно-химической, судебно-цитол...',N'profil',N'172',NULL,NULL,NULL,NULL,NULL,NULL),
+(402256,46,N'медицинскому массажу',N'profil',N'46',NULL,NULL,NULL,NULL,NULL,NULL),
+(402342,153,N'медицинскому освидетельствованию на выявление ВИЧ-инфекции',N'profil',N'153',NULL,NULL,NULL,NULL,NULL,NULL),
+(402241,27,N'забору гемопоэтических стволовых клеток',N'profil',N'27',NULL,NULL,NULL,NULL,NULL,NULL),
+(402368,179,N'хирургии (трансплантации органов и (или) тканей)',N'profil',N'179',NULL,NULL,NULL,NULL,NULL,NULL),
+(402358,169,N'санитарно-гигиеническим лабораторным исследованиям',N'profil',N'169',NULL,NULL,NULL,NULL,NULL,NULL),
+(402338,149,N'медико-социальной помощи',N'profil',N'149',NULL,NULL,NULL,NULL,NULL,NULL),
+(402371,182,N'эпидемиологии',N'profil',N'182',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000299,186,N'Детские',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402357,168,N'рентгенэндоваскулярной диагностике и лечению',N'profil',N'168',NULL,NULL,NULL,NULL,NULL,NULL),
+(402343,154,N'медицинскому освидетельствованию на наличие инфекционных заболеваний, представляющих опасность для окружающих и являющихся основанием для отказа иностранным гражданам и лицам без гражданства в выдаче либо аннулировании разрешения на временное проживание,...',N'profil',N'154',NULL,NULL,NULL,NULL,NULL,NULL),
+(402317,115,N'хранению гемопоэтических стволовых клеток',N'profil',N'115',NULL,NULL,NULL,NULL,NULL,NULL),
+(402324,135,N'авиационной и космической медицине',N'profil',N'135',NULL,NULL,NULL,NULL,NULL,NULL),
+(402318,116,N'челюстно-лицевой хирургии',N'profil',N'116',NULL,NULL,NULL,NULL,NULL,NULL),
+(402227,10,N'врачебно-летной экспертизе',N'profil',N'10',NULL,NULL,NULL,NULL,NULL,NULL),
+(402321,121,N'экспертизе связи заболеваний с профессией',N'profil',N'121',NULL,NULL,NULL,NULL,NULL,NULL),
+(402287,82,N'сестринскому делу',N'profil',N'82',NULL,NULL,NULL,NULL,NULL,NULL),
+(402364,175,N'однородной стационарной судебно-психиатрической экспертизе',N'profil',N'175',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000300,187,N'Дневного пребывания в стационаре',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402349,160,N'неотложной медицинской помощи',N'profil',N'160',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000301,188,N'По уходу',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402306,104,N'транспортировке органов и (или) тканей человека для трансплантации',N'profil',N'104',NULL,NULL,NULL,NULL,NULL,NULL),
+(402350,161,N'организации здравоохранения и общественному здоровью',N'profil',N'161',NULL,NULL,NULL,NULL,NULL,NULL),
+(402315,113,N'хирургии (трансплантации органов и (или) тканей)',N'profil',N'113',NULL,NULL,NULL,NULL,NULL,NULL),
+(402367,178,N'транспортировке половых клеток и (или) тканей репродуктивных органов',N'profil',N'178',NULL,NULL,NULL,NULL,NULL,NULL),
+(402370,181,N'энтомологии',N'profil',N'181',NULL,NULL,NULL,NULL,NULL,NULL),
+(402247,36,N'клинической фармакологии',N'profil',N'36',NULL,NULL,NULL,NULL,NULL,NULL),
+(402298,94,N'судебно-медицинской экспертизе и обследованию потерпевших, обвиняемых и других лиц',N'profil',N'94',NULL,NULL,NULL,NULL,NULL,NULL),
+(402369,180,N'экспертизе качества медицинской помощи',N'profil',N'180',NULL,NULL,NULL,NULL,NULL,NULL),
+(402257,47,N'медицинской оптике',N'profil',N'47',NULL,NULL,NULL,NULL,NULL,NULL),
+(402261,51,N'медицинской статистике',N'profil',N'51',NULL,NULL,NULL,NULL,NULL,NULL),
+(402339,150,N'медицинским осмотрам (предсменным, послесменным)',N'profil',N'150',NULL,NULL,NULL,NULL,NULL,NULL),
+(402344,155,N'медицинскому освидетельствованию на наличие медицинских противопоказаний к управлению транспортным средством',N'profil',N'155',NULL,NULL,NULL,NULL,NULL,NULL),
+(402226,8,N'военно-врачебной экспертизе',N'profil',N'8',NULL,NULL,NULL,NULL,NULL,NULL),
+(402297,93,N'судебно-медицинской экспертизе и исследованию трупа',N'profil',N'93',NULL,NULL,NULL,NULL,NULL,NULL),
+(402363,174,N'комплексной амбулаторной судебно-психиатрической экспертизе',N'profil',N'174',NULL,NULL,NULL,NULL,NULL,NULL),
+(402333,144,N'заготовке, хранению донорской крови и (или) ее компонентов',N'profil',N'144',NULL,NULL,NULL,NULL,NULL,NULL),
+(402299,95,N'судебно-психиатрической экспертизе',N'profil',N'95',NULL,NULL,NULL,NULL,NULL,NULL),
+(402346,157,N'медицинскому освидетельствованию на состояние опьянения (алкогольного, наркотического или иного токсического)',N'profil',N'157',NULL,NULL,NULL,NULL,NULL,NULL),
+(402303,99,N'торакальной хирургии',N'profil',N'99',NULL,NULL,NULL,NULL,NULL,NULL),
+(402258,48,N'медицинским осмотрам (предварительным, периодическим)',N'profil',N'48',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000303,190,N'Реабилитационные',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402359,170,N'сестринскому делу в косметологии',N'profil',N'170',NULL,NULL,NULL,NULL,NULL,NULL),
+(402248,37,N'лабораторному делу',N'profil',N'37',NULL,NULL,NULL,NULL,NULL,NULL),
+(402353,164,N'пластической хирургии',N'profil',N'164',NULL,NULL,NULL,NULL,NULL,NULL),
+(402274,67,N'патологической анатомии',N'profil',N'67',NULL,NULL,NULL,NULL,NULL,NULL),
+(402345,156,N'медицинскому освидетельствованию на наличие медицинских противопоказаний к владению оружием',N'profil',N'156',NULL,NULL,NULL,NULL,NULL,NULL),
+(402341,152,N'медицинскому освидетельствованию кандидатов в усыновители, опекуны (попечители) или приемные родители',N'profil',N'152',NULL,NULL,NULL,NULL,NULL,NULL),
+(402245,34,N'клинической лабораторной диагностике',N'profil',N'34',NULL,NULL,NULL,NULL,NULL,NULL),
+(402320,120,N'экспертизе профессиональной пригодности',N'profil',N'120',NULL,NULL,NULL,NULL,NULL,NULL),
+(402259,49,N'медицинским осмотрам (предрейсовым, послерейсовым)',N'profil',N'49',NULL,NULL,NULL,NULL,NULL,NULL),
+(402270,62,N'организации сестринского дела',N'profil',N'62',NULL,NULL,NULL,NULL,NULL,NULL),
+(402296,91,N'судебно-медицинской экспертизе',N'profil',N'91',NULL,NULL,NULL,NULL,NULL,NULL),
+(402334,145,N'изъятию и хранению органов и (или) тканей человека для трансплантации',N'profil',N'145',NULL,NULL,NULL,NULL,NULL,NULL),
+(402269,61,N'операционному делу',N'profil',N'61',NULL,NULL,NULL,NULL,NULL,NULL),
+(402331,142,N'дезинфектологии',N'profil',N'142',NULL,NULL,NULL,NULL,NULL,NULL),
+(402337,148,N'медико-социальной экспертизе',N'profil',N'148',NULL,NULL,NULL,NULL,NULL,NULL),
+(402309,107,N'управлению сестринской деятельностью',N'profil',N'107',NULL,NULL,NULL,NULL,NULL,NULL),
+(402352,163,N'оториноларингологии (кохлеарной имплантации)',N'profil',N'163',NULL,NULL,NULL,NULL,NULL,NULL),
+(402354,165,N'психиатрическому освидетельствованию',N'profil',N'165',NULL,NULL,NULL,NULL,NULL,NULL),
+(402220,1,N'хирургии (абдоминальной)',N'profil',N'1',NULL,NULL,NULL,NULL,NULL,NULL),
+(402326,137,N'акушерству и гинекологии (использованию вспомогательных репродуктивных технологий)',N'profil',N'137',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',N'402221',NULL,N'2'),
+(402221,3,N'акушерскому делу',N'profil',N'3',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',NULL,NULL,N'2'),
+(402325,136,N'акушерству и гинекологии (за исключением использования вспомогательных репродуктивных технологий и искусственного прерывания беременности)',N'profil',N'136',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',N'402221',NULL,N'2'),
+(402222,4,N'аллергологии и иммунологии',N'profil',N'4',N'АЛЛЕРГОЛОГ-ИММУНОЛОГ',N'АЛЛЕРГОЛОГУ-ИММУНОЛОГУ',N'АЛЛЕРГОЛОГА-ИММУНОЛОГА',NULL,NULL,NULL),
+(402223,5,N'анестезиологии и реаниматологии',N'profil',N'5',N'АНЕСТЕЗИОЛОГ-РЕАНИМАТОЛОГ',N'АНЕСТЕЗИОЛОГУ-РЕАНИМАТОЛОГУ',N'АНЕСТЕЗИОЛОГА-РЕАНИМАТОЛОГА',NULL,NULL,NULL),
+(402224,6,N'бактериологии',N'profil',N'6',N'БАКТЕРИОЛОГ',N'БАКТЕРИОЛОГУ',N'БАКТЕРИОЛОГА',NULL,NULL,NULL),
+(402225,7,N'вирусологии',N'profil',N'7',N'ВИРУСОЛОГ',N'ВИРУСОЛОГУ',N'ВИРУСОЛОГА',NULL,NULL,NULL),
+(402327,138,N'вакцинации (проведению профилактических прививок)',N'profil',N'138',N'ВРАЧ ИММУНОПРОФИЛАКТИКИ',N'ВРАЧУ ИММУНОПРОФИЛАКТИКИ',N'ВРАЧА ИММУНОПРОФИЛАКТИКИ',NULL,NULL,NULL),
+(402266,57,N'общей врачебной практике (семейной медицине)',N'profil',N'57',N'ВРАЧ ОБЩ. ПРАКТИКИ',N'ВРАЧУ ОБЩ. ПРАКТИКИ',N'ВРАЧА ОБЩ. ПРАКТИКИ',N'402267',NULL,N'2'),
+(402267,58,N'общей практике',N'profil',N'58',N'ВРАЧ ОБЩ. ПРАКТИКИ',N'ВРАЧУ ОБЩ. ПРАКТИКИ',N'ВРАЧА ОБЩ. ПРАКТИКИ',NULL,NULL,N'2'),
+(402308,106,N'ультразвуковой диагностике',N'profil',N'106',N'ВРАЧ УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',N'ВРАЧУ УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',N'ВРАЧА УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',NULL,NULL,NULL),
+(402228,11,N'гастроэнтерологии',N'profil',N'11',N'ГАСТРОЭНТЕРОЛОГ',N'ГАСТРОЭНТЕРОЛОГУ',N'ГАСТРОЭНТЕРОЛОГА',NULL,NULL,NULL),
+(402229,12,N'гематологии',N'profil',N'12',N'ГЕМАТОЛОГ',N'ГЕМАТОЛОГУ',N'ГЕМАТОЛОГА',NULL,NULL,NULL),
+(402230,13,N'генетике',N'profil',N'13',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',NULL,NULL,NULL),
+(402255,45,N'медицинской генетике',N'profil',N'45',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',N'402230',NULL,NULL),
+(402251,40,N'лабораторной генетике',N'profil',N'40',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',N'402230',NULL,NULL),
+(402231,14,N'гериатрии',N'profil',N'14',N'ГЕРИАТР',N'ГЕРИАТРУ',N'ГЕРИАТРА',NULL,NULL,NULL),
+(402232,15,N'гистологии',N'profil',N'15',N'ГИСТОЛОГ',N'ГИСТОЛОГУ',N'ГИСТОЛОГА',NULL,NULL,NULL),
+(402233,16,N'дерматовенерологии',N'profil',N'16',N'ДЕРМАТОВЕНЕРОЛОГ',N'ДЕРМАТОВЕНЕРОЛОГУ',N'ДЕРМАТОВЕНЕРОЛОГА',NULL,NULL,NULL),
+(402239,22,N'диабетологии',N'profil',N'22',N'ДИАБЕТОЛОГ',N'ДИАБЕТОЛОГУ',N'ДИАБЕТОЛОГА',NULL,NULL,NULL),
+(402240,23,N'диетологии',N'profil',N'23',N'ДИЕТОЛОГ',N'ДИЕТОЛОГУ',N'ДИЕТОЛОГА',NULL,NULL,NULL),
+(402242,28,N'инфекционным болезням',N'profil',N'28',N'ИНФЕКЦИОНИСТ',N'ИНФЕКЦИОНИСТУ',N'ИНФЕКЦИОНИСТА',NULL,NULL,NULL),
+(402243,29,N'кардиологии',N'profil',N'29',N'КАРДИОЛОГ',N'КАРДИОЛОГУ',N'КАРДИОЛОГА',NULL,NULL,NULL),
+(402234,17,N'детской кардиологии',N'profil',N'17',N'КАРДИОЛОГ ДЕТСКИЙ',N'КАРДИОЛОГУ ДЕТСКОМУ',N'КАРДИОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402244,30,N'колопроктологии',N'profil',N'30',N'КОЛОПРОКТОЛОГ',N'КОЛОПРОКТОЛОГУ',N'КОЛОПРОКТОЛОГА',NULL,NULL,NULL),
+(402335,146,N'косметологии',N'profil',N'146',N'КОСМЕТОЛОГ',N'КОСМЕТОЛОГУ',N'КОСМЕТОЛОГА',NULL,NULL,NULL),
+(402336,147,N'лечебной физкультуре',N'profil',N'147',N'ЛЕЧЕБНАЯ ФИЗКУЛЬТУРА',N'ЛЕЧЕБНОЙ ФИЗКУЛЬТУРЫ',N'ЛЕЧЕБНОЙ ФИЗКУЛЬТУРЫ',NULL,NULL,NULL),
+(402254,43,N'мануальной терапии',N'profil',N'43',N'МАНУАЛЬНЫЙ ТЕРАПЕВТ',N'МАНУАЛЬНОМУ ТЕРАПЕВТУ',N'МАНУАЛЬНОГО ТЕРАПЕВТА',NULL,NULL,NULL),
+(402250,39,N'лабораторной микологии',N'profil',N'39',N'МИКОЛОГ',N'МИКОЛОГУ',N'МИКОЛОГА',N'402246',NULL,NULL),
+(402246,35,N'клинической микологии',N'profil',N'35',N'МИКОЛОГ',N'МИКОЛОГУ',N'МИКОЛОГА',NULL,NULL,NULL),
+(402348,159,N'наркологии',N'profil',N'159',N'НАРКОЛОГ',N'НАРКОЛОГУ',N'НАРКОЛОГА',NULL,NULL,NULL),
+(402262,53,N'неврологии',N'profil',N'53',N'НЕВРОЛОГ',N'НЕВРОЛОГУ',N'НЕВРОЛОГА',NULL,NULL,NULL),
+(402263,54,N'нейрохирургии',N'profil',N'54',N'НЕЙРОХИРУРГ',N'НЕЙРОХИРУРГУ',N'НЕЙРОХИРУРГА',NULL,NULL,NULL),
+(402264,55,N'неонатологии',N'profil',N'55',N'НЕОНАТОЛОГ',N'НЕОНАТОЛОГУ',N'НЕОНАТОЛОГА',NULL,NULL,NULL),
+(402265,56,N'нефрологии',N'profil',N'56',N'НЕФРОЛОГ',N'НЕФРОЛОГУ',N'НЕФРОЛОГА',NULL,NULL,NULL),
+(402268,60,N'онкологии',N'profil',N'60',N'ОНКОЛОГ',N'ОНКОЛОГУ',N'ОНКОЛОГА',NULL,NULL,NULL),
+(402235,18,N'детской онкологии',N'profil',N'18',N'ОНКОЛОГ ДЕТСКИЙ',N'ОНКОЛОГУ ДЕТСКОМУ',N'ОНКОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402271,63,N'ортодонтии',N'profil',N'63',N'ОРТОДОНТ',N'ОРТОДОНТУ',N'ОРТОДОНТА',NULL,NULL,NULL),
+(402374,185,N'остеопатии',N'profil',N'185',N'ОСТЕОПАТ',N'ОСТЕОПАТУ',N'ОСТЕОПАТА',NULL,NULL,NULL),
+(402351,162,N'оториноларингологии (за исключением кохлеарной имплантации)',N'profil',N'162',N'ОТОРИНОЛАРИНГОЛОГ',N'ОТОРИНОЛАРИНГОЛОГУ',N'ОТОРИНОЛАРИНГОЛОГА',NULL,NULL,NULL),
+(402300,96,N'сурдологии-оториноларингологии',N'profil',N'96',N'ОТОРИНОЛАРИНГОЛОГ-СУРДОЛОГ',N'ОТОРИНОЛАРИНГОЛОГУ-СУРДОЛОГУ',N'ОТОРИНОЛАРИНГОЛОГА-СУРДОЛОГА',NULL,NULL,NULL),
+(402272,65,N'офтальмологии',N'profil',N'65',N'ОФТАЛЬМОЛОГ',N'ОФТАЛЬМОЛОГА',N'ОФТАЛЬМОЛОГА',NULL,NULL,NULL),
+(402273,66,N'паразитологии',N'profil',N'66',N'ПАРАЗИТОЛОГ',N'ПАРАЗИТОЛОГУ',N'ПАРАЗИТОЛОГА',NULL,NULL,NULL),
+(402275,68,N'педиатрии',N'profil',N'68',N'ПЕДИАТР',N'ПЕДИАТРУ',N'ПЕДИАТРА',NULL,NULL,N'2'),
+(402276,71,N'профпатологии',N'profil',N'71',N'ПРОФПАТОЛОГ',N'ПРОФПАТОЛОГУ',N'ПРОФПАТОЛОГА',NULL,NULL,NULL),
+(402277,72,N'психиатрии',N'profil',N'72',N'ПСИХИАТР',N'ПСИХИАТРУ',N'ПСИХИАТРА',NULL,NULL,NULL),
+(402278,73,N'психиатрии-наркологии',N'profil',N'73',N'ПСИХИАТР-НАРКОЛОГ',N'ПСИХИАТРУ-НАРКОЛОГУ',N'ПСИХИАТРА-НАРКОЛОГА',NULL,NULL,NULL),
+(402279,74,N'психотерапии',N'profil',N'74',N'ПСИХОТЕРАПЕВТ',N'ПСИХОТЕРАПЕВТУ',N'ПСИХОТЕРАПЕВТА',NULL,NULL,NULL),
+(402280,75,N'пульмонологии',N'profil',N'75',N'ПУЛЬМОНОЛОГ',N'ПУЛЬМОНОЛОГУ',N'ПУЛЬМОНОЛОГА',NULL,NULL,NULL),
+(402281,76,N'радиологии',N'profil',N'76',N'РАДИОЛОГ',N'РАДИОЛОГУ',N'РАДИОЛОГА',NULL,NULL,NULL),
+(402355,166,N'радиотерапии',N'profil',N'166',N'РАДИОТЕРАПЕВТ',N'РАДИОТЕРАПЕВТУ',N'РАДИОТЕРАПЕВТА',NULL,NULL,NULL),
+(402347,158,N'медицинской реабилитации',N'profil',N'158',N'РЕАБИЛИТОЛОГ',N'РЕАБИЛИТОЛОГУ',N'РЕАБИЛИТОЛОГА',NULL,NULL,NULL),
+(402356,167,N'реаниматологии',N'profil',N'167',N'РЕАНИМОТОЛОГ',N'РЕАНИМАТОЛОГУ',N'РЕАНИМАТОЛОГА',NULL,NULL,NULL),
+(402282,77,N'ревматологии',N'profil',N'77',N'РЕВМАТОЛОГ',N'РЕВМАТОЛОГУ',N'РЕВМАТОЛОГА',NULL,NULL,NULL),
+(402283,78,N'рентгенологии',N'profil',N'78',N'РЕНТГЕНОЛОГ',N'РЕНТГЕНОЛОГУ',N'РЕНТГЕНОЛОГА',NULL,NULL,NULL),
+(402284,79,N'рефлексотерапии',N'profil',N'79',N'РЕФЛЕКСОТЕРАПЕВТ',N'РЕФЛЕКСОТЕРАПЕВТУ',N'РЕФЛЕКСОТЕРАПЕВТА',NULL,NULL,NULL),
+(402285,80,N'сексологии',N'profil',N'80',N'СЕКСОЛОГ',N'СЕКСОЛОГУ',N'СЕКСОЛОГА',NULL,NULL,NULL),
+(402286,81,N'сердечно-сосудистой хирургии',N'profil',N'81',N'СЕРДЕЧНО-СОСУДИСТЫЙ ХИРУРГ',N'СЕРДЕЧНО-СОСУДИСТОМУ ХИРУРГУ',N'СЕРДЕЧНО-СОСУДИСТОГО ХИРУРГА',NULL,NULL,NULL),
+(402290,85,N'стоматологии',N'profil',N'85',N'СТОМАТОЛОГ',N'СТОМАТОЛОГУ',N'СТОМАТОЛОГА',NULL,NULL,NULL),
+(402291,86,N'стоматологии детской',N'profil',N'86',N'СТОМАТОЛОГ ДЕТСКИЙ',N'СТОМАТОЛОГУ ДЕТСКОМУ',N'СТОМАТОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402360,171,N'стоматологии общей практики',N'profil',N'171',N'СТОМАТОЛОГ ОБЩ. ПРАКТИКИ',N'СТОМАТОЛОГУ ОБЩ. ПРАКТИКИ',N'СТОМАТОЛОГА ОБЩ. ПРАКТИКИ',NULL,NULL,NULL),
+(402292,87,N'стоматологии профилактической',N'profil',N'87',N'СТОМАТОЛОГ-ГИГИЕНИСТ',N'СТОМАТОЛОГУ-ГИГИЕНИСТУ',N'СТОМАТОЛОГА-ГИГИЕНИСТА',N'402329',NULL,NULL),
+(402329,140,N'гигиене в стоматологии',N'profil',N'140',N'СТОМАТОЛОГ-ГИГИЕНИСТ',N'СТОМАТОЛОГУ-ГИГИЕНИСТУ',N'СТОМАТОЛОГА-ГИГИЕНИСТА',NULL,NULL,NULL),
+(402293,88,N'стоматологии ортопедической',N'profil',N'88',N'СТОМАТОЛОГ-ОРТОПЕД',N'СТОМАТОЛОГУ-ОРТОПЕДУ',N'СТОМАТОЛОГА-ОРТОПЕДА',NULL,NULL,NULL),
+(402294,89,N'стоматологии терапевтической',N'profil',N'89',N'СТОМАТОЛОГ-ТЕРАПЕВТ',N'СТОМАТОЛОГУ-ТЕРАПЕВТУ',N'СТОМАТОЛОГА-ТЕРАПЕВТА',NULL,NULL,N'2'),
+(402295,90,N'стоматологии хирургической',N'profil',N'90',N'СТОМАТОЛОГ-ХИРУРГ',N'СТОМАТОЛОГУ-ХИРУРГУ',N'СТОМАТОЛОГА-ХИРУРГА',NULL,NULL,NULL),
+(402301,97,N'терапии',N'profil',N'97',N'ТЕРАПЕВТ',N'ТЕРАПЕВТУ',N'ТЕРАПЕВТА',NULL,NULL,N'2'),
+(402302,98,N'токсикологии',N'profil',N'98',N'ТОКСИКОЛОГ',N'ТОКСИКОЛОГУ',N'ТОКСИКОЛОГА',NULL,NULL,NULL),
+(402304,100,N'травматологии и ортопедии',N'profil',N'100',N'ТРАВМАТОЛОГ-ОРТОПЕД',N'ТРАВМАТОЛОГУ-ОРТОПЕДУ',N'ТРАВМАТОЛОГА-ОРТОПЕДА',NULL,NULL,NULL),
+(402307,105,N'трансфузиологии',N'profil',N'105',N'ТРАНСФУЗИОЛОГ',N'ТРАНСФУЗИОЛОГУ',N'ТРАНСФУЗИОЛОГА',NULL,NULL,NULL),
+(402310,108,N'урологии',N'profil',N'108',N'УРОЛОГ',N'УРОЛОГУ',N'УРОЛОГА',NULL,NULL,NULL),
+(402236,19,N'детской урологии-андрологии',N'profil',N'19',N'УРОЛОГ-АНДРОЛОГ ДЕТСКИЙ',N'УРОЛОГУ-АНДРОЛОГУ ДЕТСКОМУ',N'УРОЛОГА-АНДРОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402253,42,N'лечебному делу',N'profil',N'42',N'ФЕЛЬДШЕР',N'ФЕЛЬДШЕРУ',N'ФЕЛЬДШЕРА',NULL,NULL,NULL),
+(402311,109,N'физиотерапии',N'profil',N'109',N'ФИЗИОТЕРАПЕВТ',N'ФИЗИОТЕРАПЕВТУ',N'ФИЗИОТЕРАПЕВТА',NULL,NULL,NULL),
+(402312,110,N'фтизиатрии',N'profil',N'110',N'ФТИЗИАТР',N'ФТИЗИАТРУ',N'ФТИЗИАТРА',NULL,NULL,NULL),
+(402314,112,N'хирургии',N'profil',N'112',N'ХИРУРГ',N'ХИРУРГУ',N'ХИРУРГА',NULL,NULL,NULL),
+(402237,20,N'детской хирургии',N'profil',N'20',N'ХИРУРГ ДЕТСКИЙ',N'ХИРУРГУ ДЕТСКОМУ',N'ХИРУРГА ДЕТСКОГО',NULL,NULL,NULL),
+(402316,114,N'хирургии (комбустиологии)',N'profil',N'114',N'ХИРУРГ-КОМБУСТИОЛОГ',N'ХИРУРГУ-КОМБУСТИОЛОГУ',N'ХИРУРГА-КОМБУСТИОЛОГА',NULL,NULL,NULL),
+(402322,122,N'эндокринологии',N'profil',N'122',N'ЭНДОКРИНОЛОГ',N'ЭНДОКРИНОЛОГУ',N'ЭНДОКРИНОЛОГА',NULL,NULL,NULL),
+(402238,21,N'детской эндокринологии',N'profil',N'21',N'ЭНДОКРИНОЛОГ ДЕТСКИЙ',N'ЭНДОКРИНОЛОГУ ДЕТСКОМУ',N'ЭНДОКРИНОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402323,123,N'эндоскопии',N'profil',N'123',N'ЭНДОСКОПИСТ',N'ЭНДОСКОПИСТУ',N'ЭНДОСКОПИСТА',NULL,NULL,NULL)
+
+)
+updated AS (
+UPDATE dbo.LpuSectionProfile
+SET 
+--lpusectionprofile_code	=d.lpusectionprofile_code,
+--lpusectionprofile_name	=d.lpusectionprofile_name, !!! может обрезаться в Excel
+--lpusectionprofile_omscode	=d.lpusectionprofile_omscode,
+--lpusectionprofile_sysnick	=d.lpusectionprofile_sysnick,
+profilespec_name	=d.profilespec_name,
+profilespec_name_vin	=d.profilespec_name_vin,
+profilespec_name_rod	=d.profilespec_name_rod,
+lpusectionprofile_mainid	=  d.lpusectionprofile_mainid::bigint,
+lpusectionprofile_inetdontshow	=d.lpusectionprofile_inetdontshow::bigint,
+lpusectionprofile_isarea	=d.lpusectionprofile_isarea::bigint,
+--lpusectionprofile_fedid	=d.lpusectionprofile_fedid,
+--region_id	=d.region_id,
+--lpusectionprofile_deleted	=d.lpusectionprofile_deleted,
+--lpusectionprofile_begdt	=d.lpusectionprofile_begdt,
+pmUser_updID = 1,
+LpuSectionProfile_updDT = current_timestamp
+from d
+WHERE
+LpuSectionProfile.lpusectionprofile_id = d.lpusectionprofile_id and LpuSectionProfile.region_id = 35
+and (
+--coalesce(LpuSectionProfile.lpusectionprofile_code, '') <> coalesce(d.lpusectionprofile_code, '') OR
+--coalesce(LpuSectionProfile.lpusectionprofile_name, '') <> coalesce(d.lpusectionprofile_name, '') OR
+--coalesce(LpuSectionProfile.lpusectionprofile_omscode, '') <> coalesce(d.lpusectionprofile_omscode, '') OR
+--coalesce(LpuSectionProfile.pusectionprofile_sysnick, '') <> coalesce(d.lpusectionprofile_sysnick, '') OR
+coalesce(LpuSectionProfile.profilespec_name, '') <> coalesce(d.profilespec_name, '') OR
+coalesce(LpuSectionProfile.profilespec_name_vin, '') <> coalesce(d.profilespec_name_vin, '') OR
+coalesce(LpuSectionProfile.profilespec_name_rod, '') <> coalesce(d.profilespec_name_rod, '') OR
+coalesce(LpuSectionProfile.lpusectionprofile_mainid, 0) <> coalesce(d.lpusectionprofile_mainid::bigint, 0) OR
+coalesce(LpuSectionProfile.lpusectionprofile_inetdontshow, 0) <> coalesce(d.lpusectionprofile_inetdontshow::bigint, 0) OR
+coalesce(LpuSectionProfile.lpusectionprofile_isarea, 0) <> coalesce(d.lpusectionprofile_isarea::bigint, 0) --OR
+--coalesce(LpuSectionProfile.lpusectionprofile_fedid, 0) <> coalesce(d.lpusectionprofile_fedid, 0) OR
+--coalesce(LpuSectionProfile.region_id, 0) <> coalesce(d.region_id, 0) OR
+--coalesce(LpuSectionProfile.lpusectionprofile_deleted, 0) <> coalesce(d.lpusectionprofile_deleted, 0) OR
+--coalesce(LpuSectionProfile.lpusectionprofile_begdt, '1900-01-01') <> coalesce(d.lpusectionprofile_begdt, '1900-01-01')
+)
+-- returning
+)
+INSERT INTO dbo.LpuSectionProfile 
+(
+,pmUser_insID,pmUser_updID,LpuSectionProfile_insDT,LpuSectionProfile_updDT) 
+
+SELECT 
+,1, 1, current_timestamp, current_timestamp
+FROM d
+left join dbo.LpuSectionProfile on LpuSectionProfile.LpuSectionProfile_id = d.LpuSectionProfile_id
+WHERE LpuSectionProfile.LpuSectionProfile_id is null
+;
+
+end if ;
+
+end $$ ;
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--dbo_lpusectionprofile_20220519_promedweb-110549_r35.sql
+--liquibase formatted sql
+--changeset eduard.chudinov:1 stripComments:false dbms:mssql endDelimiter:GO
+--comment: PROMEDWEB-110549
+
+-- Region_id=35
+/*
+Необходимо подготовить скрипт для заполнения полей профилей отделений на портале.
+
+Таблица; dbo.lpusectionprofile
+Столбцы: profilespec_name, profilespec_name_vin, profilespec_name_rod, lpusectionprofile_mainid, lpusectionprofile_inetdontshow, lpusectionprofile_isarea
+
+Прод ЕЦП https://vologda.promedweb.ru/
+Прод портала https://k-vrachu.volmed.org.ru/
+*/
+
+
+
+if dbo.getregion() = 35 or  db_name() IN ('ProMedWebRelease','ProMedTest','ProMedUfa')
+BEGIN
+
+IF OBJECT_ID('tmp.ed_PROMEDWEB_110549_LpuSectionProfile_20220519') IS null
+BEGIN
+
+select * 
+INTO tmp.ed_PROMEDWEB_110549_LpuSectionProfile_20220519
+from dbo.LpuSectionProfile
+where region_id = 35
+
+END 
+
+--SET IDENTITY_INSERT dbo.LpuSectionProfile ON 
+
+MERGE dbo.LpuSectionProfile WITH (ROWLOCK) AS u  -- таблица, которая будет меняться
+USING (
+SELECT d.lpusectionprofile_id,d.lpusectionprofile_code,d.lpusectionprofile_name,d.lpusectionprofile_sysnick,d.lpusectionprofile_omscode,d.profilespec_name,d.profilespec_name_vin,d.profilespec_name_rod,CAST(d.lpusectionprofile_mainid AS bigint) lpusectionprofile_mainid,CAST(d.lpusectionprofile_inetdontshow AS bigint) lpusectionprofile_inetdontshow,CAST(d.lpusectionprofile_isarea AS BIGINT) lpusectionprofile_isarea
+FROM ( VALUES
+
+(402330,141,N'гигиеническому воспитанию',N'profil',N'141',NULL,NULL,NULL,NULL,NULL,NULL),
+(402372,134,N'Приемное отделение',N'priem',N'134',NULL,NULL,NULL,NULL,NULL,NULL),
+(402249,38,N'лабораторной диагностике',N'profil',N'38',NULL,NULL,NULL,NULL,NULL,NULL),
+(402305,103,N'транспортировке гемопоэтических стволовых клеток и костного мозга',N'profil',N'103',NULL,NULL,NULL,NULL,NULL,NULL),
+(402252,41,N'лечебной физкультуре и спортивной медицине',N'profil',N'41',NULL,NULL,NULL,NULL,NULL,NULL),
+(402313,111,N'функциональной диагностике',N'profil',N'111',NULL,NULL,NULL,NULL,NULL,NULL),
+(402319,117,N'экспертизе временной нетрудоспособности',N'profil',N'117',NULL,NULL,NULL,NULL,NULL,NULL),
+(402366,177,N'трансплантации костного мозга и гемопоэтических стволовых клеток',N'profil',N'177',NULL,NULL,NULL,NULL,NULL,NULL),
+(402289,84,N'скорой медицинской помощи',N'profil',N'84',NULL,NULL,NULL,NULL,NULL,NULL),
+(402332,143,N'забору, криоконсервации и хранению половых клеток и тканей репродуктивных органов',N'profil',N'143',NULL,NULL,NULL,NULL,NULL,NULL),
+(402260,50,N'медицинским осмотрам (предполетным, послеполетным)',N'profil',N'50',NULL,NULL,NULL,NULL,NULL,NULL),
+(402328,139,N'водолазной медицине',N'profil',N'139',NULL,NULL,NULL,NULL,NULL,NULL),
+(402362,173,N'однородной амбулаторной судебно-психиатрической экспертизе',N'profil',N'173',NULL,NULL,NULL,NULL,NULL,NULL),
+(402288,83,N'сестринскому делу в педиатрии',N'profil',N'83',NULL,NULL,NULL,NULL,NULL,NULL),
+(402373,184,N'акушерству и гинекологии (искусственному прерыванию беременности)',N'profil',N'184',NULL,NULL,NULL,NULL,NULL,NULL),
+(402340,151,N'медицинским осмотрам профилактическим',N'profil',N'151',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000302,189,N'Дневного пребывания в стационаре',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402365,176,N'комплексной стационарной судебно-психиатрической экспертизе (психолого-психиатрической, сексолого-психиатрической)',N'profil',N'176',NULL,NULL,NULL,NULL,NULL,NULL),
+(402361,172,N'судебно-медицинской экспертизе вещественных доказательств и исследованию биологических объектов (биохимической, генетической, медико-криминалистической, спектрографической, судебно-биологической, судебно-гистологической, судебно-химической, судебно-цитол...',N'profil',N'172',NULL,NULL,NULL,NULL,NULL,NULL),
+(402256,46,N'медицинскому массажу',N'profil',N'46',NULL,NULL,NULL,NULL,NULL,NULL),
+(402342,153,N'медицинскому освидетельствованию на выявление ВИЧ-инфекции',N'profil',N'153',NULL,NULL,NULL,NULL,NULL,NULL),
+(402241,27,N'забору гемопоэтических стволовых клеток',N'profil',N'27',NULL,NULL,NULL,NULL,NULL,NULL),
+(402368,179,N'хирургии (трансплантации органов и (или) тканей)',N'profil',N'179',NULL,NULL,NULL,NULL,NULL,NULL),
+(402358,169,N'санитарно-гигиеническим лабораторным исследованиям',N'profil',N'169',NULL,NULL,NULL,NULL,NULL,NULL),
+(402338,149,N'медико-социальной помощи',N'profil',N'149',NULL,NULL,NULL,NULL,NULL,NULL),
+(402371,182,N'эпидемиологии',N'profil',N'182',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000299,186,N'Детские',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402357,168,N'рентгенэндоваскулярной диагностике и лечению',N'profil',N'168',NULL,NULL,NULL,NULL,NULL,NULL),
+(402343,154,N'медицинскому освидетельствованию на наличие инфекционных заболеваний, представляющих опасность для окружающих и являющихся основанием для отказа иностранным гражданам и лицам без гражданства в выдаче либо аннулировании разрешения на временное проживание,...',N'profil',N'154',NULL,NULL,NULL,NULL,NULL,NULL),
+(402317,115,N'хранению гемопоэтических стволовых клеток',N'profil',N'115',NULL,NULL,NULL,NULL,NULL,NULL),
+(402324,135,N'авиационной и космической медицине',N'profil',N'135',NULL,NULL,NULL,NULL,NULL,NULL),
+(402318,116,N'челюстно-лицевой хирургии',N'profil',N'116',NULL,NULL,NULL,NULL,NULL,NULL),
+(402227,10,N'врачебно-летной экспертизе',N'profil',N'10',NULL,NULL,NULL,NULL,NULL,NULL),
+(402321,121,N'экспертизе связи заболеваний с профессией',N'profil',N'121',NULL,NULL,NULL,NULL,NULL,NULL),
+(402287,82,N'сестринскому делу',N'profil',N'82',NULL,NULL,NULL,NULL,NULL,NULL),
+(402364,175,N'однородной стационарной судебно-психиатрической экспертизе',N'profil',N'175',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000300,187,N'Дневного пребывания в стационаре',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402349,160,N'неотложной медицинской помощи',N'profil',N'160',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000301,188,N'По уходу',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402306,104,N'транспортировке органов и (или) тканей человека для трансплантации',N'profil',N'104',NULL,NULL,NULL,NULL,NULL,NULL),
+(402350,161,N'организации здравоохранения и общественному здоровью',N'profil',N'161',NULL,NULL,NULL,NULL,NULL,NULL),
+(402315,113,N'хирургии (трансплантации органов и (или) тканей)',N'profil',N'113',NULL,NULL,NULL,NULL,NULL,NULL),
+(402367,178,N'транспортировке половых клеток и (или) тканей репродуктивных органов',N'profil',N'178',NULL,NULL,NULL,NULL,NULL,NULL),
+(402370,181,N'энтомологии',N'profil',N'181',NULL,NULL,NULL,NULL,NULL,NULL),
+(402247,36,N'клинической фармакологии',N'profil',N'36',NULL,NULL,NULL,NULL,NULL,NULL),
+(402298,94,N'судебно-медицинской экспертизе и обследованию потерпевших, обвиняемых и других лиц',N'profil',N'94',NULL,NULL,NULL,NULL,NULL,NULL),
+(402369,180,N'экспертизе качества медицинской помощи',N'profil',N'180',NULL,NULL,NULL,NULL,NULL,NULL),
+(402257,47,N'медицинской оптике',N'profil',N'47',NULL,NULL,NULL,NULL,NULL,NULL),
+(402261,51,N'медицинской статистике',N'profil',N'51',NULL,NULL,NULL,NULL,NULL,NULL),
+(402339,150,N'медицинским осмотрам (предсменным, послесменным)',N'profil',N'150',NULL,NULL,NULL,NULL,NULL,NULL),
+(402344,155,N'медицинскому освидетельствованию на наличие медицинских противопоказаний к управлению транспортным средством',N'profil',N'155',NULL,NULL,NULL,NULL,NULL,NULL),
+(402226,8,N'военно-врачебной экспертизе',N'profil',N'8',NULL,NULL,NULL,NULL,NULL,NULL),
+(402297,93,N'судебно-медицинской экспертизе и исследованию трупа',N'profil',N'93',NULL,NULL,NULL,NULL,NULL,NULL),
+(402363,174,N'комплексной амбулаторной судебно-психиатрической экспертизе',N'profil',N'174',NULL,NULL,NULL,NULL,NULL,NULL),
+(402333,144,N'заготовке, хранению донорской крови и (или) ее компонентов',N'profil',N'144',NULL,NULL,NULL,NULL,NULL,NULL),
+(402299,95,N'судебно-психиатрической экспертизе',N'profil',N'95',NULL,NULL,NULL,NULL,NULL,NULL),
+(402346,157,N'медицинскому освидетельствованию на состояние опьянения (алкогольного, наркотического или иного токсического)',N'profil',N'157',NULL,NULL,NULL,NULL,NULL,NULL),
+(402303,99,N'торакальной хирургии',N'profil',N'99',NULL,NULL,NULL,NULL,NULL,NULL),
+(402258,48,N'медицинским осмотрам (предварительным, периодическим)',N'profil',N'48',NULL,NULL,NULL,NULL,NULL,NULL),
+(20000303,190,N'Реабилитационные',N'profil',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(402359,170,N'сестринскому делу в косметологии',N'profil',N'170',NULL,NULL,NULL,NULL,NULL,NULL),
+(402248,37,N'лабораторному делу',N'profil',N'37',NULL,NULL,NULL,NULL,NULL,NULL),
+(402353,164,N'пластической хирургии',N'profil',N'164',NULL,NULL,NULL,NULL,NULL,NULL),
+(402274,67,N'патологической анатомии',N'profil',N'67',NULL,NULL,NULL,NULL,NULL,NULL),
+(402345,156,N'медицинскому освидетельствованию на наличие медицинских противопоказаний к владению оружием',N'profil',N'156',NULL,NULL,NULL,NULL,NULL,NULL),
+(402341,152,N'медицинскому освидетельствованию кандидатов в усыновители, опекуны (попечители) или приемные родители',N'profil',N'152',NULL,NULL,NULL,NULL,NULL,NULL),
+(402245,34,N'клинической лабораторной диагностике',N'profil',N'34',NULL,NULL,NULL,NULL,NULL,NULL),
+(402320,120,N'экспертизе профессиональной пригодности',N'profil',N'120',NULL,NULL,NULL,NULL,NULL,NULL),
+(402259,49,N'медицинским осмотрам (предрейсовым, послерейсовым)',N'profil',N'49',NULL,NULL,NULL,NULL,NULL,NULL),
+(402270,62,N'организации сестринского дела',N'profil',N'62',NULL,NULL,NULL,NULL,NULL,NULL),
+(402296,91,N'судебно-медицинской экспертизе',N'profil',N'91',NULL,NULL,NULL,NULL,NULL,NULL),
+(402334,145,N'изъятию и хранению органов и (или) тканей человека для трансплантации',N'profil',N'145',NULL,NULL,NULL,NULL,NULL,NULL),
+(402269,61,N'операционному делу',N'profil',N'61',NULL,NULL,NULL,NULL,NULL,NULL),
+(402331,142,N'дезинфектологии',N'profil',N'142',NULL,NULL,NULL,NULL,NULL,NULL),
+(402337,148,N'медико-социальной экспертизе',N'profil',N'148',NULL,NULL,NULL,NULL,NULL,NULL),
+(402309,107,N'управлению сестринской деятельностью',N'profil',N'107',NULL,NULL,NULL,NULL,NULL,NULL),
+(402352,163,N'оториноларингологии (кохлеарной имплантации)',N'profil',N'163',NULL,NULL,NULL,NULL,NULL,NULL),
+(402354,165,N'психиатрическому освидетельствованию',N'profil',N'165',NULL,NULL,NULL,NULL,NULL,NULL),
+(402220,1,N'хирургии (абдоминальной)',N'profil',N'1',NULL,NULL,NULL,NULL,NULL,NULL),
+(402326,137,N'акушерству и гинекологии (использованию вспомогательных репродуктивных технологий)',N'profil',N'137',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',N'402221',NULL,N'2'),
+(402221,3,N'акушерскому делу',N'profil',N'3',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',NULL,NULL,N'2'),
+(402325,136,N'акушерству и гинекологии (за исключением использования вспомогательных репродуктивных технологий и искусственного прерывания беременности)',N'profil',N'136',N'АКУШЕР-ГИНЕКОЛОГ',N'АКУШЕРУ-ГИНЕКОЛОГУ',N'АКУШЕРА-ГИНЕКОЛОГА',N'402221',NULL,N'2'),
+(402222,4,N'аллергологии и иммунологии',N'profil',N'4',N'АЛЛЕРГОЛОГ-ИММУНОЛОГ',N'АЛЛЕРГОЛОГУ-ИММУНОЛОГУ',N'АЛЛЕРГОЛОГА-ИММУНОЛОГА',NULL,NULL,NULL),
+(402223,5,N'анестезиологии и реаниматологии',N'profil',N'5',N'АНЕСТЕЗИОЛОГ-РЕАНИМАТОЛОГ',N'АНЕСТЕЗИОЛОГУ-РЕАНИМАТОЛОГУ',N'АНЕСТЕЗИОЛОГА-РЕАНИМАТОЛОГА',NULL,NULL,NULL),
+(402224,6,N'бактериологии',N'profil',N'6',N'БАКТЕРИОЛОГ',N'БАКТЕРИОЛОГУ',N'БАКТЕРИОЛОГА',NULL,NULL,NULL),
+(402225,7,N'вирусологии',N'profil',N'7',N'ВИРУСОЛОГ',N'ВИРУСОЛОГУ',N'ВИРУСОЛОГА',NULL,NULL,NULL),
+(402327,138,N'вакцинации (проведению профилактических прививок)',N'profil',N'138',N'ВРАЧ ИММУНОПРОФИЛАКТИКИ',N'ВРАЧУ ИММУНОПРОФИЛАКТИКИ',N'ВРАЧА ИММУНОПРОФИЛАКТИКИ',NULL,NULL,NULL),
+(402266,57,N'общей врачебной практике (семейной медицине)',N'profil',N'57',N'ВРАЧ ОБЩ. ПРАКТИКИ',N'ВРАЧУ ОБЩ. ПРАКТИКИ',N'ВРАЧА ОБЩ. ПРАКТИКИ',N'402267',NULL,N'2'),
+(402267,58,N'общей практике',N'profil',N'58',N'ВРАЧ ОБЩ. ПРАКТИКИ',N'ВРАЧУ ОБЩ. ПРАКТИКИ',N'ВРАЧА ОБЩ. ПРАКТИКИ',NULL,NULL,N'2'),
+(402308,106,N'ультразвуковой диагностике',N'profil',N'106',N'ВРАЧ УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',N'ВРАЧУ УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',N'ВРАЧА УЛЬТРАЗВУКОВОЙ ДИАГНОСТИКИ',NULL,NULL,NULL),
+(402228,11,N'гастроэнтерологии',N'profil',N'11',N'ГАСТРОЭНТЕРОЛОГ',N'ГАСТРОЭНТЕРОЛОГУ',N'ГАСТРОЭНТЕРОЛОГА',NULL,NULL,NULL),
+(402229,12,N'гематологии',N'profil',N'12',N'ГЕМАТОЛОГ',N'ГЕМАТОЛОГУ',N'ГЕМАТОЛОГА',NULL,NULL,NULL),
+(402230,13,N'генетике',N'profil',N'13',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',NULL,NULL,NULL),
+(402255,45,N'медицинской генетике',N'profil',N'45',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',N'402230',NULL,NULL),
+(402251,40,N'лабораторной генетике',N'profil',N'40',N'ГЕНЕТИК',N'ГЕНЕТИКУ',N'ГЕНЕТИКА',N'402230',NULL,NULL),
+(402231,14,N'гериатрии',N'profil',N'14',N'ГЕРИАТР',N'ГЕРИАТРУ',N'ГЕРИАТРА',NULL,NULL,NULL),
+(402232,15,N'гистологии',N'profil',N'15',N'ГИСТОЛОГ',N'ГИСТОЛОГУ',N'ГИСТОЛОГА',NULL,NULL,NULL),
+(402233,16,N'дерматовенерологии',N'profil',N'16',N'ДЕРМАТОВЕНЕРОЛОГ',N'ДЕРМАТОВЕНЕРОЛОГУ',N'ДЕРМАТОВЕНЕРОЛОГА',NULL,NULL,NULL),
+(402239,22,N'диабетологии',N'profil',N'22',N'ДИАБЕТОЛОГ',N'ДИАБЕТОЛОГУ',N'ДИАБЕТОЛОГА',NULL,NULL,NULL),
+(402240,23,N'диетологии',N'profil',N'23',N'ДИЕТОЛОГ',N'ДИЕТОЛОГУ',N'ДИЕТОЛОГА',NULL,NULL,NULL),
+(402242,28,N'инфекционным болезням',N'profil',N'28',N'ИНФЕКЦИОНИСТ',N'ИНФЕКЦИОНИСТУ',N'ИНФЕКЦИОНИСТА',NULL,NULL,NULL),
+(402243,29,N'кардиологии',N'profil',N'29',N'КАРДИОЛОГ',N'КАРДИОЛОГУ',N'КАРДИОЛОГА',NULL,NULL,NULL),
+(402234,17,N'детской кардиологии',N'profil',N'17',N'КАРДИОЛОГ ДЕТСКИЙ',N'КАРДИОЛОГУ ДЕТСКОМУ',N'КАРДИОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402244,30,N'колопроктологии',N'profil',N'30',N'КОЛОПРОКТОЛОГ',N'КОЛОПРОКТОЛОГУ',N'КОЛОПРОКТОЛОГА',NULL,NULL,NULL),
+(402335,146,N'косметологии',N'profil',N'146',N'КОСМЕТОЛОГ',N'КОСМЕТОЛОГУ',N'КОСМЕТОЛОГА',NULL,NULL,NULL),
+(402336,147,N'лечебной физкультуре',N'profil',N'147',N'ЛЕЧЕБНАЯ ФИЗКУЛЬТУРА',N'ЛЕЧЕБНОЙ ФИЗКУЛЬТУРЫ',N'ЛЕЧЕБНОЙ ФИЗКУЛЬТУРЫ',NULL,NULL,NULL),
+(402254,43,N'мануальной терапии',N'profil',N'43',N'МАНУАЛЬНЫЙ ТЕРАПЕВТ',N'МАНУАЛЬНОМУ ТЕРАПЕВТУ',N'МАНУАЛЬНОГО ТЕРАПЕВТА',NULL,NULL,NULL),
+(402250,39,N'лабораторной микологии',N'profil',N'39',N'МИКОЛОГ',N'МИКОЛОГУ',N'МИКОЛОГА',N'402246',NULL,NULL),
+(402246,35,N'клинической микологии',N'profil',N'35',N'МИКОЛОГ',N'МИКОЛОГУ',N'МИКОЛОГА',NULL,NULL,NULL),
+(402348,159,N'наркологии',N'profil',N'159',N'НАРКОЛОГ',N'НАРКОЛОГУ',N'НАРКОЛОГА',NULL,NULL,NULL),
+(402262,53,N'неврологии',N'profil',N'53',N'НЕВРОЛОГ',N'НЕВРОЛОГУ',N'НЕВРОЛОГА',NULL,NULL,NULL),
+(402263,54,N'нейрохирургии',N'profil',N'54',N'НЕЙРОХИРУРГ',N'НЕЙРОХИРУРГУ',N'НЕЙРОХИРУРГА',NULL,NULL,NULL),
+(402264,55,N'неонатологии',N'profil',N'55',N'НЕОНАТОЛОГ',N'НЕОНАТОЛОГУ',N'НЕОНАТОЛОГА',NULL,NULL,NULL),
+(402265,56,N'нефрологии',N'profil',N'56',N'НЕФРОЛОГ',N'НЕФРОЛОГУ',N'НЕФРОЛОГА',NULL,NULL,NULL),
+(402268,60,N'онкологии',N'profil',N'60',N'ОНКОЛОГ',N'ОНКОЛОГУ',N'ОНКОЛОГА',NULL,NULL,NULL),
+(402235,18,N'детской онкологии',N'profil',N'18',N'ОНКОЛОГ ДЕТСКИЙ',N'ОНКОЛОГУ ДЕТСКОМУ',N'ОНКОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402271,63,N'ортодонтии',N'profil',N'63',N'ОРТОДОНТ',N'ОРТОДОНТУ',N'ОРТОДОНТА',NULL,NULL,NULL),
+(402374,185,N'остеопатии',N'profil',N'185',N'ОСТЕОПАТ',N'ОСТЕОПАТУ',N'ОСТЕОПАТА',NULL,NULL,NULL),
+(402351,162,N'оториноларингологии (за исключением кохлеарной имплантации)',N'profil',N'162',N'ОТОРИНОЛАРИНГОЛОГ',N'ОТОРИНОЛАРИНГОЛОГУ',N'ОТОРИНОЛАРИНГОЛОГА',NULL,NULL,NULL),
+(402300,96,N'сурдологии-оториноларингологии',N'profil',N'96',N'ОТОРИНОЛАРИНГОЛОГ-СУРДОЛОГ',N'ОТОРИНОЛАРИНГОЛОГУ-СУРДОЛОГУ',N'ОТОРИНОЛАРИНГОЛОГА-СУРДОЛОГА',NULL,NULL,NULL),
+(402272,65,N'офтальмологии',N'profil',N'65',N'ОФТАЛЬМОЛОГ',N'ОФТАЛЬМОЛОГА',N'ОФТАЛЬМОЛОГА',NULL,NULL,NULL),
+(402273,66,N'паразитологии',N'profil',N'66',N'ПАРАЗИТОЛОГ',N'ПАРАЗИТОЛОГУ',N'ПАРАЗИТОЛОГА',NULL,NULL,NULL),
+(402275,68,N'педиатрии',N'profil',N'68',N'ПЕДИАТР',N'ПЕДИАТРУ',N'ПЕДИАТРА',NULL,NULL,N'2'),
+(402276,71,N'профпатологии',N'profil',N'71',N'ПРОФПАТОЛОГ',N'ПРОФПАТОЛОГУ',N'ПРОФПАТОЛОГА',NULL,NULL,NULL),
+(402277,72,N'психиатрии',N'profil',N'72',N'ПСИХИАТР',N'ПСИХИАТРУ',N'ПСИХИАТРА',NULL,NULL,NULL),
+(402278,73,N'психиатрии-наркологии',N'profil',N'73',N'ПСИХИАТР-НАРКОЛОГ',N'ПСИХИАТРУ-НАРКОЛОГУ',N'ПСИХИАТРА-НАРКОЛОГА',NULL,NULL,NULL),
+(402279,74,N'психотерапии',N'profil',N'74',N'ПСИХОТЕРАПЕВТ',N'ПСИХОТЕРАПЕВТУ',N'ПСИХОТЕРАПЕВТА',NULL,NULL,NULL),
+(402280,75,N'пульмонологии',N'profil',N'75',N'ПУЛЬМОНОЛОГ',N'ПУЛЬМОНОЛОГУ',N'ПУЛЬМОНОЛОГА',NULL,NULL,NULL),
+(402281,76,N'радиологии',N'profil',N'76',N'РАДИОЛОГ',N'РАДИОЛОГУ',N'РАДИОЛОГА',NULL,NULL,NULL),
+(402355,166,N'радиотерапии',N'profil',N'166',N'РАДИОТЕРАПЕВТ',N'РАДИОТЕРАПЕВТУ',N'РАДИОТЕРАПЕВТА',NULL,NULL,NULL),
+(402347,158,N'медицинской реабилитации',N'profil',N'158',N'РЕАБИЛИТОЛОГ',N'РЕАБИЛИТОЛОГУ',N'РЕАБИЛИТОЛОГА',NULL,NULL,NULL),
+(402356,167,N'реаниматологии',N'profil',N'167',N'РЕАНИМОТОЛОГ',N'РЕАНИМАТОЛОГУ',N'РЕАНИМАТОЛОГА',NULL,NULL,NULL),
+(402282,77,N'ревматологии',N'profil',N'77',N'РЕВМАТОЛОГ',N'РЕВМАТОЛОГУ',N'РЕВМАТОЛОГА',NULL,NULL,NULL),
+(402283,78,N'рентгенологии',N'profil',N'78',N'РЕНТГЕНОЛОГ',N'РЕНТГЕНОЛОГУ',N'РЕНТГЕНОЛОГА',NULL,NULL,NULL),
+(402284,79,N'рефлексотерапии',N'profil',N'79',N'РЕФЛЕКСОТЕРАПЕВТ',N'РЕФЛЕКСОТЕРАПЕВТУ',N'РЕФЛЕКСОТЕРАПЕВТА',NULL,NULL,NULL),
+(402285,80,N'сексологии',N'profil',N'80',N'СЕКСОЛОГ',N'СЕКСОЛОГУ',N'СЕКСОЛОГА',NULL,NULL,NULL),
+(402286,81,N'сердечно-сосудистой хирургии',N'profil',N'81',N'СЕРДЕЧНО-СОСУДИСТЫЙ ХИРУРГ',N'СЕРДЕЧНО-СОСУДИСТОМУ ХИРУРГУ',N'СЕРДЕЧНО-СОСУДИСТОГО ХИРУРГА',NULL,NULL,NULL),
+(402290,85,N'стоматологии',N'profil',N'85',N'СТОМАТОЛОГ',N'СТОМАТОЛОГУ',N'СТОМАТОЛОГА',NULL,NULL,NULL),
+(402291,86,N'стоматологии детской',N'profil',N'86',N'СТОМАТОЛОГ ДЕТСКИЙ',N'СТОМАТОЛОГУ ДЕТСКОМУ',N'СТОМАТОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402360,171,N'стоматологии общей практики',N'profil',N'171',N'СТОМАТОЛОГ ОБЩ. ПРАКТИКИ',N'СТОМАТОЛОГУ ОБЩ. ПРАКТИКИ',N'СТОМАТОЛОГА ОБЩ. ПРАКТИКИ',NULL,NULL,NULL),
+(402292,87,N'стоматологии профилактической',N'profil',N'87',N'СТОМАТОЛОГ-ГИГИЕНИСТ',N'СТОМАТОЛОГУ-ГИГИЕНИСТУ',N'СТОМАТОЛОГА-ГИГИЕНИСТА',N'402329',NULL,NULL),
+(402329,140,N'гигиене в стоматологии',N'profil',N'140',N'СТОМАТОЛОГ-ГИГИЕНИСТ',N'СТОМАТОЛОГУ-ГИГИЕНИСТУ',N'СТОМАТОЛОГА-ГИГИЕНИСТА',NULL,NULL,NULL),
+(402293,88,N'стоматологии ортопедической',N'profil',N'88',N'СТОМАТОЛОГ-ОРТОПЕД',N'СТОМАТОЛОГУ-ОРТОПЕДУ',N'СТОМАТОЛОГА-ОРТОПЕДА',NULL,NULL,NULL),
+(402294,89,N'стоматологии терапевтической',N'profil',N'89',N'СТОМАТОЛОГ-ТЕРАПЕВТ',N'СТОМАТОЛОГУ-ТЕРАПЕВТУ',N'СТОМАТОЛОГА-ТЕРАПЕВТА',NULL,NULL,N'2'),
+(402295,90,N'стоматологии хирургической',N'profil',N'90',N'СТОМАТОЛОГ-ХИРУРГ',N'СТОМАТОЛОГУ-ХИРУРГУ',N'СТОМАТОЛОГА-ХИРУРГА',NULL,NULL,NULL),
+(402301,97,N'терапии',N'profil',N'97',N'ТЕРАПЕВТ',N'ТЕРАПЕВТУ',N'ТЕРАПЕВТА',NULL,NULL,N'2'),
+(402302,98,N'токсикологии',N'profil',N'98',N'ТОКСИКОЛОГ',N'ТОКСИКОЛОГУ',N'ТОКСИКОЛОГА',NULL,NULL,NULL),
+(402304,100,N'травматологии и ортопедии',N'profil',N'100',N'ТРАВМАТОЛОГ-ОРТОПЕД',N'ТРАВМАТОЛОГУ-ОРТОПЕДУ',N'ТРАВМАТОЛОГА-ОРТОПЕДА',NULL,NULL,NULL),
+(402307,105,N'трансфузиологии',N'profil',N'105',N'ТРАНСФУЗИОЛОГ',N'ТРАНСФУЗИОЛОГУ',N'ТРАНСФУЗИОЛОГА',NULL,NULL,NULL),
+(402310,108,N'урологии',N'profil',N'108',N'УРОЛОГ',N'УРОЛОГУ',N'УРОЛОГА',NULL,NULL,NULL),
+(402236,19,N'детской урологии-андрологии',N'profil',N'19',N'УРОЛОГ-АНДРОЛОГ ДЕТСКИЙ',N'УРОЛОГУ-АНДРОЛОГУ ДЕТСКОМУ',N'УРОЛОГА-АНДРОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402253,42,N'лечебному делу',N'profil',N'42',N'ФЕЛЬДШЕР',N'ФЕЛЬДШЕРУ',N'ФЕЛЬДШЕРА',NULL,NULL,NULL),
+(402311,109,N'физиотерапии',N'profil',N'109',N'ФИЗИОТЕРАПЕВТ',N'ФИЗИОТЕРАПЕВТУ',N'ФИЗИОТЕРАПЕВТА',NULL,NULL,NULL),
+(402312,110,N'фтизиатрии',N'profil',N'110',N'ФТИЗИАТР',N'ФТИЗИАТРУ',N'ФТИЗИАТРА',NULL,NULL,NULL),
+(402314,112,N'хирургии',N'profil',N'112',N'ХИРУРГ',N'ХИРУРГУ',N'ХИРУРГА',NULL,NULL,NULL),
+(402237,20,N'детской хирургии',N'profil',N'20',N'ХИРУРГ ДЕТСКИЙ',N'ХИРУРГУ ДЕТСКОМУ',N'ХИРУРГА ДЕТСКОГО',NULL,NULL,NULL),
+(402316,114,N'хирургии (комбустиологии)',N'profil',N'114',N'ХИРУРГ-КОМБУСТИОЛОГ',N'ХИРУРГУ-КОМБУСТИОЛОГУ',N'ХИРУРГА-КОМБУСТИОЛОГА',NULL,NULL,NULL),
+(402322,122,N'эндокринологии',N'profil',N'122',N'ЭНДОКРИНОЛОГ',N'ЭНДОКРИНОЛОГУ',N'ЭНДОКРИНОЛОГА',NULL,NULL,NULL),
+(402238,21,N'детской эндокринологии',N'profil',N'21',N'ЭНДОКРИНОЛОГ ДЕТСКИЙ',N'ЭНДОКРИНОЛОГУ ДЕТСКОМУ',N'ЭНДОКРИНОЛОГА ДЕТСКОГО',NULL,NULL,NULL),
+(402323,123,N'эндоскопии',N'profil',N'123',N'ЭНДОСКОПИСТ',N'ЭНДОСКОПИСТУ',N'ЭНДОСКОПИСТА',NULL,NULL,NULL)
+
+) as d(lpusectionprofile_id,lpusectionprofile_code,lpusectionprofile_name,lpusectionprofile_sysnick,lpusectionprofile_omscode,profilespec_name,profilespec_name_vin,profilespec_name_rod,lpusectionprofile_mainid,lpusectionprofile_inetdontshow,lpusectionprofile_isarea)
+) as d
+ON ( u.lpusectionprofile_id = d.lpusectionprofile_id AND region_id = 35 ) 
+WHEN MATCHED   
+and (
+--coalesce(u.lpusectionprofile_code, '') <> coalesce(d.lpusectionprofile_code, '') OR
+--coalesce(u.lpusectionprofile_name, '') <> coalesce(d.lpusectionprofile_name, '') OR
+--coalesce(u.lpusectionprofile_omscode, '') <> coalesce(d.lpusectionprofile_omscode, '') OR
+--coalesce(u.lpusectionprofile_sysnick, '') <> coalesce(d.lpusectionprofile_sysnick, '') OR
+coalesce(u.profilespec_name, '') <> coalesce(d.profilespec_name, '') OR
+coalesce(u.profilespec_name_vin, '') <> coalesce(d.profilespec_name_vin, '') OR
+coalesce(u.profilespec_name_rod, '') <> coalesce(d.profilespec_name_rod, '') OR
+coalesce(u.lpusectionprofile_mainid, 0) <> coalesce(d.lpusectionprofile_mainid, 0) OR
+coalesce(u.lpusectionprofile_inetdontshow, 0) <> coalesce(d.lpusectionprofile_inetdontshow, 0) OR
+coalesce(u.lpusectionprofile_isarea, 0) <> coalesce(d.lpusectionprofile_isarea, 0) --OR
+--coalesce(u.lpusectionprofile_fedid, 0) <> coalesce(d.lpusectionprofile_fedid, 0) OR
+--coalesce(u.region_id, 0) <> coalesce(d.region_id, 0) OR
+--coalesce(u.lpusectionprofile_deleted, 0) <> coalesce(d.lpusectionprofile_deleted, 0) OR
+--coalesce(u.lpusectionprofile_begdt, '1900-01-01') <> coalesce(d.lpusectionprofile_begdt, '1900-01-01')
+)  
+THEN 
+UPDATE SET 
+--u.lpusectionprofile_code	=d.lpusectionprofile_code,
+--u.lpusectionprofile_name	=d.lpusectionprofile_name, !!! может обрезаться в Excel
+--u.lpusectionprofile_omscode	=d.lpusectionprofile_omscode,
+--u.lpusectionprofile_sysnick	=d.lpusectionprofile_sysnick,
+u.profilespec_name	=d.profilespec_name,
+u.profilespec_name_vin	=d.profilespec_name_vin,
+u.profilespec_name_rod	=d.profilespec_name_rod,
+u.lpusectionprofile_mainid	=d.lpusectionprofile_mainid,
+u.lpusectionprofile_inetdontshow	=d.lpusectionprofile_inetdontshow,
+u.lpusectionprofile_isarea	=d.lpusectionprofile_isarea,
+--u.lpusectionprofile_fedid	=d.lpusectionprofile_fedid,
+--u.region_id	=d.region_id,
+--u.lpusectionprofile_deleted	=d.lpusectionprofile_deleted,
+--u.lpusectionprofile_begdt	=d.lpusectionprofile_begdt,
+u.pmUser_updID = 1,
+u.LpuSectionProfile_updDT = current_timestamp
+--WHEN NOT MATCHED 
+--THEN INSERT 
+--(
+--,pmUser_insID,pmUser_updID,LpuSectionProfile_insDT,LpuSectionProfile_updDT)
+--VALUES
+--(
+--,1, 1, current_timestamp, current_timestamp) -- вставка
+;
+
+--SET IDENTITY_INSERT dbo.LpuSectionProfile OFF
+
+END
+
+-- (затронуто строк: 58)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+Select --distinct
+t.relname,
+--    c.column_order as field_order,
+--    c.column_name as field_name,
+--    col_description(t.oid, c.column_order) as field_desc,
+  	c.data_type as field_type,
+    case 
+        when c.data_type = 'BIT' or c.data_type = 'CHAR' or c.data_type = 'VARCHAR' then cast(c.maximum_length as varchar)
+        when c.data_type = 'NUMERIC' then cast(c.numeric_precision as varchar)
+        else ''
+    end as field_size,
+    case 
+        when c.data_type = 'NUMERIC' then cast(c.numeric_scale as varchar)
+        else ''
+    end as field_dec,
+    c.*
+    /*
+    
+    case when c.is_nullable = 'YES' then 'false' else 'true' end as IsNotNull,
+    case when c.is_identity = 'YES' then 'true' else 'false' end as IsIdentity,
+    c.column_default as field_default,
+    */
+FROM pg_catalog.pg_class t
+INNER JOIN pg_namespace n ON n.oid = t.relnamespace
+INNER JOIN LATERAL (
+	SELECT 
+    	attr.attnum as column_order,
+        attr.attname as column_name,
+        upper(case 
+    		when typ.typname = 'character' or typ.typname = '""char""' or typ.typname = 'bpchar' then 'char'
+		    when typ.typname = 'character varying' then 'varchar'
+		    when typ.typname = 'int8' then 'bigint'
+		    when typ.typname = 'serial8' then 'bigserial'
+		    when typ.typname = 'bit varying' then 'varbit'
+		    when typ.typname = 'float8' then 'double precision'
+		    when typ.typname = 'int4' then 'int'
+		    when typ.typname = 'float4' then 'real'
+		    when typ.typname = 'int2' then 'smallint'
+		    when typ.typname = 'serial4' then 'serial'
+            when typ.typname = 'timestamptz' then 'timestamp with time zone'
+		    else typ.typname
+		  end) as data_type,
+          CASE atttypid
+         	WHEN 21 /*int2*/ THEN 16
+         	WHEN 23 /*int4*/ THEN 32
+         	WHEN 20 /*int8*/ THEN 64
+         	WHEN 1700 /*numeric*/ THEN
+              CASE WHEN atttypmod = -1 THEN null
+                   ELSE ((atttypmod - 4) >> 16) & 65535     -- calculate the precision
+              END
+         	WHEN 700 /*float4*/ THEN 24 /*FLT_MANT_DIG*/
+         	WHEN 701 /*float8*/ THEN 53 /*DBL_MANT_DIG*/
+         	ELSE null
+	 	  END AS numeric_precision,
+		  CASE 
+		    WHEN atttypid IN (21, 23, 20) THEN 0
+		    WHEN atttypid IN (1700) THEN            
+	        	CASE 
+    	        	WHEN atttypmod = -1 THEN null       
+	        	    ELSE (atttypmod - 4) & 65535            -- calculate the scale  
+		        END
+    		ELSE null
+		  END AS numeric_scale,
+          CASE WHEN atttypmod = -1 THEN null ELSE (atttypmod - 4) END as maximum_length,
+          attr.*
+    FROM pg_catalog.pg_attribute attr
+    INNER JOIN pg_catalog.pg_type typ ON typ.oid = attr.atttypid
+    LEFT JOIN pg_catalog.pg_attrdef def ON def.adrelid = t.oid AND def.adnum = attr.attnum
+    WHERE attr.attrelid = t.oid
+	AND attr.attisdropped = false -- не удалено
+    AND attr.attnum > 0
+) c ON true
+WHERE t.relkind in ('r', 'f') -- таблицы
+AND n.nspname ilike 'dbo'
+--AND t.relname ilike 'evndirection'
+AND c.column_name not like '%_rowversion'
+AND c.data_type not in ('BIGINT', 'CHAR', 'VARCHAR', 'INT', 'XML', 'TIMESTAMP', 'TEXT', 'DATE', 'UUID', 'SMALLINT', 'TIME', 'TIMESTAMP WITH TIME ZONE',
+'DOUBLE PRECISION', 'NUMERIC', 'BOOL', 'JSONB', 'JSON', 'REAL')
+--order by c.column_order
+limit 100
+
+--select * from pg_catalog.pg_attribute  limit 10
