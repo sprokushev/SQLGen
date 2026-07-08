@@ -14,7 +14,7 @@ using SQLGen.Controls;
 namespace SQLGen.Forms
 {
     /// <summary>
-    /// Форма выбора модуля
+    /// Форма выбора префикса версии (сервиса)
     /// </summary>
     public partial class FormAskModule : Form
     {

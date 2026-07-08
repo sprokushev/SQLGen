@@ -45,15 +45,13 @@
         <TextBox x:Name="tbTasks" HorizontalAlignment="Left" Height="230" Margin="11,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="364" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" TextChanged="tbTasks_TextChanged" ToolTip="Сюда копируем список задач, через запятую или в отдельных строках" LostFocus="tbTasks_LostFocus"/>
 
         <!--CheckBox x:Name="cbPreCheck" Content="проводить предварительную проверку при парсинге" HorizontalAlignment="Left" Margin="19,285,0,0" VerticalAlignment="Top" IsChecked="false" Width="Auto"/-->
-        <Button x:Name="btFillURL" Content="https://jira.rtmis.ru/issues/?jql=fixVersion%20in%20" FontSize="10" HorizontalAlignment="Left" Margin="19,280,0,0" VerticalAlignment="Top" Width="348" Click="btFillURL_Click" ToolTip="Запускается парсинг списка задач по URL из Jira"/>
+        <Button x:Name="btFillURL" Content="https://jira.rtmis.ru/issues/?jql=fixVersion%20in%20" FontSize="10" HorizontalAlignment="Left" Margin="19,280,0,0" VerticalAlignment="Top" Width="348" Click="btFillURL_Click" ToolTip="Запускается парсинг списка задач по URL из Jira" IsEnabled="False"/>
         <Button x:Name="btFill" Content="Заполнить список YML-файлов" HorizontalAlignment="Left" Margin="19,305,0,0" VerticalAlignment="Top" Width="197" Click="btFill_Click" ToolTip="Запускается парсинг задач из Jira, по списку выше"/>
         <Button x:Name="btRefreshJira" Content="Обновить из Jira" HorizontalAlignment="Left" Margin="231,305,0,0" VerticalAlignment="Top" Width="136" Click="btRefreshJira_Click" ToolTip="Заново выполнить парсинг из Jira (по списку задач из перечня ниже)"/>
         <Button x:Name="btAddTask" Content="Добавить задачу в список" HorizontalAlignment="Left" Margin="19,330,0,0" VerticalAlignment="Top" Width="197" Click="btAddTask_Click" ToolTip="Добавить дополнительную задачу или задачи и выполнить их парсинг из Jira"/>
-        <Button x:Name="btTaskDoubles" HorizontalAlignment="Left" Margin="231,330,0,0" VerticalAlignment="Top" Width="136" Click="btTaskDoubles_Click" Height="45">
-            <TextBlock Text="Дубли (по задачам из Jira)" TextWrapping="Wrap" TextAlignment="Center" ToolTip="ПРОВЕРИТЬ есть ли скрипты обновляющие одни и те же объекты (по списку задач из перечня ниже)"/>
+        <Button x:Name="btCheckTaskBefore" HorizontalAlignment="Left" Margin="231,330,0,0" VerticalAlignment="Top" Width="136" Click="btCheckTaskBefore_Click" Height="45">
+            <TextBlock Text="Проверить задачи до сборки версии" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Проверить до сборки версии (скрипты обновляющие одни и те же объекты, поиск задач в других версиях) по списку задач из перечня ниже"/>
         </Button>
-
-        <Button x:Name="btFindTaskInVersion" Content="Поиск задач в других версиях" HorizontalAlignment="Left" Margin="19,355,0,0" VerticalAlignment="Top" Width="197" Click="btFindTaskInVersion_Click" ToolTip="ПРОВЕРИТЬ присутствие задач в других версиях (по списку задач из перечня ниже)"/>
 
         <Label x:Name="lbCount" Content="Всего задач: 0 из них включаем в релиз: 0" HorizontalAlignment="Left" Margin="8,380,0,0" VerticalAlignment="Top" Width="368"/>
         <ProgressBar x:Name="pbProgressFill" HorizontalAlignment="Left" Height="15" Margin="11,410,0,0" VerticalAlignment="Top" Width="365"/>
@@ -74,7 +72,7 @@
         <!-- Button x:Name="btMergeTaskNext" Content="Продолжить Merge" HorizontalAlignment="Left" Margin="885,100,0,0" VerticalAlignment="Top" Width="120" Click="btMergeTaskNext_Click"/-->
         <Button x:Name="btGitPush" Content="GIT PUSH" HorizontalAlignment="Left" Margin="1011,77,0,0" VerticalAlignment="Top" Width="80" Click="btGitPush_Click"/>
 
-        <Label x:Name="lbPrevVersion" Content="Предыдущая версия:" HorizontalAlignment="Left" Margin="394,130,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lbPrevVersion" Content="Предыдущая версия:" HorizontalAlignment="Left" Margin="394,124,0,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="cbPrevVersion" HorizontalAlignment="Left" Margin="524,127,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True"/>
         <Button x:Name="btFindPrevVersion" Content="Найти" HorizontalAlignment="Left" Margin="949,127,0,0" VerticalAlignment="Top" Width="70" Click="btFindPrevVersion_Click"/>
         <Button x:Name="btSetPrevVersion" Content="Сменить" HorizontalAlignment="Left" Margin="1024,127,0,0" VerticalAlignment="Top" Width="60" Click="btSetPrevVersion_Click" ToolTip="Сменить в yml-файле ссылку на предыдущий yml-файл"/>
@@ -83,66 +81,68 @@
         <TextBox x:Name="tbFileVersion" HorizontalAlignment="Left" Height="22" Margin="524,152,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" TextChanged="tbFileVersion_TextChanged"/>
         <TextBox x:Name="tbGITVersion" HorizontalAlignment="Left" Height="22" Margin="399,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbGITVersion_MouseDoubleClick"/>
         <Button x:Name="btCopyGITVersion" HorizontalAlignment="Left" Margin="1064,177,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyGITVersion_Click" Height="21" VerticalAlignment="Top" >
-             <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
+            <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
         </Button>
         <Label Content="Команда для бота:" HorizontalAlignment="Left" Margin="394,200,0,0" VerticalAlignment="Top"/>
 
         <ComboBox x:Name="cbLiquibot" HorizontalAlignment="Left" Height="22" Margin="524,202,0,0" VerticalAlignment="Top" Width="490" IsEditable="true" IsReadOnly="true"/>
-                    
+
         <Button x:Name="btCopyLiquibot" HorizontalAlignment="Left" Margin="1019,202,0,0" Width="21" ToolTip="Скопировать команду для ликвибота в буфер" Height="21" VerticalAlignment="Top" Click="btCopyLiquibot_Click" >
             <Image Source="../Images/clipboard.png" ToolTip="Скопировать команду для ликвибота в буфер"/>
         </Button>
         <Button x:Name="btCopyAllLiquibot" Content="Все" HorizontalAlignment="Left" Margin="1044,202,0,0" VerticalAlignment="Top" Width="40" Click="btCopyAllLiquibot_Click" ToolTip="Скопировать все команды для ликвибота в буфер"/>
 
-        <Label x:Name="lbNextVersion" Content="Следующая версия" HorizontalAlignment="Left" Margin="394,225,0,0" VerticalAlignment="Top" Width="122"/>
+        <Label x:Name="lbNextVersion" Content="Следующая версия:" HorizontalAlignment="Left" Margin="394,225,0,0" VerticalAlignment="Top" Width="122"/>
         <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="524,227,0,0" VerticalAlignment="Top" Width="305" IsReadOnly="True"/>
         <Button x:Name="btFindNextVersion" Content="Найти" HorizontalAlignment="Left" Margin="839,227,0,0" VerticalAlignment="Top" Width="70" Click="btFindNextVersion_Click"/>
         <Button x:Name="btSetNextVersion" Content="Сменить" HorizontalAlignment="Left" Margin="914,227,0,0" VerticalAlignment="Top" Width="65" Click="btSetNextVersion_Click" ToolTip="Сменить в yml-файле следующей версии ссылку на файл текущей версии"/>
         <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="984,227,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
 
 
-        <Label Content="Фильтр 1:" HorizontalAlignment="Left" Margin="700,347,0,0" VerticalAlignment="Top" Width="66"/>
-        <ComboBox x:Name="cbFilterList1" HorizontalAlignment="Left" Margin="772,348,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList1_SelectionChanged"/>
-        <ComboBox x:Name="cbFilterList2" HorizontalAlignment="Left" Margin="772,374,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList2_SelectionChanged"/>
-        <Label Content="Фильтр 2:" HorizontalAlignment="Left" Margin="700,372,0,0" VerticalAlignment="Top" Width="68"/>
-        <ComboBox x:Name="cbFilterList3" HorizontalAlignment="Left" Margin="772,400,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList3_SelectionChanged"/>
-        <Label Content="Фильтр 3:" HorizontalAlignment="Left" Margin="700,397,0,0" VerticalAlignment="Top" Width="66"/>
-        <Label Content="Фильтр по значению:" HorizontalAlignment="Left" Margin="530,422,0,0" VerticalAlignment="Top" Width="158" HorizontalContentAlignment="Right"/>
-        <TextBox x:Name="tbFilterTask" HorizontalAlignment="Left" Height="22" Margin="696,426,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="312" KeyDown="tbFilterTask_KeyDown"/>
+        <Label Content="Фильтр 1:" HorizontalAlignment="Left" Margin="682,347,0,0" VerticalAlignment="Top" Width="66"/>
+        <ComboBox x:Name="cbFilterList1" HorizontalAlignment="Left" Margin="754,348,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList1_SelectionChanged"/>
+        <ComboBox x:Name="cbFilterList2" HorizontalAlignment="Left" Margin="754,374,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList2_SelectionChanged"/>
+        <Label Content="Фильтр 2:" HorizontalAlignment="Left" Margin="682,372,0,0" VerticalAlignment="Top" Width="68"/>
+        <ComboBox x:Name="cbFilterList3" HorizontalAlignment="Left" Margin="754,400,0,0" VerticalAlignment="Top" Width="236" SelectionChanged="cbFilterList3_SelectionChanged"/>
+        <Label Content="Фильтр 3:" HorizontalAlignment="Left" Margin="682,397,0,0" VerticalAlignment="Top" Width="66"/>
+        <Label Content="Фильтр по значению:" HorizontalAlignment="Left" Margin="539,424,0,0" VerticalAlignment="Top" Width="136" HorizontalContentAlignment="Right"/>
+        <TextBox x:Name="tbFilterTask" HorizontalAlignment="Left" Height="22" Margin="678,426,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="312" KeyDown="tbFilterTask_KeyDown"/>
 
-        <Button x:Name="btClearFilter" HorizontalAlignment="Left" Margin="1016,348,0,0" VerticalAlignment="Top" Width="74" Height="70" Click="btClearFilter_Click">
+        <Button x:Name="btClearFilter" HorizontalAlignment="Left" Margin="1000,348,0,0" VerticalAlignment="Top" Width="90" Height="74" Click="btClearFilter_Click">
             <TextBlock Text="Очистить фильтр" TextWrapping="Wrap" TextAlignment="Center"/>
         </Button>
-        <Button x:Name="btFindTask" Content ="Искать" HorizontalAlignment="Left" Margin="1016,427,0,0" VerticalAlignment="Top" Width="74" Height="20" Click="btFindTask_Click"/>
+        <Button x:Name="btFindTask" Content ="Искать" HorizontalAlignment="Left" Margin="1000,427,0,0" VerticalAlignment="Top" Width="90" Height="20" Click="btFindTask_Click"/>
 
-        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="399,423,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
+        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="399,428,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
 
-        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="398,280,0,0" VerticalAlignment="Top" Width="127" Height="50" Click="btGenerate_Click">
+        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="398,280,0,0" VerticalAlignment="Top" Width="127" Height="40" Click="btGenerate_Click">
             <TextBlock x:Name="btGenerateText" Text="Собрать yml-файл" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Собрать новый yml-файл версии"/>
         </Button>
 
-        <Button x:Name="btGenerateAdd" HorizontalAlignment="Left" Margin="398,333,0,0" VerticalAlignment="Top" Width="127" Click="btGenerateAdd_Click" Height="55">
+        <Button x:Name="btGenerateAdd" HorizontalAlignment="Left" Margin="398,325,0,0" VerticalAlignment="Top" Width="127" Click="btGenerateAdd_Click" Height="55">
             <TextBlock Text="Добавить в существующий yml-файл" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Добавить дополнительные задачи в конец yml-файла версии"/>
         </Button>
 
-        <Button x:Name="btCodeReview" Content="Code Review" HorizontalAlignment="Left" Margin="398,391,0,0" VerticalAlignment="Top" Width="127" Height="29" Click="btCodeReview_Click" ToolTip="Выполнить code review версии"/>
+        <Button x:Name="btCodeReview" HorizontalAlignment="Left" Margin="530,280,0,0" VerticalAlignment="Top" Width="127" Height="40" Click="btCodeReview_Click">
+            <TextBlock Text="Code Review после сборки версии" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Выполнить code review версии"/>
+        </Button>
+        <Button x:Name="btCheckTableInPrevVers" Content="История таблиц" HorizontalAlignment="Left" Margin="530,325,0,0" VerticalAlignment="Top" Width="127" Click="btCheckTableInPrevVers_Click" ToolTip="Получить историю таблиц - в каких версиях встречается скрипт таблицы в первый раз с момента разрыва кумулятивности" Height="25"/>
+        <Button x:Name="btCompileProc" Content="Компиляция" HorizontalAlignment="Left" Margin="530,352,0,0" VerticalAlignment="Top" Width="127" Click="btCompileProc_Click" ToolTip="Получить список хранимок из версии на компиляцию" Height="28"/>
+        <Button x:Name="btAddBreakCumulative" Content="Добавить разрыв кумулятивности" HorizontalAlignment="Left" Margin="398,385,0,0" VerticalAlignment="Top" Width="258" Click="btAddBreakCumulative_Click" ToolTip="В ветке текущего релиза выбрать одну из предыдущих версий и добавить в нее разрыв кумулятивности" Height="25"/>
 
-        <Button x:Name="btYmlDoubles" Content="Дубли (по задачам из yml)" HorizontalAlignment="Left" Margin="530,280,0,0" VerticalAlignment="Top" Width="171" Click="btYmlDoubles_Click" ToolTip="ПРОВЕРИТЬ есть ли скрипты обновляющие одни и те же объекты (из yml-файла версии)"/>
-        <Button x:Name="btFindTaskFromYMLInVersion" Content="Связи с другими версиями" HorizontalAlignment="Left" Margin="530,303,0,0" VerticalAlignment="Top" Width="170" Click="btFindTaskFromYMLInVersion_Click" ToolTip="ОБЯЗАТЕЛЬНО ПРОВЕРИТЬ корректность yml-файла версии, а также цепочку кумулятивности"/>
-        <Button x:Name="btCompileProc" Content="Список на компиляцию" HorizontalAlignment="Left" Margin="530,327,0,0" VerticalAlignment="Top" Width="170" Click="btCompileProc_Click" ToolTip="Получить список команд для компиляции на ПГ всех хранимок, которые меняются в версии"/>
-        <Button x:Name="btCheckTableInPrevVers" Content="История таблиц" HorizontalAlignment="Left" Margin="530,351,0,0" VerticalAlignment="Top" Width="170" Click="btCheckTableInPrevVers_Click" ToolTip="Получить историю таблиц - в каких версиях встречается скрипт таблицы в первый раз с момента разрыва кумулятивности"/>
-        <Button x:Name="btAddBreakCumulative" Content="Добавить разрыв кумулятивности" FontSize="10" HorizontalAlignment="Left" Margin="530,375,0,0" VerticalAlignment="Top" Width="170" Click="btAddBreakCumulative_Click" ToolTip="В ветке текущего релиза выбрать одну из предыдущих версий и добавить в нее разрыв кумулятивности"/>
-
-        <Button x:Name="btCheckYML" Content="Проверить скрипты" HorizontalAlignment="Left" Margin="706,280,0,0" VerticalAlignment="Top" Width="133" Click="btCheckYML_Click" ToolTip="ПРОВЕРИТЬ скрипты (из yml-файла версии)"/>
+        <Button x:Name="btCheckYML" Content="Проверить sql-скрипты" HorizontalAlignment="Left" Margin="662,280,0,0" VerticalAlignment="Top" Width="176" Click="btCheckYML_Click" ToolTip="ПРОВЕРИТЬ sql-скрипты (из yml-файла версии)"/>
         <!--Button x:Name="btTransfer" Content="Выполнить transfer.sh" HorizontalAlignment="Left" Margin="844,244,0,0" VerticalAlignment="Top" Width="136" Click="btTransfer_Click" ToolTip="Выполнить transfer.sh" /-->
-        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="985,280,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
-        <Button x:Name="btFormGIT" HorizontalAlignment="Left" Margin="985,303,0,0" VerticalAlignment="Top" Width="106" Click="btFormGIT_Click" Height="39">
+        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="845,280,0,0" VerticalAlignment="Top" Width="145" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
+        <Button x:Name="btToDEV" HorizontalAlignment="Left" Margin="1000,280,0,0" VerticalAlignment="Top" Width="90" Click="btToDEV_Click">
+            <TextBlock Text="Влить в dev" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Влить ветку текущей версии в dev"/>
+        </Button>
+        <Button x:Name="btFormGIT" HorizontalAlignment="Left" Margin="1000,305,0,0" VerticalAlignment="Top" Width="90" Click="btFormGIT_Click" Height="39">
             <TextBlock Text="Скопировать из GIT" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Скопировать все скрипты версии в папку задачи"/>
         </Button>
 
-        <CheckBox x:Name="isCorrectEncoding" Content="предлагать исправлять кодировку ?" HorizontalAlignment="Left" Margin="705,300,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 ?" HorizontalAlignment="Left" Margin="705,315,0,0" VerticalAlignment="Top"/>
-        <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="705,330,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="isCorrectEncoding" Content="предлагать исправлять кодировку ?" HorizontalAlignment="Left" Margin="686,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 ?" HorizontalAlignment="Left" Margin="686,316,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="686,331,0,0" VerticalAlignment="Top"/>
 
         <Button x:Name="btUp" Grid.Row="2" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="10,430,0,0" VerticalAlignment="Top" Width="23" Height="23">
             <Image Source="../Images/up.png"></Image>
@@ -186,7 +186,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                
+
                 <DataGridTextColumn x:Name="BranchName" Header="Ветка" Width="140" Binding="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="true" />
 
                 <DataGridTextColumn x:Name="PathInGIT" Header="Папка" Width="75" Binding="{Binding PathInGIT}" IsReadOnly="true" />
@@ -238,7 +238,7 @@
                     </DataGridTextColumn.CellStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn x:Name="YMLFile_dev_MS" Header="dev__pormed__ms" Width="160" Binding="{Binding YMLFile_dev_MS}" IsReadOnly="false">
+                <DataGridTextColumn x:Name="YMLFile_dev_MS" Header="dev__promed__ms" Width="160" Binding="{Binding YMLFile_dev_MS}" IsReadOnly="false">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="Background" Value="{Binding YMLFile_dev_MS_Comment, Converter={StaticResource colorconverter_ymlfile}}"/>

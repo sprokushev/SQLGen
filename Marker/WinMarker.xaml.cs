@@ -1,17 +1,22 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using Newtonsoft.Json.Linq;
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using SQLGen.Controls;
-using SQLGen.Utilities;
+using static SQLGen.Utilities.External;
 
 namespace SQLGen
 {
@@ -66,41 +71,9 @@ namespace SQLGen
         }
 
         /// <summary>имя файла со скриптом</summary>
-        public string ScriptFilename
+        public string ScriptFilename (int _num, string _table)
         {
-            get
-            {
-                {
-                    return this.PrefixToFilename + " " + MainWindow.Task.TaskNumberToFilename + " " + this.ScriptNumberToFilename + " insert dbo FreeDocMarker.sql";
-                }
-            }
-        }
-
-        // номер скрипта
-        private string _script_num;
-        /// <summary>Номер скрипта</summary>
-        public string ScriptNumber
-        {
-            get
-            {
-                return _script_num ?? "0";
-            }
-            set
-            {
-                _script_num = value;
-                if (string.IsNullOrWhiteSpace(_script_num)) _script_num = "0";
-                if (!int.TryParse(_script_num, out int _num)) _script_num = "0";
-                _script_num = _script_num.Trim();
-            }
-        }
-
-        /// <summary>Номер скрипта - для использования в имени файла</summary>
-        public string ScriptNumberToFilename
-        {
-            get
-            {
-                return this.ScriptNumber.Replace("-", String.Empty).Replace(" ", String.Empty).ToLower();
-            }
+            return $"{this.PrefixToFilename}  {MainWindow.Task.TaskNumberToFilename}  {_num.ToString()} marker dbo {_table}.sql";
         }
 
         /// <summary>Конструктор WinMarker</summary>
@@ -537,7 +510,7 @@ namespace SQLGen
 
             if (ConnectSQL != null) //-V3022
             {
-                Utilities.Controls.RefreshGITProjectItems(cbGITProject, ConnectSQL.GITProject);
+                Utilities.Controls.RefreshGITProjectItems(cbGITProject, ConnectSQL.GITProject, ConnectSQL.ConnType, true);
                 cbGITProjectChanged();
             }
         }
@@ -1108,34 +1081,41 @@ namespace SQLGen
         /// <summary>Нажата кнопка Сохранить в файл на вкладке Script</summary>
         private void btSave_Click(object sender, RoutedEventArgs e)
         {
-            FileStream fs = null;
+            string filename = "";
 
             try
             {
+                // имя временного файла для скрипта
+                var generator = new RandomGenerator();
+                filename = System.IO.Path.Combine(MainWindow.Task.TaskPath, generator.RandomString(8) + ".tmp");
+
+                // создаем и заполняем временный файл
+                Encoding encoding = new UTF8Encoding(false);
+                File.WriteAllText(filename, tbScript.Text, encoding);
+
                 // определить номер скрипта 
-                this.ScriptNumber = (Utilities.Files.MaxScriptNumber(MainWindow.Task.TaskPath) + 1).ToString();
+                string ScriptNumber = (Utilities.Files.MaxScriptNumber(MainWindow.Task.TaskPath) + 1).ToString();
 
-                // запросить номер скрипта
-                FormAskNumFile dlg1 = new FormAskNumFile();
-                dlg1.tbNumFile.Text = this.ScriptNumber;
-                if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    this.ScriptNumber = dlg1.tbNumFile.Text.Trim();
-                dlg1.Dispose();
+                // разбираем на хранимки временный файл
+                Utilities.Databases.SaveProcScript(this.PrefixToFilename, MainWindow.Task.TaskNumber, filename, ScriptNumber, cbConnect);
+            }
+            catch (Exception ex)
+            {
+                App.AddLog("", ex, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
+            }
 
-                // имя файла для скрипта
-                string filename = Dialogs.SaveSQLDialog(MainWindow.Task.TaskPath, this.ScriptFilename, out fs, out FileMode fileMode);
-
-                //сохранить файл
-                if (fs != null)
+            try
+            {
+                if (
+                    (!string.IsNullOrWhiteSpace(filename)) &&
+                    File.Exists(filename)
+                )
                 {
-                    tbScript.Filename = "";
-                    Utilities.Files.WriteScript(filename, fs, tbScript.Text, false, out string err, fileMode);
-                    tbScript.Filename = filename;
+                    File.Delete(filename);
                 }
             }
-            finally
+            catch
             {
-                if (fs != null) fs.Dispose();
             }
         }
 
@@ -1505,89 +1485,22 @@ namespace SQLGen
         /// <param name="ChoosedMarker">выбранные маркеры</param>
         private string GenerateScript(List<FreeDocMarker> ChoosedMarker, List<FreeDocRelationship> ChoosedRelation)
         {
-            string script = "";
-            bool isAddRegion = isRegion.IsChecked == true;
-            string txtRegion = Utilities.Controls.GetSelectedRegion(cbRegion);
             tbScriptMessages.Text = "";
             dgScriptResults.ItemsSource = null;
             lbScriptStatus.Content = "";
 
-            string check = "";
-
-            // заголовок скрипта (информация о задаче)
-            {
-                script += MainWindow.Task.TitleScript(this.TargetDB, "data", false, false) + Environment.NewLine;
-            }
-
-            if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-            {
-                script += Environment.NewLine + "DO $script$";
-                script += Environment.NewLine + "BEGIN" + Environment.NewLine;
-            }
-
-            // Проверка на региональность
-            if (isAddRegion)
-            {
-                if (this.TargetDB == Utilities.TargetDBType.MSSQL)
-                {
-                    script += Environment.NewLine + "IF (dbo.getregion() = " + txtRegion.Trim() + " OR db_name() IN ('ProMedWebRelease', 'ProMedTest', 'promeddev'))";
-
-                    script += Environment.NewLine + "BEGIN" + Environment.NewLine;
-                }
-
-                if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                {
-                    script += Environment.NewLine + "IF (dbo.getregion() = " + txtRegion + " OR current_database() IN ('promedrelease', 'promedadygea', 'promedtest'))";
-
-                    script += Environment.NewLine + "THEN" + Environment.NewLine;
-                }
-            }
+            // текст скрипта
+            string script = "";
 
             // хинт для MS SQL
-            string mshint_change = "";
-            if (this.TargetDB == Utilities.TargetDBType.MSSQL) mshint_change = "WITH (rowlock) ";
             string mshint_sel = "";
             if (this.TargetDB == Utilities.TargetDBType.MSSQL) mshint_sel = "WITH (nolock) ";
 
-            // концовка оператора INSERT
-            string insert_end = "";
-            if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-            {
-                //insert_end = " ON CONFLICT DO NOTHING;";
-                insert_end = ";";
-            }
-
-            // концовка оператора UPDATE
-            string update_end = "";
-            if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD)) update_end = ";";
-
             // ============================================== dbo.FreeDocRelationship ===================================================
-
-            // Перед INSERT или INSERT/UPDATE
-            /*if ((this.TargetDB == Utilities.TargetDBType.MSSQL) && ChoosedRelation.Count > 0)
-            {
-                script += Environment.NewLine + "SET IDENTITY_INSERT dbo.FreeDocRelationship ON" + Environment.NewLine;
-            }
-
-            string s = ConnectSQL.GetValueFromQuery("select max(FreeDocRelationship_id) as FreeDocRelationship_id from dbo.FreeDocRelationship " + mshint_sel, "FreeDocRelationship_id", 1);
-            long max_id = 0;
-            if (string.IsNullOrWhiteSpace(s) || (!long.TryParse(s, out max_id)))
-            {
-                max_id = 0;
-            }*/
 
             // соберем список измененных связей
             foreach (FreeDocRelationship rel in ChoosedRelation)
             {
-                // определяем идентификатор
-                /*s = rel.FreeDocRelationship_id;
-                long id;
-                if (string.IsNullOrWhiteSpace(s) || (!long.TryParse(s, out id)))
-                {
-                    max_id++;
-                    id = max_id;
-                }*/
-
                 // определяем EvnClass_id
                 string s = ConnectSQL.GetValueFromQuery("SELECT EvnClass_id FROM dbo.EvnClass " + mshint_sel + "WHERE EvnClass_SysNick = '" + rel.EvnClass_SysNick + "'", "EvnClass_id", 1);
                 long EvnClass_id;
@@ -1599,39 +1512,42 @@ namespace SQLGen
                 // AliasName нужен всегда заполненным
                 if (!string.IsNullOrWhiteSpace(rel.FreeDocRelationship_AliasName))
                 {
-                    // INSERT
-                    script += Environment.NewLine;
+                    string _command = "";
 
-                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
+                    string _aliasname = rel.FreeDocRelationship_AliasName
+                        .Replace("'", "");
+                    if (string.IsNullOrWhiteSpace(_aliasname))
                     {
-                        script += "IF NOT EXISTS (SELECT TOP(1) 1 FROM dbo.FreeDocRelationship " + mshint_sel + "WHERE FreeDocRelationship_AliasName = '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ")" + Environment.NewLine +
-                            "BEGIN" + Environment.NewLine;
+                        _aliasname = "";
                     }
-                    else
+                    string _aliastable = rel.FreeDocRelationship_AliasTable
+                        .Replace("'","");
+                    if (string.IsNullOrWhiteSpace(_aliastable))
                     {
-                        script += "IF NOT EXISTS (SELECT 1 FROM dbo.FreeDocRelationship " + mshint_sel + "WHERE FreeDocRelationship_AliasName = '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + " LIMIT 1)" + Environment.NewLine +
-                            "THEN" + Environment.NewLine;
+                        _aliastable = "";
                     }
-
-                    script += "\tINSERT INTO dbo.FreeDocRelationship " + mshint_change + "(EvnClass_id, FreeDocRelationship_AliasName, FreeDocRelationship_AliasTable, FreeDocRelationship_AliasQuery, FreeDocRelationship_LinkedAlias, FreeDocRelationship_LinkDescription, pmUser_insID, pmUser_updID, FreeDocRelationship_insDT, FreeDocRelationship_updDT) " + Environment.NewLine +
-                    "\tVALUES (" + Environment.NewLine + 
-                    "\t\t" + EvnClass_id.ToString() + "," + Environment.NewLine +
-                    "\t\t'" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "'," + Environment.NewLine;
-
-                    if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_AliasTable))
+                    string _aliasquery = rel.FreeDocRelationship_AliasQuery
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_aliasquery))
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        _aliasquery = "";
                     }
-                    else
+                    string _linkedalias = rel.FreeDocRelationship_LinkedAlias
+                        .Replace("'", "");
+                    if (string.IsNullOrWhiteSpace(_linkedalias))
                     {
-                        script += "\t\t'" + rel.FreeDocRelationship_AliasTable.Replace("'", "''") + "'," + Environment.NewLine;
+                        _linkedalias = "";
                     }
-
-                    string aliasquery = rel.FreeDocRelationship_AliasQuery.Replace("'", "''");
+                    string _linkdescription = rel.FreeDocRelationship_LinkDescription
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_linkdescription))
+                    {
+                        _linkdescription = "";
+                    }
 
                     if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
                     {
-                        aliasquery = aliasquery.Replace("with(nolock)", "")
+                        _aliasquery = _aliasquery.Replace("with(nolock)", "")
                             .Replace("with (nolock)", "")
                             .Replace("with(rowlock)", "")
                             .Replace("with (rowlock)", "")
@@ -1653,191 +1569,60 @@ namespace SQLGen
                             .Replace("(ROWLOCK)", "");
                     }
 
-                    if (string.IsNullOrWhiteSpace(aliasquery))
+                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        _command = $"DECLARE @res VARCHAR(max); EXEC dbo.xp_Gen_FreeDocRelationship @EvnClass_id = {EvnClass_id.ToString()}, @FreeDocRelationship_AliasName = '{_aliasname}', @FreeDocRelationship_AliasTable = '{_aliastable}', @FreeDocRelationship_AliasQuery = '{_aliasquery}', @FreeDocRelationship_LinkedAlias = '{_linkedalias}', @FreeDocRelationship_LinkDescription = '{_linkdescription}', @isExec = NULL, @TaskNumber = '{MainWindow.Task.TaskNumber}', @res = @res OUTPUT; SELECT @res;";
                     }
                     else
                     {
-                        script += "\t\t'" + aliasquery + "'," + Environment.NewLine;
+                        _command = $"SELECT * FROM dbo.xp_gen_freedocrelationship(EvnClass_id := {EvnClass_id.ToString()}, FreeDocRelationship_AliasName := '{_aliasname}', FreeDocRelationship_AliasTable := '{_aliastable}', FreeDocRelationship_AliasQuery := '{_aliasquery}', FreeDocRelationship_LinkedAlias := '{_linkedalias}', FreeDocRelationship_LinkDescription := '{_linkdescription}', isExec := NULL, TaskNumber := '{MainWindow.Task.TaskNumber}');";
                     }
 
-                    if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_LinkedAlias))
+                    string _result = Environment.NewLine + $"-- SQLGen: FreeDocRelationship freedocrelationship_{_aliasname}_{EvnClass_id.ToString()} --";
+                    try
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        using (DbDataReader reader = ConnectSQL.OpenQuery(_command))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    for (int i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        _result += Environment.NewLine + reader[i].ToString();
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _result += Environment.NewLine + App.AddLog("Ошибка выполнения: " + Environment.NewLine + _command + Environment.NewLine, ex, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile).showMessage;
+                    }
+
+                    script += _result;
+
+                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
+                    {
+                        script +=
+                            Environment.NewLine + "-- Проверка" +
+                            Environment.NewLine + "-- SELECT * FROM dbo.FreeDocRelationship WHERE FreeDocRelationship_AliasName LIKE '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
                     }
                     else
                     {
-                        script += "\t\t'" + rel.FreeDocRelationship_LinkedAlias.Replace("'", "''") + "'," + Environment.NewLine;
+                        script +=
+                            Environment.NewLine + "-- Проверка" +
+                            Environment.NewLine + "-- SELECT * FROM dbo.FreeDocRelationship WHERE FreeDocRelationship_AliasName iLIKE '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
                     }
-
-                    if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_LinkDescription))
-                    {
-                        script += "\t\tNULL," + Environment.NewLine;
-                    }
-                    else
-                    {
-                        script += "\t\t'" + rel.FreeDocRelationship_LinkDescription.Replace("'", "''") + "'," + Environment.NewLine;
-                    }
-
-                    if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                    {
-                        script += "\t\t1, 1, localtimestamp, localtimestamp" + Environment.NewLine +
-                            "\t)" + insert_end + Environment.NewLine +
-                            "END IF;" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        script += "\t\t1, 1, getdate(), getdate()" + Environment.NewLine + 
-                            "\t)" + insert_end + Environment.NewLine +
-                            "END" + Environment.NewLine;
-                    }
-
-                    //UPDATE
-                    string update = "";
-                    //if (rel.EvnClass_SysNick != rel.original_EvnClass_SysNick)
-                    /*
-                    {
-                        if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine; //-V3022
-
-                        if (string.IsNullOrWhiteSpace(rel.EvnClass_SysNick))
-                        {
-                            update += "EvnClass_id = NULL,";
-                        }
-                        else
-                        {
-                            update += "EvnClass_id = " + EvnClass_id.ToString() + ",";
-                        }
-                    }
-                    */
-
-                    //if (rel.FreeDocRelationship_AliasName != rel.original_FreeDocRelationship_AliasName)
-                    /*
-                    {
-                        if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_AliasName))
-                        {
-                            update += "FreeDocRelationship_AliasName = NULL,";
-                        }
-                        else
-                        {
-                            update += "FreeDocRelationship_AliasName = '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "',";
-                        }
-                    }
-                    */
-
-                    //if (rel.FreeDocRelationship_AliasTable != rel.original_FreeDocRelationship_AliasTable)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_AliasTable))
-                        {
-                            update += "\tFreeDocRelationship_AliasTable = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocRelationship_AliasTable = '" + rel.FreeDocRelationship_AliasTable.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (rel.FreeDocRelationship_AliasQuery != rel.original_FreeDocRelationship_AliasQuery)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(aliasquery))
-                        {
-                            update += "\tFreeDocRelationship_AliasQuery = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocRelationship_AliasQuery = '" + aliasquery + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (rel.FreeDocRelationship_LinkedAlias != rel.original_FreeDocRelationship_LinkedAlias)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_LinkedAlias))
-                        {
-                            update += "\tFreeDocRelationship_LinkedAlias = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocRelationship_LinkedAlias = '" + rel.FreeDocRelationship_LinkedAlias.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (rel.FreeDocRelationship_LinkDescription != rel.original_FreeDocRelationship_LinkDescription)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(rel.FreeDocRelationship_LinkDescription))
-                        {
-                            update += "\tFreeDocRelationship_LinkDescription = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocRelationship_LinkDescription = '" + rel.FreeDocRelationship_LinkDescription.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                    {
-                        update += "\tpmUser_updID = 1," + Environment.NewLine +
-                            "\tFreeDocRelationship_updDT = localtimestamp" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        update += "\tpmUser_updID = 1," + Environment.NewLine +
-                            "\tFreeDocRelationship_updDT = getdate()" + Environment.NewLine;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(update))
-                    {
-                        script += Environment.NewLine + "UPDATE dbo.FreeDocRelationship " + mshint_change + "SET" + Environment.NewLine +
-                            update + 
-                            "WHERE FreeDocRelationship_AliasName = '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + update_end + Environment.NewLine;
-                    }
-
-                    check += Environment.NewLine + "SELECT * FROM dbo.FreeDocRelationship WHERE FreeDocRelationship_AliasName = '" + rel.FreeDocRelationship_AliasName.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
                 }
             }
 
-            // После INSERT или INSERT/UPDATE
-            /*if ((this.TargetDB == Utilities.TargetDBType.MSSQL) && ChoosedRelation.Count > 0)
-            {
-                script += Environment.NewLine + "SET IDENTITY_INSERT dbo.FreeDocRelationship OFF" + Environment.NewLine;
-            }*/
-
             // ============================================== dbo.FreeDocMarker ===================================================
-
-            // Перед INSERT или INSERT/UPDATE
-            /*if ((this.TargetDB == Utilities.TargetDBType.MSSQL) && ChoosedMarker.Count > 0)
-            {
-                script += Environment.NewLine + "SET IDENTITY_INSERT dbo.FreeDocMarker ON" + Environment.NewLine;
-            }
-
-            s = ConnectSQL.GetValueFromQuery("select max(FreeDocMarker_id) as FreeDocMarker_id from dbo.FreeDocMarker " + mshint_sel, "FreeDocMarker_id", 1);
-            max_id = 0;
-            if (string.IsNullOrWhiteSpace(s) || (!long.TryParse(s, out max_id)))
-            {
-                max_id = 0;
-            }*/
 
             // соберем список измененных маркеров
             foreach (FreeDocMarker marker in ChoosedMarker)
             {
-                // определяем идентификатор
-                /*s = marker.FreeDocMarker_id;
-                long id;
-                if (string.IsNullOrWhiteSpace(s) || (!long.TryParse(s, out id)))
-                {
-                    max_id++;
-                    id = max_id;
-                }*/
-
                 // определяем EvnClass_id
                 string s = ConnectSQL.GetValueFromQuery("SELECT EvnClass_id FROM dbo.EvnClass " + mshint_sel + "WHERE EvnClass_SysNick = '" + marker.EvnClass_SysNick + "'", "EvnClass_id", 1);
                 long EvnClass_id;
@@ -1849,49 +1634,53 @@ namespace SQLGen
                 // AliasName нужен всегда заполненным
                 if (!string.IsNullOrWhiteSpace(marker.FreeDocMarker_Name))
                 {
+                    string _command = "";
 
-                    // INSERT
-                    script += Environment.NewLine;
-
-                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
+                    string _name = marker.FreeDocMarker_Name
+                        .Replace("'", "");
+                    if (string.IsNullOrWhiteSpace(_name))
                     {
-                        script += "IF NOT EXISTS (SELECT TOP(1) 1 FROM dbo.v_FreeDocMarker " + mshint_sel + "WHERE FreeDocMarker_Name = '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ")" + Environment.NewLine +
-                                "BEGIN" + Environment.NewLine;
+                        _name = "";
                     }
-                    else
+                    string _tablealias = marker.FreeDocMarker_TableAlias
+                        .Replace("'", "");
+                    if (string.IsNullOrWhiteSpace(_tablealias))
                     {
-                        script += "IF NOT EXISTS (SELECT 1 FROM dbo.v_FreeDocMarker " + mshint_sel + "WHERE FreeDocMarker_Name = '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + " LIMIT 1)" + Environment.NewLine +
-                                "THEN" + Environment.NewLine;
+                        _tablealias = "";
                     }
-
-                    script += "\tINSERT INTO dbo.FreeDocMarker " + mshint_change + "(EvnClass_id, FreeDocMarker_Name, FreeDocMarker_TableAlias, FreeDocMarker_Field, FreeDocMarker_Query, FreeDocMarker_Description, FreeDocMarker_Options, FreeDocMarker_IsTableValue, pmUser_insID, pmUser_updID, FreeDocMarker_insDT, FreeDocMarker_updDT) " + Environment.NewLine +
-                    "\tVALUES (" + Environment.NewLine +
-                    "\t\t" + EvnClass_id.ToString() + "," + Environment.NewLine +
-                    "\t\t'" + marker.FreeDocMarker_Name.Replace("'", "''") + "'," + Environment.NewLine;
-
-                    if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_TableAlias))
+                    string _field = marker.FreeDocMarker_Field
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_field))
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        _field = "";
                     }
-                    else
+                    string _query = marker.FreeDocMarker_Query
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_query))
                     {
-                        script += "\t\t'" + marker.FreeDocMarker_TableAlias.Replace("'", "''") + "'," + Environment.NewLine;
+                        _query = "";
                     }
-
-                    if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Field))
+                    string _description = marker.FreeDocMarker_Description
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_description))
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        _description = "";
                     }
-                    else
+                    string _istablevalue = marker.FreeDocMarker_IsTableValue_string;
+                    if (string.IsNullOrWhiteSpace(_istablevalue)) //-V3022
                     {
-                        script += "\t\t'" + marker.FreeDocMarker_Field.Replace("'", "''") + "'," + Environment.NewLine;
+                        _istablevalue = "NULL";
                     }
-
-                    string query = marker.FreeDocMarker_Query.Replace("'", "''");
+                    string _options = marker.FreeDocMarker_Options
+                        .Replace("'", "''");
+                    if (string.IsNullOrWhiteSpace(_options))
+                    {
+                        _options = "";
+                    }
 
                     if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
                     {
-                        query = query.Replace("with(nolock)", "")
+                        _query = _query.Replace("with(nolock)", "")
                             .Replace("with (nolock)", "")
                             .Replace("with(rowlock)", "")
                             .Replace("with (rowlock)", "")
@@ -1913,232 +1702,62 @@ namespace SQLGen
                             .Replace("(ROWLOCK)", "");
                     }
 
-                    if (string.IsNullOrWhiteSpace(query))
+                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        _command = $"DECLARE @res VARCHAR(max); EXEC dbo.xp_Gen_FreeDocMarker @EvnClass_id = {EvnClass_id.ToString()}, @FreeDocMarker_Name = '{_name}', @FreeDocMarker_TableAlias = '{_tablealias}', @FreeDocMarker_Field = '{_field}', @FreeDocMarker_Query = '{_query}', @FreeDocMarker_Description = '{_description}', @FreeDocMarker_IsTableValue = {_istablevalue}, @FreeDocMarker_Options = '{_options}', @isExec = NULL, @TaskNumber = '{MainWindow.Task.TaskNumber}', @res = @res OUTPUT; SELECT @res;";
                     }
                     else
                     {
-                        script += "\t\t'" + query + "'," + Environment.NewLine;
+                        _command = $"SELECT * FROM dbo.xp_Gen_FreeDocMarker(EvnClass_id := {EvnClass_id.ToString()}, FreeDocMarker_Name := '{_name}', FreeDocMarker_TableAlias := '{_tablealias}', FreeDocMarker_Field := '{_field}', FreeDocMarker_Query := '{_query}', FreeDocMarker_Description := '{_description}', FreeDocMarker_IsTableValue := {_istablevalue}, FreeDocMarker_Options := '{_options}', isExec := NULL, TaskNumber := '{MainWindow.Task.TaskNumber}');";
                     }
 
-                    if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Description))
+                    string _result = Environment.NewLine + $"-- SQLGen: FreeDocMarker freedocmarker_{_name}_{EvnClass_id.ToString()} --";
+                    try
                     {
-                        script += "\t\tNULL," + Environment.NewLine;
+                        using (DbDataReader reader = ConnectSQL.OpenQuery(_command))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    for (int i = 0; i < reader.FieldCount; i++)
+                                    {
+                                        _result += Environment.NewLine + reader[i].ToString();
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _result += Environment.NewLine + App.AddLog("Ошибка выполнения: " + Environment.NewLine + _command + Environment.NewLine, ex, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile).showMessage;
+                    }
+
+                    script += _result;
+
+                    if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
+                    {
+                        script +=
+                            Environment.NewLine + "-- Проверка" +
+                            Environment.NewLine + "-- SELECT * FROM dbo.FreeDocMarker WHERE FreeDocMarker_Name LIKE '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
                     }
                     else
                     {
-                        script += "\t\t'" + marker.FreeDocMarker_Description.Replace("'", "''") + "'," + Environment.NewLine;
+                        script +=
+                            Environment.NewLine + "-- Проверка" +
+                            Environment.NewLine + "-- SELECT * FROM dbo.FreeDocMarker WHERE FreeDocMarker_Name iLIKE '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
                     }
-
-                    if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Options))
-                    {
-                        script += "\t\tNULL," + Environment.NewLine;
-                    }
-                    else
-                    {
-                        script += "\t\t'" + marker.FreeDocMarker_Options.Replace("'", "''") + "'," + Environment.NewLine;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_IsTableValue_string)) //-V3022
-                    {
-                        script += "\t\tNULL," + Environment.NewLine;
-                    }
-                    else
-                    {
-                        script += "\t\t" + marker.FreeDocMarker_IsTableValue_string + "," + Environment.NewLine;
-                    }
-
-                    if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                    {
-                        script += "\t\t1, 1, localtimestamp, localtimestamp" + Environment.NewLine +
-                            "\t)" + insert_end + Environment.NewLine +
-                            "END IF;" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        script += "\t\t1, 1, getdate(), getdate()" + Environment.NewLine +
-                            "\t)" + insert_end + Environment.NewLine +
-                            "END" + Environment.NewLine;
-                    }
-
-                    //UPDATE
-                    string update = "";
-                    //if (marker.EvnClass_SysNick != marker.original_EvnClass_SysNick)
-                    /*{
-                        if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine; //-V3022
-
-                        if (string.IsNullOrWhiteSpace(marker.EvnClass_SysNick))
-                        {
-                            update += "EvnClass_id = NULL,";
-                        }
-                        else
-                        {
-                            update += "EvnClass_id = " + EvnClass_id.ToString() + ",";
-                        }
-                    }*/
-
-                    //if (marker.FreeDocMarker_Name != marker.original_FreeDocMarker_Name)
-                    /*{
-                        if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Name))
-                        {
-                            update += "FreeDocMarker_Name = NULL,";
-                        }
-                        else
-                        {
-                            update += "FreeDocMarker_Name = '" + marker.FreeDocMarker_Name.Replace("'", "''") + "',";
-                        }
-                    }*/
-
-                    //if (marker.FreeDocMarker_TableAlias != marker.original_FreeDocMarker_TableAlias)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_TableAlias))
-                        {
-                            update += "\tFreeDocMarker_TableAlias = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_TableAlias = '" + marker.FreeDocMarker_TableAlias.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (marker.FreeDocMarker_Field != marker.original_FreeDocMarker_Field)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Field))
-                        {
-                            update += "\tFreeDocMarker_Field = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_Field = '" + marker.FreeDocMarker_Field.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (marker.FreeDocMarker_Query != marker.original_FreeDocMarker_Query)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(query))
-                        {
-                            update += "\tFreeDocMarker_Query = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_Query = '" + query + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (marker.FreeDocMarker_Description != marker.original_FreeDocMarker_Description)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Description))
-                        {
-                            update += "\tFreeDocMarker_Description = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_Description = '" + marker.FreeDocMarker_Description.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (marker.FreeDocMarker_Options != marker.original_FreeDocMarker_Options)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_Options))
-                        {
-                            update += "\tFreeDocMarker_Options = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_Options = '" + marker.FreeDocMarker_Options.Replace("'", "''") + "'," + Environment.NewLine;
-                        }
-                    }
-
-                    //if (marker.FreeDocMarker_IsTableValue != marker.original_FreeDocMarker_IsTableValue)
-                    {
-                        //if (!string.IsNullOrWhiteSpace(update)) update += Environment.NewLine;
-
-                        if (string.IsNullOrWhiteSpace(marker.FreeDocMarker_IsTableValue_string)) //-V3022
-                        {
-                            update += "\tFreeDocMarker_IsTableValue = NULL," + Environment.NewLine;
-                        }
-                        else
-                        {
-                            update += "\tFreeDocMarker_IsTableValue = " + marker.FreeDocMarker_IsTableValue_string + "," + Environment.NewLine;
-                        }
-                    }
-
-                    if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                    {
-                        update += "\tpmUser_updID = 1," + Environment.NewLine + 
-                            "\tFreeDocMarker_updDT = localtimestamp" + Environment.NewLine;
-                    }
-                    else
-                    {
-                        update += "\tpmUser_updID = 1," + Environment.NewLine + 
-                            "\tFreeDocMarker_updDT = getdate()" + Environment.NewLine;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(update))
-                    {
-                        script += Environment.NewLine + "UPDATE dbo.FreeDocMarker " + mshint_change + "SET" + Environment.NewLine +
-                        update +
-                        "WHERE FreeDocMarker_Name = '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + update_end + Environment.NewLine;
-                    }
-
-                    check += Environment.NewLine + "SELECT * FROM dbo.FreeDocMarker WHERE FreeDocMarker_Name = '" + marker.FreeDocMarker_Name.Replace("'", "''") + "' AND EvnClass_id = " + EvnClass_id.ToString() + ";";
-                }
-
-            }
-
-            // После INSERT или INSERT/UPDATE
-            /*
-            if ((this.TargetDB == Utilities.TargetDBType.MSSQL) && ChoosedMarker.Count > 0)
-            {
-                script += Environment.NewLine + "SET IDENTITY_INSERT dbo.FreeDocMarker OFF" + Environment.NewLine;
-            }*/
-
-            // Проверка на региональность
-            if (isAddRegion)
-            {
-                if (this.TargetDB == Utilities.TargetDBType.MSSQL)
-                {
-
-                    script += Environment.NewLine + "END" + Environment.NewLine;
-
-                }
-                if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-                {
-
-                    script += Environment.NewLine + "END IF;" + Environment.NewLine;
                 }
             }
-
-            if ((this.TargetDB == Utilities.TargetDBType.PGSQL) || (this.TargetDB == Utilities.TargetDBType.EMD))
-            {
-
-                script += Environment.NewLine + "END;" + Environment.NewLine + "$script$;" + Environment.NewLine;
-            }
-
-            script += Environment.NewLine + "-- Проверка" +
-                Environment.NewLine + "/*" +
-                check +
-                Environment.NewLine + "*/";
 
             // убираем лишние переводы строки в конце, оставляем один
-            script = script.TrimEndNewLine(Environment.NewLine);
+            script = script
+                .TrimStartNewLine()
+                .TrimEndNewLine(Environment.NewLine);
 
             return script;
         }
-
 
         /// <summary>
         /// нажата кнопка Сгенерировать скрипт (по изменениям)

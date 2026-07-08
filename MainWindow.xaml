@@ -84,7 +84,8 @@
                 <Fluent:Button  x:Name="btBuildRelease" LargeIcon="Images/versions.png" Header="Собрать релиз" Click="btBuildRelease_Click" ToolTip="Сборка релиза" />
                 <Fluent:Button  x:Name="btBuildReleaseDeployment" LargeIcon="Images/versions.png" Header="Собрать Deployment Plan" Click="btBuildReleaseDeployment_Click" ToolTip="Сборка Deployment Plan релиза" />
                 <Fluent:Button  x:Name="btBuildReleaseCron" LargeIcon="Images/versions.png" Header="Собрать Cron" Click="btBuildReleaseCron_Click" ToolTip="Сборка Cron релиза" />
-                <Fluent:Button  x:Name="btToMaster" LargeIcon="Images/merge.png" Header="Влить в master" Click="btToMaster_Click" ToolTip="влить ветку версии в ветки master и dev с разрешением конфликтов" />
+                <Fluent:Button  x:Name="btUpdRelBD" LargeIcon="Images/versions.png" Header="Обновить стенд" Click="btUpdRelBD_Click" ToolTip="Сгенерировать список команд для обновления релизного стенда" />
+                <Fluent:Button  x:Name="btToMaster" LargeIcon="Images/merge.png" Header="Влить в master" Click="btToMaster_Click" ToolTip="Влить ветку версии в ветки master и dev с разрешением конфликтов" />
               </Fluent:RibbonGroupBox>
               <Fluent:RibbonGroupBox x:Name="rbActionGroup" Header="Прочие сценарии использования" >
                 <Fluent:DropDownButton x:Name="btUpload" LargeIcon="Images/export.png" Header="Выгрузить" ToolTip="Выгрузить скрипты" >
@@ -114,6 +115,7 @@
                   <Fluent:Button  x:Name="btHelp" LargeIcon="Images/help.png" Header="Инструкция" Click="btHelp_Click" />
                   <Fluent:Button  x:Name="btChangelog" LargeIcon="Images/changelog.png" Header="Changelog" Click="btChangelog_Click" />
                   <Fluent:Button  x:Name="btFeedback" LargeIcon="Images/feedback.png" Header="Обратная связь" Click="btFeedback_Click" />
+                  <Fluent:Button  x:Name="btSendLog" LargeIcon="Images/savedoc.png" Header="Собрать логи" Click="btSendLog_Click" />
                 </Fluent:DropDownButton>
               </Fluent:RibbonGroupBox>
             </Fluent:RibbonTabItem>
@@ -233,6 +235,7 @@
             <Button x:Name="btChangeFont" Content="Сменить шрифт во всех окнах на выбранный" HorizontalAlignment="Left" Height="23" Margin="1200,7,0,0" VerticalAlignment="Top" Width="355" Click="btChangeFont_Click"/>
             <Button x:Name="btResetFont" Content="Сбросить шрифт во всех окнах на значение по умолчанию" HorizontalAlignment="Left" Height="23" Margin="1200,37,0,0" VerticalAlignment="Top" Width="355" Click="btResetFont_Click"/>
             <TextBox x:Name="tbExampleFont" Text="Образец шрифта, Font example, 1234567890" HorizontalAlignment="Left" Height="54" Margin="745,37,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="445" IsReadOnly="True" />
+            <CheckBox x:Name="isTaskReleaseCooperative" Content="Кооперативный режим сборки версий" HorizontalAlignment="Left" Margin="1290,72,0,0" VerticalAlignment="Top" Checked="isTaskReleaseCooperative_Checked" Unchecked="isTaskReleaseCooperative_Unchecked"/>
             <CheckBox x:Name="isExtendedLog" Content="Расширенное логирование" HorizontalAlignment="Left" Margin="750,102,0,0" VerticalAlignment="Top" Checked="isExtendedLog_Checked" Unchecked="isExtendedLog_Unchecked"/>
             <CheckBox x:Name="isImproveSQLinVersion" Content="Улучшать скрипты релиза (метки, changeset и пр.)" HorizontalAlignment="Left" Margin="950,102,0,0" VerticalAlignment="Top" Checked="isImproveSQLinVersion_Checked" Unchecked="isImproveSQLinVersion_Unchecked"/>
             <CheckBox x:Name="isUseNewFunc" Content="Использовать p__SetNotNull и p__FKCreate" HorizontalAlignment="Left" Margin="1290,102,0,0" VerticalAlignment="Top" Checked="isUseNewFunc_Checked" Unchecked="isUseNewFunc_Unchecked"/>

@@ -443,7 +443,7 @@ namespace SQLGen
                 }
                 else if (oper == CronOperType.ADD)
                 {
-                    new_cron.SetCron(max, MainWindow.Task.TaskNumber, _dbregion, "present", "promed");
+                    new_cron.SetCron(max, MainWindow.Task.TaskNumber, _dbregion, "present", "main");
 
                     WinAddCron.Title = "Добавить новое задание";
                 }
@@ -587,10 +587,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 if (old == "dgCronPG")
                 {
@@ -610,8 +607,9 @@ namespace SQLGen
         /// <param name="branchCron">ветка</param>
         /// <param name="isSelectedPrev">ветка уже выбрана в предыдущем проекте с заданиями</param>
         /// <param name="logFile">лог-файл</param>
+        /// <param name="info">причина выбора ветки</param>
         /// <returns></returns>
-        public static bool SelectGITBranch(string projectCron, ref string branchCron, ref bool isSelectedPrev, string logFile)
+        public static bool SelectGITBranch(string projectCron, ref string branchCron, ref bool isSelectedPrev, string logFile, string info)
         {
             if (!string.IsNullOrWhiteSpace(projectCron))
             {
@@ -634,7 +632,7 @@ namespace SQLGen
                     if (current_branch != branchCron)
                     {
                         // этой ветки нет, выберем другую ветку
-                        if (GIT.SelectGITBranch(projectCron, branchCron, out string branch, logFile, false, false))
+                        if (GIT.SelectGITBranch(projectCron, branchCron, out string branch, logFile, false, false, $"Ветка {branchCron} не найдена"))
                         {
                             branchCron = branch;
                             return true;
@@ -648,7 +646,7 @@ namespace SQLGen
                 else
                 {
                     // выбираем ветку
-                    if (GIT.SelectGITBranch(projectCron, branchCron, out string branch, logFile, true, false))
+                    if (GIT.SelectGITBranch(projectCron, branchCron, out string branch, logFile, true, false, info))
                     {
                         branchCron = branch;
                         isSelectedPrev = true;
@@ -678,7 +676,7 @@ namespace SQLGen
                 }
 
                 if (
-                    !SelectGITBranch(this.ProjectCronPG, ref branch, ref isSelectedPrev, logFile) ||
+                    !SelectGITBranch(this.ProjectCronPG, ref branch, ref isSelectedPrev, logFile, "") ||
                     string.IsNullOrWhiteSpace(branch)
                     )
                 {
@@ -710,7 +708,7 @@ namespace SQLGen
                 }
 
                 if (
-                    !SelectGITBranch(this.ProjectCronMS, ref branch, ref isSelectedPrev, logFile) ||
+                    !SelectGITBranch(this.ProjectCronMS, ref branch, ref isSelectedPrev, logFile, "") ||
                         string.IsNullOrWhiteSpace(branch)
                     )
                 {
@@ -979,6 +977,105 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Перегенерировать json-файл заданий версии
+        /// </summary>
+        /// <param name="project">проект</param>
+        /// <param name="dbregion">Тип региона по типу основной БД</param>
+        /// <param name="BranchDefault">ветка</param>
+        /// <param name="PathDefault">папка</param>
+        /// <param name="FilenameDefault">файл</param>
+        /// <param name="isBranchCanChanged">=true - можно изменить ветку</param>
+        /// <param name="jsonFilepath">итоговый путь к файлу</param>
+        /// <param name="jsonUrl">url к файлу в web-репозитории</param>
+        /// <param name="logFile">лог-файл</param>
+        /// <param name="version">версия с префиксом</param>
+        /// <param name="isOnlyExist">=true - если файла нет, ничего не делаем</param>
+        /// <param name="ListAddCron">список заданий, добавляемых версией</param>
+        /// <returns></returns>
+        public static bool RegenJSON(string project, string dbregion, string BranchDefault, string PathDefault, string FilenameDefault, bool isBranchCanChanged, out string jsonFilepath, out string jsonUrl, string logFile, string version, bool isOnlyExist, ObservableCollection<Cron> ListAddCron)
+        {
+            bool isSaved = false;
+            jsonFilepath = "";
+            jsonUrl = "";
+
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                if (string.IsNullOrWhiteSpace(FilenameDefault))
+                {
+                    // Ищем существующий файл версии
+                    FilenameDefault = Release.GetJsonFile(project, version, "cron", out bool isexist);
+
+                    if (isOnlyExist && (isexist == false))
+                    {
+                        // если файла нет - ничего не переписываем
+                        return false;
+                    }
+                }
+
+                // все задания
+                var AllCron = Cron.ListAllCron(project, dbregion, logFile);
+
+                // сгенерить json со всеми заданиями
+                string jsonText = Cron.GenerateJSON(null, AllCron, logFile, version, false, true);
+
+                // сохранить json-файл с новым содержимым
+                isSaved = GIT.SaveFileToGIT(project, BranchDefault, PathDefault, FilenameDefault, isBranchCanChanged, false, false, jsonText, out jsonFilepath, out jsonUrl, logFile, false, ".json", "(*.json)|*.json|Все файлы (*.*)|*.*", true);
+
+                if (isSaved)
+                {
+                    isBranchCanChanged = false;
+
+                    // задания для box-версии
+                    ObservableCollection<Cron> BoxCron = new ObservableCollection<Cron>();
+
+                    int _order = 0;
+                    foreach (var item in AllCron.Where(x =>
+                            x.istemp == 1 && // постоянные
+                            x.regions.Contains("all") && // для всех регионов
+                            x.state == "present" // действующие
+                        ))
+                    {
+                        _order++;
+                        var _cron = item.Copy();
+                        _cron.order = _order; // перенумеровываем
+                        _cron.exclude_regions = new List<string>(); // убираем регионы-исключения
+                        BoxCron.Add(_cron);
+                    }
+
+                    // имя файла для box
+                    string _boxfilename = FilenameDefault.Replace(".json", ".box");
+                    string _boxversion = "box";
+
+                    // сгенерить json с заданиями для box-версии
+                    jsonText = Cron.GenerateJSON(null, BoxCron, logFile, _boxversion, true, true);
+
+                    // сохранить box-файл с новым содержимым
+                    GIT.SaveFileToGIT(project, BranchDefault, PathDefault, _boxfilename, isBranchCanChanged, false, false, jsonText, out string boxFilepath, out string boxUrl, logFile, false, ".box", "(*.box)|*.box|Все файлы (*.*)|*.*", true);
+
+                    if (
+                        ListAddCron != null &&
+                        ListAddCron.Count > 0
+                    )
+                    {
+                        // имя файла для add
+                        string _addfilename = FilenameDefault.Replace(".json", ".add");
+
+                        // сгенерить json с заданиями для add
+                        jsonText = Cron.GenerateJSON(null, ListAddCron, logFile, null, false, true);
+
+                        // сохранить add-файл с новым содержимым
+                        GIT.SaveFileToGIT(project, BranchDefault, PathDefault, _addfilename, isBranchCanChanged, false, false, jsonText, out string addFilepath, out string addUrl, logFile, false, ".add", "(*.add)|*.add|Все файлы (*.*)|*.*", true);
+                    }
+
+                    // сохранить справочник регионов
+                    WinDeployment.SaveRegions(project, logFile);
+                }
+            }
+
+            return isSaved;
+        }
+
+        /// <summary>
         /// Сохранить задания в файлы
         /// </summary>
         /// <param name="project">проект</param>
@@ -987,14 +1084,14 @@ namespace SQLGen
         /// <param name="PathDefault">папка</param>
         /// <param name="FilenameDefault">файл</param>
         /// <param name="isBranchCanChanged">=true - можно изменить ветку</param>
-        /// <param name="ListCron">список заданий</param>
+        /// <param name="ListAddCron">список заданий, добавляемых в версию</param>
         /// <param name="isForce">=true - сохраняем принудительно, =false - сохраняем если изменился</param>
         /// <param name="jsonFilepath">итоговый путь к файлу</param>
         /// <param name="jsonUrl">url к файлу в web-репозитории</param>
         /// <param name="logFile">лог-файл</param>
-        /// <param name="version">версия</param>
+        /// <param name="version">версия с префиксом</param>
         /// <returns></returns>
-        public static bool SaveJSON(string project, string dbregion, string BranchDefault, string PathDefault, string FilenameDefault, bool isBranchCanChanged, ObservableCollection<Cron> ListCron, bool isForce, out string jsonFilepath, out string jsonUrl, string logFile, string version)
+        public static bool SaveJSON(string project, string dbregion, string BranchDefault, string PathDefault, string FilenameDefault, bool isBranchCanChanged, ObservableCollection<Cron> ListAddCron, bool isForce, out string jsonFilepath, out string jsonUrl, string logFile, string version)
         {
             jsonFilepath = "";
             jsonUrl = "";
@@ -1028,10 +1125,10 @@ namespace SQLGen
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
             bool isSaved = false;
 
-            if (ListCron != null)
+            if (ListAddCron != null)
             {
                 // перебираем задания
-                foreach (var cron in ListCron.OrderBy(x => x.order))
+                foreach (var cron in ListAddCron.OrderBy(x => x.order))
                 {
                     // сгенерим новый текст файла
                     string jsonText = "";
@@ -1043,7 +1140,7 @@ namespace SQLGen
 
                     int _order = 0;
 
-                    foreach (var item in ListCron.Where(x => x.IsInFile(cron)).OrderBy(x => x.order))
+                    foreach (var item in ListAddCron.Where(x => x.IsInFile(cron)).OrderBy(x => x.order))
                     {
                         _order++;
                         var new_cron = item.Copy();
@@ -1051,7 +1148,7 @@ namespace SQLGen
                         new_list.Add(new_cron);
                     }
 
-                    jsonText = Cron.GenerateJSON(null, new_list, logFile, null, false);
+                    jsonText = Cron.GenerateJSON(null, new_list, logFile, null, false, false);
 
                     // загрузим существующий файл
                     string jsonText_before = "";
@@ -1108,24 +1205,12 @@ namespace SQLGen
             }
 
             // сгенерим и сохраним версию
-            if (
-                !string.IsNullOrWhiteSpace(version) &&
-                !string.IsNullOrWhiteSpace(FilenameDefault)
-            )
+            if (!string.IsNullOrWhiteSpace(FilenameDefault))
             {
-                // все задания
-                var AllCron = Cron.ListAllCron(project, dbregion, logFile);
-
-                // сгенерить json со всеми заданиями
-                string jsonText = Cron.GenerateJSON(null, AllCron, logFile, version, false);
-
-                // сохранить json-файл с новым содержимым
-                isSaved = GIT.SaveFileToGIT(project, BranchDefault, PathDefault, FilenameDefault, isBranchCanChanged, false, false, jsonText, out jsonFilepath, out jsonUrl, logFile, false, ".json", "(*.json)|*.json|Все файлы (*.*)|*.*", true);
+                isSaved = RegenJSON(project, dbregion, BranchDefault, PathDefault, FilenameDefault, isBranchCanChanged, out jsonFilepath, out jsonUrl, logFile, version, false, ListAddCron);
 
                 if (isSaved)
                 {
-                    isBranchCanChanged = false;
-
                     if (dbregion == "MS SQL")
                     {
                         MainWindow.Task.JSONFilenameCronMS = jsonUrl;
@@ -1134,33 +1219,6 @@ namespace SQLGen
                     {
                         MainWindow.Task.JSONFilenameCronPG = jsonUrl;
                     }
-
-                    // задания для box-версии
-                    ObservableCollection<Cron> BoxCron = new ObservableCollection<Cron>();
-
-                    int _order = 0;
-                    foreach (var item in AllCron.Where(x =>
-                            x.istemp == 1 && // постоянные
-                            x.regions.Contains("all") && // для всех регионов
-                            x.state == "present" // действующие
-                        ))
-                    {
-                        _order++;
-                        var _cron = item.Copy();
-                        _cron.order = _order; // перенумеровываем
-                        _cron.exclude_regions = new List<string>(); // убираем регионы-исключения
-                        BoxCron.Add(_cron);
-                    }
-
-                    // новое имя файла
-                    string _boxfilename = FilenameDefault.Replace(".json", ".box");
-                    string _boxversion = "box";
-
-                    // сгенерить json с заданиями для box-версии
-                    jsonText = Cron.GenerateJSON(null, BoxCron, logFile, _boxversion, true);
-
-                    // сохранить box-файл с новым содержимым
-                    GIT.SaveFileToGIT(project, BranchDefault, PathDefault, _boxfilename, isBranchCanChanged, false, false, jsonText, out string boxFilepath, out string boxUrl, logFile, false, ".box", "(*.box)|*.box|Все файлы (*.*)|*.*", true);
                 }
             }
 
@@ -1232,10 +1290,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
             }
         }
 
@@ -1300,10 +1355,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgCronMSRefresh();
             }
@@ -1342,10 +1394,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgCronPGRefresh();
             }
@@ -1376,10 +1425,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgCronMSRefresh();
             }
@@ -1411,10 +1457,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgCronPGRefresh();
             }

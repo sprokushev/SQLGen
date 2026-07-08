@@ -2,9 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
 using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Management.Smo;
-using Microsoft.SqlServer.Management.SqlParser.Metadata;
 using Npgsql;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,16 +11,9 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Markup;
-using SQLGen.Utilities;
-using static System.Net.Mime.MediaTypeNames;
-using Microsoft.SqlServer.Management.Smo.RegSvrEnum;
-using System.Windows.Documents;
 
 namespace SQLGen
 {
@@ -68,12 +60,6 @@ namespace SQLGen
         /// <summary>Сохранить список коннектов</summary>
         public static void SaveConnects()
         {
-            var options = new JsonSerializerOptions
-            {
-                IgnoreReadOnlyProperties = true,
-                WriteIndented = true
-            };
-
             string filename = Path.Combine(App.AppPath, "ListConnects.json");
             string jsonString = "";
 
@@ -91,7 +77,7 @@ namespace SQLGen
                         list.Add(item);
                     }
 
-                    jsonString = JsonSerializer.Serialize<List<ConnectDB>>(list, options);
+                    jsonString = JsonSerializer.Serialize<List<ConnectDB>>(list, Other.OptionsJSON);
                     File.WriteAllText(filename, jsonString);
                 }
                 catch (Exception ex)
@@ -102,26 +88,276 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Собрать строку для повышения максимальной версии стенда
+        /// </summary>
+        /// <param name="stand">стенд</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="prefix">префикс версии</param>
+        /// <param name="list_cmd">список комманд</param>
+        /// <param name="max_version">максимальная версия</param>
+        /// <returns></returns>
+        public static string UpdateLiquibaseRTMIS(string stand, string version, string prefix, out List<string> list_cmd, out string max_version)
+        {
+            string result = "";
+            max_version = "";
+            list_cmd = new List<string>();
+
+            if (
+                string.IsNullOrWhiteSpace(stand) ||
+                string.IsNullOrWhiteSpace(version)
+            )
+            {
+                return result;
+            }
+
+            string dbname = "";
+
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                prefix = version.Split('.')[0];
+            }
+
+            // расширяем номер версии
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, version));
+            long i = (long)numversion;
+            max_version = prefix + "." + (i / 1000000000000).ToString();
+
+            i = i - (i / 1000000000000 * 1000000000000);
+            max_version += "." + (i / 1000000000).ToString();
+
+            i = i - (i / 1000000000 * 1000000000);
+            max_version += "." + (i / 1000000).ToString() + ".99";
+
+
+            if (prefix == "prmd")
+            {
+                dbname = "promedrelease";
+            }
+            else if (prefix == "rpms")
+            {
+                dbname = "userportalrelease";
+            }
+
+            string addr = "";
+            string port = "";
+
+            if (stand == "SP")
+            {
+                addr = "172.29.3.254";
+                port = "5461";
+            }
+            else if (stand == "HF")
+            {
+                addr = "172.29.3.254";
+                port = "5462";
+            }
+            else if (stand == "EHF_ACT")
+            {
+                addr = "172.29.3.254";
+                port = "5463";
+            }
+            else if (stand == "EHF_UNACT")
+            {
+                addr = "172.29.3.254";
+                port = "5464";
+            }
+            else if (stand == "LTS")
+            {
+                addr = "172.29.3.254";
+                port = "5465";
+            }
+
+            if (
+                !string.IsNullOrWhiteSpace(addr) &&
+                !string.IsNullOrWhiteSpace(dbname)
+            )
+            {
+                result = $"--Выполни в базе {dbname} на Postgre-стенде {stand} ({addr}:{port}) команду:" + Environment.NewLine +
+                $"update liquibase.rtmis set version = '{max_version}' where liquibase.VerAsNum(version) < liquibase.VerAsNum('{max_version}');" + Environment.NewLine +
+                "--------------------------------------------------------------------";
+            }
+            else
+            {
+                result = "";
+            }
+
+            list_cmd = result.ToList(new char[] { '\n', '\r' }, true);
+            return result;
+        }
+
+        /// <summary>
         /// Вернуть ConnectDB основной тестовой для проекта GIT
         /// </summary>
         /// <param name="project">проект GIT</param>
         /// <param name="db">наименование БД</param>
+        /// <param name="isMain">=true - основная БД</param>
+        /// <param name="isTest">=true - тестовая БД</param>
+        /// <param name="stand">тип стенда: SP, HF и т.д.</param>
         /// <returns></returns>
-        public static ConnectDB GetMainTestConnectByGITProject(string project, string db)
+        public static ConnectDB GetConnectByGITProject(string project, string db, bool isTest = false, bool isMain = false, string stand = "")
         {
-            foreach (var con in ListConnects.Where(x => (x.GITProject == project) && string.IsNullOrWhiteSpace(db) && (x.isMainTest == true)))
+            if (isTest)
             {
-                return con;
+                if (isMain)
+                {
+                    foreach (var con in ListConnects
+                        .Where(x => 
+                            (x.GITProject == project) && 
+                            string.IsNullOrWhiteSpace(db) && 
+                            (x.isMainTest == true)
+                        )
+                    )
+                    {
+                        return con;
+                    }
+                }
+
+                foreach (var con in ListConnects
+                    .Where(x => 
+                        (x.GITProject == project) &&
+                        (x.isTest == true) &&
+                        (!string.IsNullOrWhiteSpace(db)) && 
+                        (x.DBName.ToLower() == db.ToLower())
+                    )
+                )
+                {
+                    return con;
+                }
             }
 
-            foreach (var con in ListConnects.Where(x => (x.GITProject == project) && (!string.IsNullOrWhiteSpace(db)) && (x.isTest == true) && (x.DBName.ToLower() == db.ToLower())))
+            if (!string.IsNullOrWhiteSpace(stand))
             {
-                return con;
-            }
+                stand = stand.ToUpper();
 
-            foreach (var con in ListConnects.Where(x => (x.GITProject == project) && (!string.IsNullOrWhiteSpace(db)) && (x.isRelease == true) && (x.DBName.ToLower() == db.ToLower())))
-            {
-                return con;
+                string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+
+                string addrMS = "";
+                string portMS = "";
+                string addrPG = "";
+                string portPG = "";
+                string addrEMD = "";
+                string portEMD = "";
+
+                if (stand == "RELEASE")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1432";
+                    addrPG = addrMS;
+                    portPG = "5438";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "SP")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1461";
+                    addrPG = addrMS;
+                    portPG = "5461";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "HF")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1462";
+                    addrPG = addrMS;
+                    portPG = "5462";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "EHF_ACT")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1463";
+                    addrPG = addrMS;
+                    portPG = "5463";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "EHF_UNACT")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1464";
+                    addrPG = addrMS;
+                    portPG = "5464";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "LTS")
+                {
+                    addrMS = "172.29.3.254";
+                    portMS = "1465";
+                    addrPG = addrMS;
+                    portPG = "5465";
+                    addrEMD = addrPG;
+                    portEMD = portPG;
+                }
+                else if (stand == "QA-REL")
+                {
+                    addrMS = "";
+                    portMS = "";
+                    addrPG = "172.29.3.254";
+                    portPG = "5532";
+                    addrEMD = addrPG;
+                    portEMD = "5533";
+                }
+                else if (stand == "QA")
+                {
+                    addrMS = "";
+                    portMS = "";
+                    addrPG = "172.29.3.254";
+                    portPG = "5436";
+                    addrEMD = "";
+                    portEMD = "";
+                }
+
+                if (isMain)
+                {
+                    foreach (var con in ListConnects
+                        .Where(x =>
+                            (x.GITProject == project) &&
+                            string.IsNullOrWhiteSpace(db) &&
+                            (
+                                x.ServerAddr == addrMS && x.ServerPort == portMS ||
+                                x.ServerAddr == addrPG && x.ServerPort == portPG
+                            ) &&
+                            (prefix != "prmd" || x.DBName.ToLower() == "promedrelease" || x.DBName.ToLower() == "promedwebrelease" || x.DBName.ToLower() == "promed")
+                        )
+                    )
+                    {
+                        return con;
+                    }
+                }
+
+                foreach (var con in ListConnects
+                    .Where(x => 
+                        (x.GITProject == project) &&
+                        (!string.IsNullOrWhiteSpace(db)) && 
+                        (x.DBName.ToLower() == db.ToLower()) &&
+                        x.DBName.ToLower() != "emd" &&
+                        (
+                            x.ServerAddr == addrMS && x.ServerPort == portMS ||
+                            x.ServerAddr == addrPG && x.ServerPort == portPG
+                        )
+                    )
+                )
+                {
+                    return con;
+                }
+
+                foreach (var con in ListConnects
+                    .Where(x =>
+                        (x.GITProject == project) &&
+                        (!string.IsNullOrWhiteSpace(db)) &&
+                        (x.DBName.ToLower() == db.ToLower()) &&
+                        x.DBName.ToLower() == "emd" &&
+                        x.ServerAddr == addrEMD &&
+                        x.ServerPort == portEMD
+                    )
+                )
+                {
+                    return con;
+                }
             }
 
             return null;
@@ -358,11 +594,33 @@ namespace SQLGen
         {
             get
             {
-                return CryptoClass.decrypt_from_string(CryptedPassword);
+                string decrypt = "";
+
+                try
+                {
+                    decrypt = CryptoClass.decrypt_from_string(CryptedPassword);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка дешифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    decrypt = "";
+                }
+
+                return decrypt;
             }
             set
             {
-                CryptedPassword = CryptoClass.encrypt_to_string(value);
+                CryptedPassword = "";
+
+                try
+                {
+                    CryptedPassword = CryptoClass.encrypt_to_string(value);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка шифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    CryptedPassword = "";
+                }
             }
         }
 
@@ -505,6 +763,8 @@ namespace SQLGen
                     App.AddLog("", ex, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
                 }
 
+                return result;
+                /*
                 if (result != null) return result;
                 else
                 {
@@ -528,9 +788,9 @@ namespace SQLGen
 
                     return new DBInfo() { ServerName = this.ServerName, DBName = this.DBName, isMainTest = false, DBRoleType = DBRoleType.PROD, GITProject = _project };
                 }
+                */
             }
         }
-
 
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Тестовая БД</summary>
@@ -538,7 +798,7 @@ namespace SQLGen
         {
             get
             {
-                return ServerDB.DBRoleType == DBRoleType.TEST;
+                return ServerDB?.DBRoleType == DBRoleType.TEST;
             }
         }
 
@@ -547,7 +807,7 @@ namespace SQLGen
         {
             get
             {
-                return ServerDB.DBRoleType == DBRoleType.RELEASE;
+                return ServerDB?.DBRoleType == DBRoleType.RELEASE;
             }
         }
 
@@ -556,7 +816,7 @@ namespace SQLGen
         {
             get
             {
-                return (ServerDB.DBRoleType == DBRoleType.TEST) && ServerDB.isMainTest;
+                return (ServerDB?.DBRoleType == DBRoleType.TEST) && (ServerDB?.isMainTest == true);
             }
         }
 
@@ -565,7 +825,7 @@ namespace SQLGen
         {
             get
             {
-                return Utilities.GITProjects.GetProjectByProject(ServerDB.GITProject);
+                return Utilities.GITProjects.GetProjectByProject(ServerDB?.GITProject);
             }
         }
 
@@ -577,8 +837,37 @@ namespace SQLGen
             get
             {
                 return
-                    (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_promed_ms") ||
-                    (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_promed_pg");
+                    !string.IsNullOrWhiteSpace(this.GITProject) &&
+                    (
+                        (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_promed_ms") ||
+                        (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_promed_pg")
+                    );
+            }
+        }
+
+        /// <summary>
+        /// Это база ЛИС
+        /// </summary>
+        public bool isLIS
+        {
+            get
+            {
+                return
+                    !string.IsNullOrWhiteSpace(this.GITProject) &&
+                    (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_lis_pg");
+            }
+        }
+
+        /// <summary>
+        /// Это база EMD
+        /// </summary>
+        public bool isEMD
+        {
+            get
+            {
+                return
+                    !string.IsNullOrWhiteSpace(this.GITProject) &&
+                    (Utilities.GITProjects.GetDEVProject(this.GITProject) == "dev_emd_pg");
             }
         }
 
@@ -1532,7 +1821,42 @@ Select
 	'' as foreign_options,
 	coalesce(descr.hasRegionDescr,1) as hasRegionDescr,
 	1 as hasSequence,
-	1 as hasInherit
+	1 as hasInherit,
+	-- для секционированных таблиц
+	part.partition_function_name,
+	part.partition_field_type,
+	part.partition_field_size,
+	part.partition_field_dec,
+	part.partition_type,
+	part.partition_boundary,
+	ltrim(rtrim(STUFF((
+		SELECT 
+			', ' + 
+			case 
+				when part.partition_field_type in ('NTEXT','TEXT','NVARCHAR','VARCHAR','NCHAR','CHAR','DATETIME') then ''''
+				else ''
+			end +
+			case 
+				when part.partition_field_type in ('DATETIME') then convert(varchar(max), prv.value, 120)
+				else cast(prv.value as varchar(max))
+			end +
+			case 
+				when part.partition_field_type in ('NTEXT','TEXT','NVARCHAR','VARCHAR','NCHAR','CHAR','DATETIME') then ''''
+				else ''
+			end
+		FROM sys.partitions as p
+		LEFT JOIN sys.partition_range_values as prv on prv.function_id=part.function_id
+		    and p.partition_number= 
+				CASE part.boundary_value_on_right WHEN 1
+					THEN prv.boundary_id + 1
+					ELSE prv.boundary_id
+				END
+		WHERE pk.object_id=p.object_id and pk.index_id=p.index_id
+		ORDER BY p.partition_number
+	FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(1000)'),1,1,'')
+	)) as partition_range_values,
+	part.partition_scheme_name,
+	part.partition_field
 from sys.tables t with (nolock)
 left join sys.extended_properties ep with (nolock) on ep.major_id = t.object_id 
 	and ep.minor_id = 0 
@@ -1552,6 +1876,45 @@ outer apply (
 		and ep.name = 'SWAN_RegionalTable'
 	where tt.object_id = t.object_id
 ) descr
+-- для секционированных таблиц
+outer apply (
+	select top(1) -- пока поддерживается только 1 параметр
+		ps.name as partition_scheme_name,
+		pf.function_id,
+		pf.name as partition_function_name,
+		c.name as partition_field,
+		Upper(pt.name) as partition_field_type,
+		case 
+			when pt.name in ('nvarchar', 'varchar', 'varbinary') and pp.max_length = -1 then 'max'
+			when pt.name in ('nvarchar') and pp.max_length <> -1 then cast(pp.max_length/2 as varchar)
+			when pt.name in ('nchar') then cast(pp.max_length/2 as varchar)
+			when pt.name in ('varchar', 'varbinary') and pp.max_length <> -1 then cast(pp.max_length as varchar)
+			when pt.name in ('binary', 'char') then cast(pp.max_length as varchar)
+			when pt.name in ('decimal', 'numeric') then cast(pp.precision as varchar)
+			when pt.name in ('time') and pp.scale = 7 then ''
+			when pt.name in ('datetime2', 'datetimeoffset', 'time') then cast(pp.scale as varchar)
+			else ''
+		end as partition_field_size,
+		case 
+			when pt.name in ('decimal', 'numeric') then cast(pp.scale as varchar)
+			else ''
+		end as partition_field_dec,
+		pf.type_desc as partition_type,
+		pf.boundary_value_on_right,
+		CASE pf.boundary_value_on_right
+			WHEN 1 then 'RIGHT'
+			ELSE 'LEFT'
+		END as partition_boundary
+	from sys.partition_schemes ps with (nolock)
+	inner join sys.partition_functions pf with (nolock) on pf.function_id = ps.function_id
+	inner join sys.index_columns as ic with (nolock) on ic.object_id = pk.object_id and ic.index_id = pk.index_id 
+	inner join sys.columns c with (nolock) on c.object_id = ic.object_id and c.column_id = ic.column_id
+	inner join sys.partition_parameters pp with (nolock) on pp.function_id = pf.function_id
+		AND ic.partition_ordinal = pp.parameter_id -- возможно тут не правильно
+	inner join sys.types pt with (nolock) on pt.system_type_id = pp.system_type_id and pt.user_type_id = pp.user_type_id
+	where ps.data_space_id = pk.data_space_id
+	AND ic.partition_ordinal = 1 -- пока поддерживается только 1 параметр
+) part
 where t.object_id = object_id(N'" + table.FullTableNameToScript + "', 'U');";
             else if (this.ConnType == Utilities.ConnType.PGSQL)
             {
@@ -1593,7 +1956,17 @@ SELECT
 	ft.ftoptions as foreign_options,
 	1 as hasRegionDescr,
 	coalesce(def.hasSequence,1) as hasSequence,
-	coalesce(inh.hasInherit,1) as hasInherit
+	coalesce(inh.hasInherit,1) as hasInherit,
+	-- для секционированных таблиц
+	NULL::varchar as partition_function_name,
+	part.partition_field_type,
+	part.partition_field_size,
+	part.partition_field_dec,
+	part.partition_type,
+	NULL::varchar as partition_boundary,
+	NULL::varchar as partition_range_values,
+	NULL::varchar as partition_scheme_name,
+	part.partition_field
 FROM pg_catalog.pg_class t
 LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 left join pg_catalog.pg_constraint pk on pk.conrelid = t.oid 
@@ -1639,6 +2012,64 @@ left join lateral (
 	order by def.adnum
 	limit 1
 ) def on true  
+-- для секционированных таблиц
+left join lateral (
+	select 
+		case when p.partstrat='r' then 'RANGE'
+			when p.partstrat='h' then 'HASH'
+			when p.partstrat='l' then 'LIST'
+			else ''
+		end as partition_type,
+		pf.partition_field,
+		case 
+			when pf.typename in ('BPCHAR','CHARACTER') then 'CHAR'
+			when pf.typename in ('CHARACTER VARYING') then 'VARCHAR'
+			else pf.typename
+		end as partition_field_type,
+		case 
+			when pf.typename in ('TIMESTAMP WITH TIME ZONE','TIMESTAMP WITHOUT TIME ZONE','TIME WITHOUT TIME ZONE','TIME WITH TIME ZONE','TIME','TIMESTAMP', 'TIMESTAMPTZ','INTERVAL') then ''
+			else pf.precision 
+		end as partition_field_size,
+		pf.scale as partition_field_dec
+	from pg_partitioned_table p
+	left JOIN LATERAL (
+		SELECT
+			array_position(p.partattrs, a.attnum) as partition_order,
+			a.attname as partition_field,
+			typ.typename,
+			typ.precision,
+			typ.scale
+		FROM pg_attribute a 
+		INNER JOIN LATERAL (
+			select 
+				typeinfo,
+				regexp_replace(typeinfo, '\([^)]*\)', '', 'g') as typename,
+				split_part(CASE 
+					WHEN typeinfo ~ '\(.*\)' THEN regexp_replace(typeinfo, '.*\((.*)\).*', '\1') 
+					ELSE ''
+				END, ',', 1) as precision,
+				split_part(CASE 
+					WHEN typeinfo ~ '\(.*\)' THEN regexp_replace(typeinfo, '.*\((.*)\).*', '\1') 
+					ELSE ''
+				END, ',', 2) as scale
+			from (
+				select 
+					UPPER(FORMAT_TYPE(
+						COALESCE(NULLIF(typ.typbasetype,0),typ.oid), 
+						COALESCE(NULLIF(typ.typtypmod,-1),a.atttypmod)
+					)::VARCHAR) as typeinfo
+				from pg_type typ 
+				where typ.oid = a.atttypid
+				limit 1
+			) tt
+		) typ on true
+		WHERE a.attrelid = t.oid 
+		AND a.attnum = ANY(p.partattrs)
+		AND a.attisdropped = false -- не удалено
+	) pf on pf.partition_order = 0 -- пока поддерживается только 1 параметр
+  where p.partrelid = t.oid
+  limit 1  -- пока поддерживается только 1 параметр
+) part on true
 where t.relkind in ('r','f','p')
 and t.relname ilike '" + table.TableNameToSeekForLike + @"'
 and n.nspname ilike '" + table.SchemaNameToSeekForLike + @"';";
@@ -1708,6 +2139,16 @@ and n.nspname ilike '" + table.SchemaNameToSeekForLike + @"';";
                         table.HasRegionDescr = reader[8].ToString() == "2";
                         table.HasSequence = reader[9].ToString() == "2";
                         table.HasInherit = reader[10].ToString() == "2";
+
+                        table.PartitionFunctionName = reader[11].ToString();
+                        table.PartitionFieldType = reader[12].ToString();
+                        table.PartitionFieldSize = reader[13].ToString();
+                        table.PartitionFieldDec = reader[14].ToString();
+                        table.PartitionType = reader[15].ToString();
+                        table.PartitionBoundary = reader[16].ToString();
+                        table.PartitionRangeValues = reader[17].ToString();
+                        table.PartitionSchemeName = reader[18].ToString();
+                        table.PartitionField = reader[19].ToString();
 
                         if ((this.ConnType == Utilities.ConnType.PGSQL) && (table.SchemaNameReady == "EMD"))
                         {
@@ -2124,8 +2565,8 @@ DECLARE @existsindex TABLE (
 	IsUnique VARCHAR(10),
 	IndexPredicat VARCHAR(max), 
 	IndexInclude VARCHAR(max), 
-	IndexWhere VARCHAR(max) 
-	)
+	IndexWhere VARCHAR(max)
+)
 
 DECLARE cursp CURSOR LOCAL FOR 
     SELECT 
@@ -2136,7 +2577,6 @@ DECLARE cursp CURSOR LOCAL FOR
     FROM sys.indexes Idx (NOLOCK)
     inner join sys.TABLES t (NOLOCK) on t.object_id = Idx.object_id
     inner join sys.schemas s (NOLOCK) on s.schema_id = t.schema_id
-    INNER JOIN sys.filegroups FG (NOLOCK) ON FG.data_space_id = Idx.data_space_id
     WHERE Idx.object_id = @table_id 
     AND Idx.type <> 1";
 
@@ -2146,7 +2586,7 @@ DECLARE cursp CURSOR LOCAL FOR
                 }
 
                 queryString += Environment.NewLine + @"
-			ORDER BY Idx.object_id, Idx.index_id
+    ORDER BY Idx.object_id, Idx.index_id
 OPEN cursp
 FETCH NEXT FROM cursp
 INTO @idx_indexid, @idx_name, @idx_where, @idx_isunique
@@ -2322,7 +2762,7 @@ where not idx.isprimary";
                     table.ListIndex.Clear();
                     while (reader.Read())
                     {
-                        table.AddIndex(reader[0].ToString(), reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), "", "true", "", "");
+                        table.AddIndex(reader[0].ToString(), reader[1].ToString(), reader[2].ToString(), reader[3].ToString(), reader[4].ToString(), reader[5].ToString(), "", "true", "", "", "", "");
                         isfound = true;
                     }
                 }
@@ -2887,50 +3327,43 @@ AND n.nspname not like 'pg\_%'
 
                     queryString += @"
 select distinct
-    21 as ord,
-    'VIEW' as typ,
-    schemaname as schemaname,
-    viewname as name,
+    ord,
+    typ,
+    schemaname,
+    name,
     case 
-        when strpos(lower(comments.description), 'autogen') > 0 OR strpos(lower(comments.description), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as Autogen
-from pg_views 
-left join lateral (
-    SELECT
-        obj_description as description
-    FROM obj_description(
-        to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname))
-    )
-) comments on true
+	when description iLIKE '%autoge%' then 'AUTOGEN'
+	else ''
+    end as autogen
+from (
+select 
+	21 as ord,
+	'VIEW' as typ,
+	schemaname, 
+	viewname as name,
+	definition as viewtext,
+	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname)), 'pg_class') as description
+from pg_views
 where schemaname || '.' || viewname ilike '" + partname + @"'
-and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
-and schemaname not like '%\_old'
+AND schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff', 'box')
+AND schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 
 union
 
 select distinct
-    22 as ord,
-    'MATERIALIZED VIEW' as typ,
-    schemaname as schemaname,
-    matviewname as name,
-    case 
-        when strpos(lower(comments.description), 'autogen') > 0 OR strpos(lower(comments.description), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as Autogen
+	22 as ord,
+	'MATERIALIZED VIEW' as typ,
+	schemaname,
+	matviewname as name,
+	definition as viewtext,
+	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname)), 'pg_class') as description
 from pg_matviews 
-left join lateral (
-    SELECT
-        obj_description as description
-    FROM obj_description(
-        to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname))
-    )
-) comments on true
 where schemaname || '.' || matviewname ilike '" + partname + @"'
 and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
+) t
 ";
                 }
 
@@ -2941,23 +3374,33 @@ AND schemaname not like 'pg\_%'
                     queryString += @"
 select distinct
     31 as ord,
+    typ,
+    schemaname,
+    name,
     case 
-        when p.prokind='f' then 'FUNCTION'
-        when p.prokind='p' then 'PROCEDURE'
-        else '?'
-    end as typ,
-    n.nspname as schemaname,
-    p.proname as name,
-    case 
-        when strpos(lower(p.prosrc), 'autogen') > 0 OR strpos(lower(p.prosrc), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as Autogen
-from pg_proc p INNER JOIN pg_namespace n ON n.oid = p.pronamespace
+	when proctext iLIKE '%autoge%' then 'AUTOGEN'
+	when description iLIKE '%autoge%' then 'AUTOGEN'
+	else ''
+    end as autogen
+from (
+select
+	case 
+		when p.prokind='f' then 'FUNCTION'
+		when p.prokind='p' then 'PROCEDURE'
+		else '?'
+	end as typ,
+	n.nspname as schemaname, 
+	p.proname as name, 
+	pg_get_functiondef(p.oid) as proctext,
+	obj_description(p.oid, 'pg_proc') as description
+from pg_proc p
+INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname || '.' || p.proname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
-and n.nspname not like '%\_old'
+AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
-and exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
+AND exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
+) t
 ";
                 }
 
@@ -2968,23 +3411,33 @@ and exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in
                     queryString += @"
 select distinct
     32 as ord,
+    typ,
+    schemaname,
+    name,
     case 
-        when p.prokind='f' then 'FUNCTION'
-        when p.prokind='p' then 'PROCEDURE'
-        else '?'
-    end as typ,
-    n.nspname as schemaname,
-    p.proname as name,
-    case 
-        when strpos(lower(p.prosrc), 'autogen') > 0 OR strpos(lower(p.prosrc), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as Autogen
-from pg_proc p INNER JOIN pg_namespace n ON n.oid = p.pronamespace
+	when proctext iLIKE '%autoge%' then 'AUTOGEN'
+	when description iLIKE '%autoge%' then 'AUTOGEN'
+	else ''
+    end as autogen
+from (
+select
+	case 
+		when p.prokind='f' then 'FUNCTION'
+		when p.prokind='p' then 'PROCEDURE'
+		else '?'
+	end as typ,
+	n.nspname as schemaname, 
+	p.proname as name, 
+	pg_get_functiondef(p.oid) as proctext,
+	obj_description(p.oid, 'pg_proc') as description
+from pg_proc p
+INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname || '.' || p.proname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
-and n.nspname not like '%\_old'
+AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 and exists (select 1 from pg_language l where l.oid = p.prolang and not l.lanname in ('sql', 'plpgsql'))
+) t
 ";
                 }
 
@@ -3353,7 +3806,7 @@ union
 SELECT top(1)
     s.name as schemaname,
     i.name as objectname,
-	'I' as objecttype,
+    'I' as objecttype,
     t.name as tablename
 FROM sys.indexes i with (NOLOCK)
 inner join sys.TABLES t with (NOLOCK) on t.object_id = i.object_id
@@ -3671,7 +4124,8 @@ select
     provolatile,
     case when proisstrict then '2' else '1' end as proisstrict,
     case when prosecdef then '2' else '1' end as prosecdef,
-    procost
+    procost,
+    obj_description(p.oid, 'pg_proc') AS comments
 from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where p.proname ilike '" + _objectlike + @"'
@@ -3702,6 +4156,7 @@ limit 1
                                 string _proisstrict = reader[2].ToString();
                                 string _prosecdef = reader[3].ToString();
                                 string _procost = reader[4].ToString();
+                                string _comment = reader[5].ToString();
 
                                 proctext = (proctext ?? "").TrimEndNewLine();
 
@@ -3803,6 +4258,27 @@ limit 1
                                     }
 
                                     result.Add(";");
+
+                                    if (!string.IsNullOrWhiteSpace(_comment))
+                                    {
+                                        // возьмем из 1-й строки название функции с параметрами
+                                        if (arr.Length > 0)
+                                        {
+                                            string s = arr[0]
+                                                .Replace("CREATE OR REPLACE FUNCTION ", "")
+                                                .Replace("CREATE OR REPLACE PROCEDURE ", "")
+                                                .Replace("\r\n", "\n")
+                                                .Replace("\r", "")
+                                                /*.Replace("\t", "")
+                                                .Replace(",\n", ", ")
+                                                .Replace("\n", "")*/;
+
+                                            // добавим комментарий
+                                            result.Add("");
+                                            result.Add("COMMENT ON " + _scripttype.ToUpper() + " " + s + " IS '" + _comment + "';");
+                                        }
+                                    }
+
                                 }
                             }
                         }
@@ -3815,7 +4291,10 @@ limit 1
                     queryString = @"
 SELECT 
     array_to_string(ARRAY(
-            select attr.attname as column_name
+            select case
+                when lower(attr.attname) <> attr.attname OR attr.attname = 'notnull' then '""' || attr.attname || '""'
+                else attr.attname
+            end as column_name
             from pg_catalog.pg_attribute as attr
             join pg_catalog.pg_class as cls on cls.oid = attr.attrelid
             join pg_catalog.pg_namespace as ns on ns.oid = cls.relnamespace
@@ -4417,7 +4896,6 @@ l.LocalDbList_name";
             return this.FillDataTable(queryString, out Messages);
         }
 
-
         /// <summary>Вернуть RegionalLocalDbList_PgSql</summary>
         /// <param name="module">Имя модуля</param>
         /// <param name="schemaname">Имя схемы</param>
@@ -4454,6 +4932,265 @@ limit 1";
             }
 
             return "";
+        }
+
+        /// <summary>Вернуть последнюю версию из Databasechangelog</summary>
+        public string GetLastDatabasechangelog()
+        {
+            string result = "";
+
+            if (this.ConnType == Utilities.ConnType.MSSQL)
+            {
+                string queryString = @"
+select top(1) comments FROM dbo.DATABASECHANGELOG
+where id like 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc";
+
+                try
+                {
+                    using (DbDataReader reader = this.OpenQuery(queryString))
+                    {
+                        if (reader != null)
+                        {
+                            while (reader.Read())
+                            {
+                                result = reader[0].ToString();
+                                break; //-V3020
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+            else if (this.ConnType == Utilities.ConnType.PGSQL)
+            {
+                double maxversion = 0;
+
+                // схема dbo
+                if (this.GetObjectList(
+                    "dbo.databasechangelog",
+                    true, // точный поиск
+                    true, // ищем таблицу
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ).Count() > 0)
+                {
+                    string queryString = @"
+select comments FROM dbo.DATABASECHANGELOG
+where id ilike 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc
+limit 1";
+                    try
+                    {
+                        using (DbDataReader reader = this.OpenQuery(queryString))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    string s = reader[0].ToString();
+                                    if (Release.VerAsNum(s) > maxversion)
+                                    {
+                                        maxversion = Release.VerAsNum(s);
+                                        result = s;
+                                    }
+                                    break; //-V3020
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                // схема public
+                if (this.GetObjectList(
+                        "public.databasechangelog",
+                        true, // точный поиск
+                        true, // ищем таблицу
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ).Count() > 0)
+                {
+                    string queryString = @"
+select comments FROM public.DATABASECHANGELOG
+where id ilike 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc
+limit 1";
+                    try
+                    {
+                        using (DbDataReader reader = this.OpenQuery(queryString))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    string s = reader[0].ToString();
+                                    if (Release.VerAsNum(s) > maxversion)
+                                    {
+                                        maxversion = Release.VerAsNum(s);
+                                        result = s;
+                                    }
+                                    break; //-V3020
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                // схема EMD
+                if (this.GetObjectList(
+                        "EMD.databasechangelog",
+                        true, // точный поиск
+                        true, // ищем таблицу
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ).Count() > 0)
+                {
+                    string queryString = @"
+select comments FROM EMD.DATABASECHANGELOG
+where id ilike 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc
+limit 1";
+                    try
+                    {
+                        using (DbDataReader reader = this.OpenQuery(queryString))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    string s = reader[0].ToString();
+                                    if (Release.VerAsNum(s) > maxversion)
+                                    {
+                                        maxversion = Release.VerAsNum(s);
+                                        result = s;
+                                    }
+                                    break; //-V3020
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                // схема liquibase
+                if (this.GetObjectList(
+                        "liquibase.databasechangelog",
+                        true, // точный поиск
+                        true, // ищем таблицу
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ).Count() > 0)
+                {
+                    string queryString = @"
+select comments FROM liquibase.DATABASECHANGELOG
+where id ilike 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc
+limit 1";
+                    try
+                    {
+                        using (DbDataReader reader = this.OpenQuery(queryString))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    string s = reader[0].ToString();
+                                    if (Release.VerAsNum(s) > maxversion)
+                                    {
+                                        maxversion = Release.VerAsNum(s);
+                                        result = s;
+                                    }
+                                    break; //-V3020
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                // схема iemc
+                if (this.GetObjectList(
+                        "iemc.databasechangelog",
+                        true, // точный поиск
+                        true, // ищем таблицу
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ).Count() > 0)
+                {
+                    string queryString = @"
+select comments FROM iemc.DATABASECHANGELOG
+where id ilike 'Version_%_end' 
+and dateexecuted>='20250101'
+order by liquibase.VerAsNum(id) desc
+limit 1";
+                    try
+                    {
+                        using (DbDataReader reader = this.OpenQuery(queryString))
+                        {
+                            if (reader != null)
+                            {
+                                while (reader.Read())
+                                {
+                                    string s = reader[0].ToString();
+                                    if (Release.VerAsNum(s) > maxversion)
+                                    {
+                                        maxversion = Release.VerAsNum(s);
+                                        result = s;
+                                    }
+                                    break; //-V3020
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+
+            return result;
         }
 
         /// <summary>Вернуть данные из БД о списке маркеров</summary>
@@ -4718,7 +5455,7 @@ inner join lateral (
 ) c on true
 where n.nspname ilike '" + Utilities.Databases.GetSchemaName(evnParent) + @"'
 and t.relname ilike r.evnclass_sysnick
-and t.relkind = 'r'
+and t.relkind IN ('r', 'p')
 and (
         c.attname not ilike all (select r.evnclass_sysnick || '_id' from r)
         or (t.relname = 'evn' and c.attname = 'evn_id')

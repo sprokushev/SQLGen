@@ -1,12 +1,13 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Windows.Controls;
-using SQLGen.Utilities;
 
 namespace SQLGen
 {
@@ -88,7 +89,7 @@ namespace SQLGen
                 try
                 {
                     string jsonString = File.ReadAllText(filename);
-                    HistoryList = JsonSerializer.Deserialize<List<HistoryGroup>>(jsonString, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
+                    HistoryList = JsonSerializer.Deserialize<List<HistoryGroup>>(jsonString, Other.oldOptionsJSON);
                 }
                 catch (Exception ex)
                 {
@@ -169,7 +170,7 @@ namespace SQLGen
             {
                 try
                 {
-                    jsonString = JsonSerializer.Serialize<List<HistoryGroup>>(HistoryList, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
+                    jsonString = JsonSerializer.Serialize<List<HistoryGroup>>(HistoryList, Other.OptionsJSON);
                     File.WriteAllText(filename, jsonString);
                 }
                 catch (Exception ex)

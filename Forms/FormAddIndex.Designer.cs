@@ -52,6 +52,16 @@ namespace SQLGen
             this.cbScriptType = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbIsNullsNotDistinct = new System.Windows.Forms.CheckBox();
+            this.grpDeleted = new System.Windows.Forms.GroupBox();
+            this.rbDeleted_NULL = new System.Windows.Forms.RadioButton();
+            this.rbDeleted_1 = new System.Windows.Forms.RadioButton();
+            this.rbDeleted_2 = new System.Windows.Forms.RadioButton();
+            this.grpRegion = new System.Windows.Forms.GroupBox();
+            this.rbRegion_NULL = new System.Windows.Forms.RadioButton();
+            this.rbRegion_1 = new System.Windows.Forms.RadioButton();
+            this.rbRegion_2 = new System.Windows.Forms.RadioButton();
+            this.grpDeleted.SuspendLayout();
+            this.grpRegion.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -67,7 +77,7 @@ namespace SQLGen
             // tbIndexName
             // 
             this.tbIndexName.Location = new System.Drawing.Point(161, 260);
-            this.tbIndexName.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbIndexName.Margin = new System.Windows.Forms.Padding(4);
             this.tbIndexName.Name = "tbIndexName";
             this.tbIndexName.Size = new System.Drawing.Size(481, 22);
             this.tbIndexName.TabIndex = 7;
@@ -78,7 +88,7 @@ namespace SQLGen
             // 
             this.cbIsUnique.AutoSize = true;
             this.cbIsUnique.Location = new System.Drawing.Point(23, 210);
-            this.cbIsUnique.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbIsUnique.Margin = new System.Windows.Forms.Padding(4);
             this.cbIsUnique.Name = "cbIsUnique";
             this.cbIsUnique.Size = new System.Drawing.Size(158, 20);
             this.cbIsUnique.TabIndex = 6;
@@ -98,7 +108,7 @@ namespace SQLGen
             // tbIndexPredicat
             // 
             this.tbIndexPredicat.Location = new System.Drawing.Point(116, 15);
-            this.tbIndexPredicat.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbIndexPredicat.Margin = new System.Windows.Forms.Padding(4);
             this.tbIndexPredicat.Multiline = true;
             this.tbIndexPredicat.Name = "tbIndexPredicat";
             this.tbIndexPredicat.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -119,7 +129,7 @@ namespace SQLGen
             // tbIndexInclude
             // 
             this.tbIndexInclude.Location = new System.Drawing.Point(116, 82);
-            this.tbIndexInclude.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbIndexInclude.Margin = new System.Windows.Forms.Padding(4);
             this.tbIndexInclude.Multiline = true;
             this.tbIndexInclude.Name = "tbIndexInclude";
             this.tbIndexInclude.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -140,7 +150,7 @@ namespace SQLGen
             // tbIndexWhere
             // 
             this.tbIndexWhere.Location = new System.Drawing.Point(116, 149);
-            this.tbIndexWhere.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbIndexWhere.Margin = new System.Windows.Forms.Padding(4);
             this.tbIndexWhere.Multiline = true;
             this.tbIndexWhere.Name = "tbIndexWhere";
             this.tbIndexWhere.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -161,7 +171,7 @@ namespace SQLGen
             // tbIndexToDel
             // 
             this.tbIndexToDel.Location = new System.Drawing.Point(23, 331);
-            this.tbIndexToDel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbIndexToDel.Margin = new System.Windows.Forms.Padding(4);
             this.tbIndexToDel.Multiline = true;
             this.tbIndexToDel.Name = "tbIndexToDel";
             this.tbIndexToDel.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -173,7 +183,7 @@ namespace SQLGen
             // 
             this.cbIsProd.AutoSize = true;
             this.cbIsProd.Location = new System.Drawing.Point(29, 415);
-            this.cbIsProd.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbIsProd.Margin = new System.Windows.Forms.Padding(4);
             this.cbIsProd.Name = "cbIsProd";
             this.cbIsProd.Size = new System.Drawing.Size(133, 20);
             this.cbIsProd.TabIndex = 10;
@@ -184,7 +194,7 @@ namespace SQLGen
             // 
             this.cbIsReg.AutoSize = true;
             this.cbIsReg.Location = new System.Drawing.Point(240, 415);
-            this.cbIsReg.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbIsReg.Margin = new System.Windows.Forms.Padding(4);
             this.cbIsReg.Name = "cbIsReg";
             this.cbIsReg.Size = new System.Drawing.Size(155, 20);
             this.cbIsReg.TabIndex = 11;
@@ -195,7 +205,7 @@ namespace SQLGen
             // 
             this.cbIsReport.AutoSize = true;
             this.cbIsReport.Location = new System.Drawing.Point(497, 415);
-            this.cbIsReport.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbIsReport.Margin = new System.Windows.Forms.Padding(4);
             this.cbIsReport.Name = "cbIsReport";
             this.cbIsReport.Size = new System.Drawing.Size(139, 20);
             this.cbIsReport.TabIndex = 12;
@@ -204,8 +214,8 @@ namespace SQLGen
             // 
             // btGenerate
             // 
-            this.btGenerate.Location = new System.Drawing.Point(135, 500);
-            this.btGenerate.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btGenerate.Location = new System.Drawing.Point(132, 642);
+            this.btGenerate.Margin = new System.Windows.Forms.Padding(4);
             this.btGenerate.Name = "btGenerate";
             this.btGenerate.Size = new System.Drawing.Size(239, 36);
             this.btGenerate.TabIndex = 14;
@@ -216,8 +226,8 @@ namespace SQLGen
             // btCancel
             // 
             this.btCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btCancel.Location = new System.Drawing.Point(511, 500);
-            this.btCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btCancel.Location = new System.Drawing.Point(508, 642);
+            this.btCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btCancel.Name = "btCancel";
             this.btCancel.Size = new System.Drawing.Size(240, 36);
             this.btCancel.TabIndex = 15;
@@ -228,7 +238,7 @@ namespace SQLGen
             // btPredicatFill
             // 
             this.btPredicatFill.Location = new System.Drawing.Point(684, 18);
-            this.btPredicatFill.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btPredicatFill.Margin = new System.Windows.Forms.Padding(4);
             this.btPredicatFill.Name = "btPredicatFill";
             this.btPredicatFill.Size = new System.Drawing.Size(147, 53);
             this.btPredicatFill.TabIndex = 2;
@@ -239,7 +249,7 @@ namespace SQLGen
             // btIncludeFill
             // 
             this.btIncludeFill.Location = new System.Drawing.Point(684, 86);
-            this.btIncludeFill.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btIncludeFill.Margin = new System.Windows.Forms.Padding(4);
             this.btIncludeFill.Name = "btIncludeFill";
             this.btIncludeFill.Size = new System.Drawing.Size(147, 53);
             this.btIncludeFill.TabIndex = 4;
@@ -250,7 +260,7 @@ namespace SQLGen
             // btAutoName
             // 
             this.btAutoName.Location = new System.Drawing.Point(684, 249);
-            this.btAutoName.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btAutoName.Margin = new System.Windows.Forms.Padding(4);
             this.btAutoName.Name = "btAutoName";
             this.btAutoName.Size = new System.Drawing.Size(176, 38);
             this.btAutoName.TabIndex = 8;
@@ -265,8 +275,8 @@ namespace SQLGen
             "CREATE",
             "ALTER",
             "DROP"});
-            this.cbScriptType.Location = new System.Drawing.Point(135, 449);
-            this.cbScriptType.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbScriptType.Location = new System.Drawing.Point(132, 591);
+            this.cbScriptType.Margin = new System.Windows.Forms.Padding(4);
             this.cbScriptType.Name = "cbScriptType";
             this.cbScriptType.Size = new System.Drawing.Size(239, 24);
             this.cbScriptType.TabIndex = 13;
@@ -275,7 +285,7 @@ namespace SQLGen
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(19, 453);
+            this.label6.Location = new System.Drawing.Point(16, 595);
             this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(91, 16);
@@ -293,13 +303,113 @@ namespace SQLGen
             this.cbIsNullsNotDistinct.Text = "Nulls Not Distinct";
             this.cbIsNullsNotDistinct.UseVisualStyleBackColor = true;
             // 
+            // grpDeleted
+            // 
+            this.grpDeleted.Controls.Add(this.rbDeleted_NULL);
+            this.grpDeleted.Controls.Add(this.rbDeleted_1);
+            this.grpDeleted.Controls.Add(this.rbDeleted_2);
+            this.grpDeleted.Location = new System.Drawing.Point(23, 452);
+            this.grpDeleted.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.grpDeleted.Name = "grpDeleted";
+            this.grpDeleted.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.grpDeleted.Size = new System.Drawing.Size(739, 51);
+            this.grpDeleted.TabIndex = 23;
+            this.grpDeleted.TabStop = false;
+            this.grpDeleted.Text = "pAddisDeleted (фильтр WHERE таблица_deleted)";
+            // 
+            // rbDeleted_NULL
+            // 
+            this.rbDeleted_NULL.AutoSize = true;
+            this.rbDeleted_NULL.Checked = true;
+            this.rbDeleted_NULL.Location = new System.Drawing.Point(16, 21);
+            this.rbDeleted_NULL.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbDeleted_NULL.Name = "rbDeleted_NULL";
+            this.rbDeleted_NULL.Size = new System.Drawing.Size(288, 20);
+            this.rbDeleted_NULL.TabIndex = 2;
+            this.rbDeleted_NULL.TabStop = true;
+            this.rbDeleted_NULL.Text = "не добавлять параметр (по умолчанию)";
+            this.rbDeleted_NULL.UseVisualStyleBackColor = true;
+            // 
+            // rbDeleted_1
+            // 
+            this.rbDeleted_1.AutoSize = true;
+            this.rbDeleted_1.Location = new System.Drawing.Point(532, 21);
+            this.rbDeleted_1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbDeleted_1.Name = "rbDeleted_1";
+            this.rbDeleted_1.Size = new System.Drawing.Size(151, 20);
+            this.rbDeleted_1.TabIndex = 1;
+            this.rbDeleted_1.Text = "=1 (убрать фильтр)";
+            this.rbDeleted_1.UseVisualStyleBackColor = true;
+            // 
+            // rbDeleted_2
+            // 
+            this.rbDeleted_2.AutoSize = true;
+            this.rbDeleted_2.Location = new System.Drawing.Point(324, 21);
+            this.rbDeleted_2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbDeleted_2.Name = "rbDeleted_2";
+            this.rbDeleted_2.Size = new System.Drawing.Size(167, 20);
+            this.rbDeleted_2.TabIndex = 0;
+            this.rbDeleted_2.Text = "=2 (добавить фильтр)";
+            this.rbDeleted_2.UseVisualStyleBackColor = true;
+            // 
+            // grpRegion
+            // 
+            this.grpRegion.Controls.Add(this.rbRegion_NULL);
+            this.grpRegion.Controls.Add(this.rbRegion_1);
+            this.grpRegion.Controls.Add(this.rbRegion_2);
+            this.grpRegion.Location = new System.Drawing.Point(23, 520);
+            this.grpRegion.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.grpRegion.Name = "grpRegion";
+            this.grpRegion.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.grpRegion.Size = new System.Drawing.Size(739, 51);
+            this.grpRegion.TabIndex = 24;
+            this.grpRegion.TabStop = false;
+            this.grpRegion.Text = "pAddisRegion (фильтр WHERE region_id)";
+            // 
+            // rbRegion_NULL
+            // 
+            this.rbRegion_NULL.AutoSize = true;
+            this.rbRegion_NULL.Checked = true;
+            this.rbRegion_NULL.Location = new System.Drawing.Point(16, 21);
+            this.rbRegion_NULL.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbRegion_NULL.Name = "rbRegion_NULL";
+            this.rbRegion_NULL.Size = new System.Drawing.Size(288, 20);
+            this.rbRegion_NULL.TabIndex = 2;
+            this.rbRegion_NULL.TabStop = true;
+            this.rbRegion_NULL.Text = "не добавлять параметр (по умолчанию)";
+            this.rbRegion_NULL.UseVisualStyleBackColor = true;
+            // 
+            // rbRegion_1
+            // 
+            this.rbRegion_1.AutoSize = true;
+            this.rbRegion_1.Location = new System.Drawing.Point(532, 21);
+            this.rbRegion_1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbRegion_1.Name = "rbRegion_1";
+            this.rbRegion_1.Size = new System.Drawing.Size(151, 20);
+            this.rbRegion_1.TabIndex = 1;
+            this.rbRegion_1.Text = "=1 (убрать фильтр)";
+            this.rbRegion_1.UseVisualStyleBackColor = true;
+            // 
+            // rbRegion_2
+            // 
+            this.rbRegion_2.AutoSize = true;
+            this.rbRegion_2.Location = new System.Drawing.Point(324, 21);
+            this.rbRegion_2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.rbRegion_2.Name = "rbRegion_2";
+            this.rbRegion_2.Size = new System.Drawing.Size(167, 20);
+            this.rbRegion_2.TabIndex = 0;
+            this.rbRegion_2.Text = "=2 (добавить фильтр)";
+            this.rbRegion_2.UseVisualStyleBackColor = true;
+            // 
             // FormAddIndex
             // 
             this.AcceptButton = this.btGenerate;
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btCancel;
-            this.ClientSize = new System.Drawing.Size(897, 575);
+            this.ClientSize = new System.Drawing.Size(897, 700);
+            this.Controls.Add(this.grpRegion);
+            this.Controls.Add(this.grpDeleted);
             this.Controls.Add(this.cbIsNullsNotDistinct);
             this.Controls.Add(this.tbIndexPredicat);
             this.Controls.Add(this.btPredicatFill);
@@ -322,11 +432,15 @@ namespace SQLGen
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "FormAddIndex";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Новый индекс";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormAddIndex_FormClosed);
+            this.grpDeleted.ResumeLayout(false);
+            this.grpDeleted.PerformLayout();
+            this.grpRegion.ResumeLayout(false);
+            this.grpRegion.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -389,5 +503,31 @@ namespace SQLGen
         /// cbIsNullsNotDistinct
         /// </summary>
         public System.Windows.Forms.CheckBox cbIsNullsNotDistinct;
+        private System.Windows.Forms.GroupBox grpDeleted;
+        /// <summary>
+        /// rbDeleted_NULL
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbDeleted_NULL;
+        /// <summary>
+        /// rbDeleted_1
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbDeleted_1;
+        /// <summary>
+        /// rbDeleted_2
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbDeleted_2;
+        private System.Windows.Forms.GroupBox grpRegion;
+        /// <summary>
+        /// rbRegion_NULL
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbRegion_NULL;
+        /// <summary>
+        /// rbRegion_1
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbRegion_1;
+        /// <summary>
+        /// rbRegion_2
+        /// </summary>
+        public System.Windows.Forms.RadioButton rbRegion_2;
     }
 }

@@ -1,18 +1,19 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using Path = System.IO.Path;
-using SQLGen.Controls;
-using SQLGen.Utilities;
 
 namespace SQLGen
 {
@@ -57,12 +58,7 @@ namespace SQLGen
             {
                 try
                 {
-                    var options = new JsonSerializerOptions
-                    {
-                        IgnoreReadOnlyProperties = true,
-                        WriteIndented = true
-                    };
-                    var param = JsonSerializer.Deserialize<ChangeParam>(MainWindow.Task.OtherJsonInfo, options);
+                    var param = JsonSerializer.Deserialize<ChangeParam>(MainWindow.Task.OtherJsonInfo, Other.oldOptionsJSON);
 
                     tbMask.Text = Path.Combine(param.pathMask, param.fileMask);
                     tbExclude.Text = param.excludePath;
@@ -546,14 +542,9 @@ namespace SQLGen
                    )
                 {
                     // сохраним для следующего сеанса
-                    var options = new JsonSerializerOptions
-                    {
-                        IgnoreReadOnlyProperties = true,
-                        WriteIndented = true
-                    };
-                    MainWindow.Task.OtherJsonInfo = JsonSerializer.Serialize<ChangeParam>(param, options);
+                    MainWindow.Task.OtherJsonInfo = JsonSerializer.Serialize<ChangeParam>(param, Other.OptionsJSON);
 
-                    mainWindow.SaveTaskNoShow();
+                    MainWindow.SaveTask(MainWindow.Task, true);
                 }
 
                 List<string> list = Utilities.Files.ListFilesInDir(param.pathMask, false, true, false, param.excludePath, true, param.fileMask);
@@ -662,7 +653,7 @@ namespace SQLGen
                 else project = cbItem.Tag.ToString();
 
                 // переключение на выбранную ветку
-                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false))
+                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false, ""))
                 {
                     isRefreshed = true;
 

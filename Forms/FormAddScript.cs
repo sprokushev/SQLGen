@@ -142,6 +142,8 @@ namespace SQLGen
             cbTypeObject.Items.Add("TRIGGER");
             cbTypeObject.Items.Add("TYPE");
             cbTypeObject.Items.Add("VIEW");
+            cbTypeObject.Items.Add("freedocmarker");
+            cbTypeObject.Items.Add("freedocrelationship");
             cbTypeObject.Text = "";
 
             cbShemaObject.SelectedIndex = -1;
@@ -447,7 +449,7 @@ namespace SQLGen
             filename = filename.Trim().Replace("_", ".");
             string res = filename;
 
-            // определяем имя файла для alter/create
+            // определяем имя файла для структуры, кода, маркеров
             if (
                     (script.GITProject != "") &&
                     (script.GITTypeObject != "") &&
@@ -526,18 +528,11 @@ namespace SQLGen
                         res = res + "l";
                     }
                 }
-
             }
 
             res = res.Replace(".", "_").Replace(" ", "_").Replace("-", "");
             return res.Trim();
         }
-
-
-
-
-
-
 
         /// <summary>
         /// Исправить имя объекта в соответствии с "реальным" из списка
@@ -1695,7 +1690,7 @@ namespace SQLGen
                     (!string.IsNullOrWhiteSpace(gitScript.GITProject)) &&
                     (gitScript.GITKindObject == "DATA") &&
                     (!string.IsNullOrWhiteSpace(gitScript.GITProjectFolder))
-                )
+            )
             {
                 if (!isDEV) cbShemaObject.Items.Clear();
 
@@ -1716,7 +1711,7 @@ namespace SQLGen
                     (!string.IsNullOrWhiteSpace(devScript.GITProject)) &&
                     (devScript.GITKindObject == "DATA") &&
                     (!string.IsNullOrWhiteSpace(devScript.GITProjectFolder))
-                    )
+            )
             {
                 cbShemaObject.Items.Clear();
 
@@ -1732,13 +1727,44 @@ namespace SQLGen
                 App.AddLog($"Заполнен список объектов для скриптов по данным", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
             }
 
-            // заполняем список схем для всего кроме скриптов по данным
+            // заполняем список схем для скриптов маркеров
+            if (isGIT &&
+                    (!string.IsNullOrWhiteSpace(gitScript.GITProject)) &&
+                    (
+                        (gitScript.GITTypeObject == "freedocmarker") ||
+                        (gitScript.GITTypeObject == "freedocrelationship")
+                    )
+            )
+            {
+                if (!isDEV)
+                {
+                    cbShemaObject.Items.Clear();
+                    cbShemaObject.Items.Add("dbo");
+                }
+            }
+
+            if (
+                    isDEV &&
+                    (!string.IsNullOrWhiteSpace(devScript.GITProject)) &&
+                    (
+                        (devScript.GITTypeObject == "freedocmarker") ||
+                        (devScript.GITTypeObject == "freedocrelationship")
+                    )
+            )
+            {
+                cbShemaObject.Items.Clear();
+                cbShemaObject.Items.Add("dbo");
+            }
+
+            // заполняем список схем для всего кроме скриптов по данным и маркеров
             if (isGIT &&
                     (!string.IsNullOrWhiteSpace(gitScript.GITProject)) &&
                     (gitScript.GITKindObject != "DATA") &&
+                    (gitScript.GITTypeObject != "freedocmarker") &&
+                    (gitScript.GITTypeObject != "freedocrelationship") &&
                     (gitScript.GITTypeObject != "") &&
                     (!string.IsNullOrWhiteSpace(gitScript.GITProjectFolder))
-                )
+            )
             {
                 List<string> list = null;
 
@@ -1768,9 +1794,11 @@ namespace SQLGen
                    isDEV &&
                    (!string.IsNullOrWhiteSpace(devScript.GITProject)) &&
                    (devScript.GITKindObject != "DATA") &&
+                   (devScript.GITTypeObject != "freedocmarker") &&
+                   (devScript.GITTypeObject != "freedocrelationship") &&
                    (devScript.GITTypeObject != "") &&
                    (!string.IsNullOrWhiteSpace(devScript.GITProjectFolder))
-                   )
+            )
             {
                 List<string> list = null;
 
@@ -1834,12 +1862,12 @@ namespace SQLGen
             cbDEVNameObject.SelectedIndex = -1;
             cbDEVNameObject.Text = "";
 
-            // заполняем список объектов для скриптов по структуре и коду
+            // заполняем список объектов для скриптов по структуре, коду, маркерам
             if (isGIT &&
                     (gitScript.GITProject != "") &&
                     (
                         (gitScript.GITKindObject == "STRUCT") ||
-                        (gitScript.GITKindObject == "CODE") 
+                        (gitScript.GITKindObject == "CODE")
                     ) &&
                     (gitScript.GITShemaObject != "") 
             )
@@ -1848,7 +1876,7 @@ namespace SQLGen
 
                 string typeFolder = Path.Combine(MainWindow.APPinfo.GITFolder, gitScript.GITProjectFolder, gitScript.GITShemaObject, gitScript.GITTypeObject);
 
-                App.AddLog($"Заполняем из {typeFolder} список объектов для скриптов по структуре и коду", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
+                App.AddLog($"Заполняем из {typeFolder} список объектов для скриптов по структуре, коду, маркерам", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
 
                 if (gitScript.isSingleScript) // сохраняем в один файл
                 {
@@ -1868,10 +1896,10 @@ namespace SQLGen
                     }
                 }
 
-                App.AddLog($"Заполнен список объектов для скриптов по структуре и коду", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
+                App.AddLog($"Заполнен список объектов для скриптов по структуре, коду, маркерам", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
             }
 
-            // заполняем список объектов для скриптов по структуре и коду
+            // заполняем список объектов для скриптов по структуре, коду, маркерам
             if (
                     isDEV &&
                     (devScript.GITProject != "") &&
@@ -1886,7 +1914,7 @@ namespace SQLGen
 
                 string typeFolder = Path.Combine(MainWindow.APPinfo.GITFolder, devScript.GITProjectFolder, devScript.GITShemaObject, devScript.GITTypeObject);
 
-                App.AddLog($"Заполняем из {typeFolder} список объектов для скриптов по структуре и коду", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
+                App.AddLog($"Заполняем из {typeFolder} список объектов для скриптов по структуре, коду, маркерам", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
 
                 if (devScript.isSingleScript) // сохраняем в один файл
                 {
@@ -1906,7 +1934,7 @@ namespace SQLGen
                     }
                 }
 
-                App.AddLog($"Заполнен список объектов для скриптов по структуре и коду", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
+                App.AddLog($"Заполнен список объектов для скриптов по структуре, коду, маркерам", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFile);
             }
 
             if (isGIT) cbGITNameObject_Sync();

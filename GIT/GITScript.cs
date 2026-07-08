@@ -108,18 +108,19 @@ namespace SQLGen
                     (GITTypeObject == "DATA") ||
                     (GITTypeObject == "data") ||
                     (GITTypeObject == "data_new")
-                    )
+                )
                 {
                     // данные
                     return "DATA";
                 }
-                else if
-                    (
+                else if (
                     (GITTypeObject == "FUNCTION") ||
                     (GITTypeObject == "PROCEDURE") ||
                     (GITTypeObject == "TRIGGER") ||
-                    (GITTypeObject == "VIEW")
-                ) 
+                    (GITTypeObject == "VIEW") ||
+                    (GITTypeObject == "freedocmarker") ||
+                    (GITTypeObject == "freedocrelationship")
+                )
                 {
                     // код
                     return "CODE";
@@ -286,7 +287,7 @@ namespace SQLGen
                 {
                     path = Path.Combine(folder, GITShemaObject);
                 }
-                // для скриптов по структуре (кроме схем) или коду
+                // для скриптов по структуре (кроме схем) или коду или маркерам
                 else
                 {
                     if (isSingleScript) // сохраняем в один файл
@@ -308,7 +309,11 @@ namespace SQLGen
         {
             get
             {
-                if (GITKindObject == "DATA") 
+                if (
+                    (GITKindObject == "DATA") ||
+                    (GITTypeObject == "freedocmarker") ||
+                    (GITTypeObject == "freedocrelationship")
+                ) 
                 {
                     // собираем имя объекта
                     string s = GITNameObject;
@@ -337,7 +342,11 @@ namespace SQLGen
         {
             get
             {
-                if (GITKindObject == "DATA") 
+                if (
+                    (GITKindObject == "DATA") ||
+                    (GITTypeObject == "freedocmarker") ||
+                    (GITTypeObject == "freedocrelationship")
+                ) 
                 {
                     return "";
                 }
@@ -415,7 +424,7 @@ namespace SQLGen
                     }
 
                     // сохранить текущую задачу
-                    SaveTask(Task);
+                    SaveTask(Task, false);
                 }
                 catch (Exception ex)
                 {
@@ -485,7 +494,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                SaveTask(Task);
+                SaveTask(Task, false);
 
                 // найти следующий файл и заполнить поля
                 dlg1.GetNextFileAndFillForm();
@@ -503,7 +512,7 @@ namespace SQLGen
             }
 
             // сохранить текущую задачу
-            SaveTask(Task);
+            SaveTask(Task, false);
 
             // обновить текущую ветку
             cbGITProject_SelectionChanged(null, null);
@@ -862,14 +871,14 @@ namespace SQLGen
                                 result = false;
                             }
                         }
-                        else if (script.isSingleScript && (script.GITKindObject == "CODE")) // если код и сохраняем в один файл
+                        else if (script.isSingleScript && (script.GITKindObject == "CODE")) // если код или маркер и сохраняем в один файл
                         {
                             // заменяем полностью
                             ListCopyFiles.Add(new CopyInfo { fromFile = script.FullSourceScriptname_TO_GIT, toFile = FileInGIT, actionType = ActionType.OWERWRITE });
                         }
                         else
                         {
-                            // если сохраняем в один файл и это не код - надо дописать в конец, но сначала проверим существование
+                            // если сохраняем в один файл и это не код или маркер - надо дописать в конец, но сначала проверим существование
 
                             // сначала определим имя changeset
                             string changeset_name = SQLChangeset.FirstChangesetName(script.FullSourceScriptname_TO_GIT, out SQLChangeset _changeset);
@@ -1302,7 +1311,7 @@ namespace SQLGen
             if (has_to_send)
             {
                 // сохранить задачу
-                SaveTask(Task);
+                SaveTask(Task, false);
 
                 if (result)
                 {
@@ -1397,12 +1406,12 @@ namespace SQLGen
                 if (DevProjects.Count > 0)
                 {
                     // выбрать ветку (в новых проектах)
-                    FormAskBranch dlg2 = new FormAskBranch(null, null, Task.LogFile);
+                    FormAskBranch dlg2 = new FormAskBranch(null, null, "", Task.LogFile);
 
                     foreach (var project in DevProjects)
                     {
                         // Заполнить ListBranches
-                        foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", Task.LogFile, true))
+                        foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", Task.LogFile, true, out double n))
                         {
                             string _branch = item.Replace("*", "").Trim();
 
@@ -1470,7 +1479,7 @@ namespace SQLGen
                     AddHistoryYMLFile(tbYMLFile.Text);
 
                     // сохранить текущую задачу
-                    SaveTask(Task);
+                    SaveTask(Task, false);
 
                     if (isError)
                     {
@@ -1532,7 +1541,7 @@ namespace SQLGen
 
             var projects_arr = Projects.Select(x => x.GITProject).ToList();
 
-            // Спросим, для какого модуля (префикса) добавляем: prmd, rpms, smp, bi
+            // Спросим, для какого префикса версии (сервиса) добавляем: prmd, rpms, smp, bi
             if (
                 Task.ListDeploymentMS.Count() > 0 ||
                 Task.ListDeploymentPG.Count() > 0 ||
@@ -1614,6 +1623,9 @@ namespace SQLGen
             if (projects_arr.Count() > 0)
             {
                 GIT.GitAdd(projects_arr.ToArray(), Task.TaskNumber, false, true, MainWindow.Task.LogFile);
+
+                // сохранить текущую задачу
+                SaveTask(Task, true);
             }
         }
     }

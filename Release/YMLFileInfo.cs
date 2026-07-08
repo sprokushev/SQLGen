@@ -221,6 +221,7 @@ namespace SQLGen
 
         private string _mergestatus;
         /// <summary>Статус merge</summary>
+        [JsonIgnore]
         public string MergeStatus
         {
             get
@@ -640,6 +641,7 @@ namespace SQLGen
 
         private bool _isfiltered1;
         /// <summary>Включен в фильтр 1</summary>
+        [JsonIgnore]
         public bool IsFiltered1
         {
             get
@@ -656,6 +658,7 @@ namespace SQLGen
 
         private bool _isfiltered2;
         /// <summary>Включен в фильтр 2</summary>
+        [JsonIgnore]
         public bool IsFiltered2
         {
             get
@@ -672,6 +675,7 @@ namespace SQLGen
 
         private bool _isfiltered3;
         /// <summary>Включен в фильтр 3</summary>
+        [JsonIgnore]
         public bool IsFiltered3
         {
             get
@@ -688,6 +692,7 @@ namespace SQLGen
 
         private bool _isfiltered4;
         /// <summary>Включен в фильтр 4</summary>
+        [JsonIgnore]
         public bool IsFiltered4
         {
             get

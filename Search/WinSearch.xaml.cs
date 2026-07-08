@@ -246,7 +246,7 @@ namespace SQLGen
                         string GITPath = Path.Combine(MainWindow.APPinfo.GITFolder, GITProjectFolder);
 
                         // переключение на выбранную ветку
-                        if (GIT.SelectGITBranch(GITProject, current_branch, out string branch, MainWindow.Task.LogFile, true, isForcedGitRefresh))
+                        if (GIT.SelectGITBranch(GITProject, current_branch, out string branch, MainWindow.Task.LogFile, true, isForcedGitRefresh, ""))
                         {
                             lbGITBranch.Content = "Текущая ветка GIT: " + branch.Replace("_", "__");
 
@@ -729,6 +729,8 @@ namespace SQLGen
                     if (t1 == "FUNCTION") return "FUNCTION";
                     if (t1 == "SEQUENCE") return "SEQUENCE";
                     if (t1 == "TYPE") return "TYPE";
+                    if (t1 == "FREEDOCMARKER") return "FREEDOCMARKER";
+                    if (t1 == "FREEDOCRELATIONSHIP") return "FREEDOCRELATIONSHIP";
                     if (
                         (Path.GetExtension(t1) == ".SQL") &&
                         t1.StartsWith(t0)
@@ -794,7 +796,9 @@ namespace SQLGen
                         (objecttype == "TRIGGER") ||
                         (objecttype == "FUNCTION") ||
                         (objecttype == "SEQUENCE") ||
-                        (objecttype == "TYPE")
+                        (objecttype == "TYPE") ||
+                        (objecttype == "FREEDOCMARKER") ||
+                        (objecttype == "FREEDOCRELATIONSHIP")
                     )
                 )
                 {

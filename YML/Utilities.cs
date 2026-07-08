@@ -38,6 +38,8 @@ namespace SQLGen.Utilities
             { "DATA_NEW", "data" },
             { "BULK", "data" },
             { "COPY", "data" },
+            { "FREEDOCRELATIONSHIP", "data" },
+            { "FREEDOCMARKER", "data" },
             { "VIEW", "code" },
             { "PROCEDURE", "code" },
             { "FUNCTION", "code" },
@@ -150,6 +152,635 @@ namespace SQLGen.Utilities
         }
 
         // -------------------------------------------------------------------------------------------------------
+        /// <summary>Проверка куска текста, без привязки к файлу, напрмер changeset</summary>
+        /// <param name="Project">проект GIT</param>
+        /// <param name="reportSQLFile">имя проверяемого файла (для отчета)</param>
+        /// <param name="scripttype">тип проверяемого скрипта</param>
+        /// <param name="lines">массив проверяемых строк</param>
+        /// <param name="isCheckRegion">скрипт предназначен для определенных регионов (НЕ базовый), в скрипте должна быть проверка на региональность</param>
+        /// <param name="isBaseRegion">у скрипта Базовая региональность БД, в скрипте НЕ должна быть проверка на региональность</param>
+        /// <param name="isRelease">=true - особенности проверка при сборки версии, например доболнительно ищем в проверке на региональность слово release и т.д.</param>
+        /// <param name="Errors">список обнаруженных ошибок</param>
+        /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
+        /// <param name="isCheckLabel">=false - не проверять метки</param>
+        /// <returns>возвращает SQLTextCheckResult</returns>
+        public static SQLTextCheckResult SQLTextCheck(string Project, string reportSQLFile, string scripttype, string[] lines, bool isCheckRegion, bool isBaseRegion, bool isRelease, ref string Errors, string logFile, bool isCheckLabel)
+        {
+            if (Errors == null) Errors = "";
+
+            SQLTextCheckResult result = new SQLTextCheckResult();
+
+            if (lines == null || lines.LongLength == 0)
+            {
+                return result;
+            }
+
+            string DBType = Utilities.GITProjects.GetDBTypeByProject(Project); // тип БД = MSSQL или PGSQL
+
+            // ----------------------------------------------------------
+            // проверка на случай появления нового проекта GIT, не внесенного в настройки
+            if (DBType == "")
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: Проект " + Project + " для неизвестного типа БД" + Environment.NewLine;
+                return result;
+            }
+
+            // ================================================================
+            // Анализ содержимого скрипта
+            // ================================================================
+
+            // инициализируем поиск ключевых слов
+            KeyWord.InitKeyWords();
+
+            bool isRegion = false;
+            bool isRegionRelease = false;
+            bool isCheckNotId_Table = false;
+            bool isCheckNotId_FieldId = false;
+            string CheckNotId_TableName = "";
+            int cntINSERT = 0; // счетчик insert (+1) и on conflict (-1)
+            int cntIDENTITY = 0; // счетчик idenity on (+1) и idenity off (-1)
+            int row = 0;
+
+            int isComment = 0; // кол-во стартов блока комментариев
+            int ii;
+
+            // находим ключевые фразы в файле, перебирая строки
+            foreach (var line in lines)
+            {
+                if (line.Length > 10000)
+                {
+                    result.isBAD = true;
+                    Errors += "ВНИМАНИЕ: Строка в файле " + reportSQLFile + " пропущена из-за того, в ней содержится больше 10000 символов" + Environment.NewLine;
+                    continue;
+                }
+
+                // приводим строку к нужному для анализа виду
+                string s = line.ToLower().Trim();
+                // номер строки в файле
+                row++;
+
+                // прогоняем строку по поиску всех ключевых слов, которые могут быть в комментариях
+                foreach (var item in KeyWord.ListKeyWords.Where(x => x.Value.CheckWithComment == true))
+                {
+                    item.Value.Check(row, s);
+                }
+
+                /* убираем комментарии из строки*/
+                bool flag;
+                do
+                {
+                    // флаг повторного выполнения
+                    flag = false;
+
+                    // словарь символов комментария, найденных в строке
+                    SortedDictionary<int, string> com = new SortedDictionary<int, string>();
+
+                    // заполняем словарь
+                    ii = 0;
+                    while (ii > -1)
+                    {
+                        ii = s.IndexOf("/*", ii);
+                        if (ii > -1)
+                        {
+                            com.Add(ii, "/*");
+                            ii++;
+                        }
+                    }
+                    ii = 0;
+                    while (ii > -1)
+                    {
+                        ii = s.IndexOf("*/", ii);
+                        if (ii > -1)
+                        {
+                            com.Add(ii, "*/");
+                            ii++;
+                        }
+                    }
+                    ii = 0;
+                    while (ii > -1)
+                    {
+                        ii = s.IndexOf("--", ii);
+                        if (ii > -1)
+                        {
+                            com.Add(ii, "--");
+                            ii++;
+                        }
+                    }
+
+                    // анализируем наличие в строке символов комментария
+                    if (com.Count > 0)
+                    {
+                        // первый символ с начала строки
+                        var first = com.First();
+
+                        if (first.Value == "--")
+                        {
+                            // если комментарий начинается с --, проверяем, может в предыдущих строках был /* и в этой строке есть */
+                            var next = com.Where(x => (x.Key > first.Key) && (x.Value == "*/")).FirstOrDefault();
+                            if ((isComment > 0) && (!next.Equals(default(KeyValuePair<int, string>))))
+                            {
+                                // если в предыдущих строках был /*, а в этой строке есть символ завершения комментария */ - вырезаем комментарий с начала строки по */
+                                s = s.Substring(next.Key + 2).Trim();
+                                // уменьшаем счетчик
+                                isComment--;
+                                // и начинаем анализ заново
+                                flag = true;
+                                continue;
+                            }
+                            else
+                            {
+                                // если НЕТ символа завершения комментария */ - убираем начиная с -- до конца строки
+                                s = s.Substring(0, first.Key).Trim();
+                            }
+                        }
+                        else if (first.Value == "/*")
+                        {
+                            // если комментарий начинается с /*, ищем в этой же строке символ */
+                            var next = com.Where(x => (x.Key > first.Key) && (x.Value == "*/")).FirstOrDefault();
+                            if (!next.Equals(default(KeyValuePair<int, string>)))
+                            {
+                                // если комментарий начинаяется и завершается в этой же строке - вырезаем комментарий
+                                s = (s.Substring(0, first.Key) + s.Substring(next.Key + 2)).Trim();
+                                // и начинаем анализ заново
+                                flag = true;
+                                continue;
+                            }
+                            else
+                            {
+                                // если комментарий начинается /*, но не завершается */ в этой же строке - убираем все начиная с /* до конца строки
+                                s = s.Substring(0, first.Key).Trim();
+                                // увеличиваем счетчик
+                                isComment++;
+                            }
+                        }
+                        else
+                        {
+                            // если первым идет символ */ - вырезаем все с начала строки по */ включительно
+                            s = s.Substring(first.Key + 2).Trim();
+                            // уменьшаем счетчик
+                            isComment--;
+                            // и начинаем анализ заново
+                            flag = true;
+                            continue;
+                        }
+                    }
+                } while (flag);
+
+                if (isComment > 0)
+                {
+                    // комментарий начат на предыдущей строке, убираем всю строку
+                    s = "";
+                }
+
+                // прогоняем строку по поиску всех ключевых слов, игнорируя комментарии
+                foreach (var item in KeyWord.ListKeyWords.Where(x => x.Value.CheckWithComment == false))
+                {
+                    //if (item.Key == "GET_REGION" && s.StartsWith("IF (SELECT".ToLower()))
+                    //{
+                    //    int iii = 0;
+                    //}
+
+                    item.Value.Check(row, s);
+                }
+
+                /*
+                if (s.Contains("go"))
+                {
+                    // для тестирования
+                    int i = 0;
+                }
+                */
+
+                // прогоняем строку по списку таблиц, для которых в скриптах по дате не должно быть идентифкаторов
+                foreach (var item in MainWindow.APPinfo.CheckNoIdTables)
+                {
+                    if (item != "")
+                    {
+                        string _schema = "dbo";
+                        string _table = item.ToLower();
+
+                        var arr = _table.Split('.');
+                        if (arr.Length > 1)
+                        {
+                            _schema = arr[0];
+                            _table = arr[1];
+                        }
+
+                        string _nick;
+                        if (_schema == "dbo") _nick = _table;
+                        else _nick = _schema + "." + _table;
+
+                        string _id = _table + "_id";
+
+                        if (!isCheckNotId_Table)
+                        {
+                            isCheckNotId_Table = s.Contains(_nick);
+                            CheckNotId_TableName = _table;
+                        }
+                        if (!isCheckNotId_FieldId) isCheckNotId_FieldId = s.Contains(_id);
+                    }
+                }
+
+                // кол-во НЕ пустых строк
+                if (!string.IsNullOrWhiteSpace(s)) result.NoEmptyRow++;
+            }
+
+
+            /*
+            if (fullSQLFile.Contains("dbo_curestandartref_70188_20210719.sql"))
+            {
+                // для тестирования
+                int i = 0;
+            }
+            */
+
+            // проверяем наличие ключевых фраз, проставляем флаги
+            result.hasLiquibase = KeyWord.GetKeyWord("--liquibase formatted sql").isFound;
+            result.hasChangeset = KeyWord.GetKeyWord("--changeset").isFound;
+            bool isstripcomments = KeyWord.GetKeyWord("stripcomments:false").isFound;
+            bool isdbmsMSsql = KeyWord.GetKeyWord("dbms:mssql").isFound;
+            bool isdbmsPGsql = KeyWord.GetKeyWord("dbms:postgresql").isFound;
+            bool isenddelimiterGO = KeyWord.GetKeyWord("enddelimiter:go").isFound;
+            bool isenddelimiterSemicolon = KeyWord.GetKeyWord("enddelimiter:;;").isFound;
+            result.hasAutogen = KeyWord.GetKeyWord("autogen").isFound;
+            bool isGenView = KeyWord.GetKeyWord("xp_gen_view").isFound;
+            bool isDropfns = KeyWord.GetKeyWord("xp_dropfns").isFound;
+            result.hasGenIdentity = KeyWord.GetKeyWord("xp_genidentity").isFound;
+            bool isDrop = KeyWord.GetKeyWord("DROP").isFound;
+            result.hasCreateTable = KeyWord.GetKeyWord("CREATE").isFound;
+            bool isCreateNotExists = KeyWord.GetKeyWord("CREATE_NOT_EXISTS").isFound;
+            bool isInsert = KeyWord.GetKeyWord("INSERT").isFound;
+            bool isDropColumn = KeyWord.GetKeyWord("DROP_COLUMN").isFound;
+            bool isRenameColumn = KeyWord.GetKeyWord("RENAME_COLUMN").isFound;
+            bool isSp_Rename = KeyWord.GetKeyWord("sp_rename").isFound;
+            bool isWhile = KeyWord.GetKeyWord("WHILE").isFound;
+            bool isLoop = KeyWord.GetKeyWord("LOOP").isFound;
+            bool isCommit = (KeyWord.GetKeyWord("COMMIT").CountRows - KeyWord.GetKeyWord("ON_COMMIT").CountRows) > 0;
+            bool isRollback = KeyWord.GetKeyWord("ROLLBACK").isFound;
+            bool isRunInTransaction = KeyWord.GetKeyWord("runintransaction:false").isFound;
+
+            bool isCreateStored = KeyWord.GetKeyWord("CREATE_STORED").isFound;
+            int MinRowCreateStored = KeyWord.GetKeyWord("CREATE_STORED").MinRow.Key;
+
+            bool isSetDate = KeyWord.GetKeyWord("SET_DATE").isFound;
+            bool isSetRegion = KeyWord.GetKeyWord("SET_REGION").isFound;
+            bool isGetRegion = KeyWord.GetKeyWord("GET_REGION").isFound;
+            bool isGetRegionRelease = KeyWord.GetKeyWord("GET_REGION_RELEASE").isFound;
+
+            bool isSet = KeyWord.GetKeyWord("SET").isFound;
+            int MinRowSet = KeyWord.GetKeyWord("SET").MinRow.Key;
+
+            bool isLabelStruct = false;
+            bool isLabelCode = false;
+            bool isLabelData = false;
+            bool isLabelFinish = false;
+
+            if (MainWindow.APPinfo.isImproveSQLinVersion && isCheckLabel)
+            {
+                isLabelStruct = KeyWord.GetKeyWord("labels:struct").isFound;
+                isLabelCode = KeyWord.GetKeyWord("labels:code").isFound;
+                isLabelData = KeyWord.GetKeyWord("labels:data").isFound;
+                isLabelFinish = KeyWord.GetKeyWord("labels:finish").isFound;
+            }
+
+            /*
+            bool isSetIdenity = KeyWord("SET_IDENTITY_ON").isFound;
+            if (!isSetIdenity) isSetIdenity = KeyWord("SET_IDENTITY_OFF").isFound;
+            */
+
+            result.hasCommentInScript = KeyWord.GetKeyWord("COMMENT").isFound;
+
+            cntINSERT = KeyWord.GetKeyWord("INSERT").CountRows - KeyWord.GetKeyWord("ON_CONFLICT").CountRows;
+            cntIDENTITY = KeyWord.GetKeyWord("SET_IDENTITY_ON").CountRows - KeyWord.GetKeyWord("SET_IDENTITY_OFF").CountRows;
+
+            if (isSetRegion && isGetRegion)
+            {
+                // подавляем ложное срабатывание
+                //int i = 0;
+            }
+            else
+            {
+                isRegion = isGetRegion;
+                isRegionRelease = isGetRegionRelease; //-V3137
+            }
+
+            bool isGO = KeyWord.GetKeyWord("GO").isFound;
+
+            // ================================================================
+            // Проверки содержимого скрипта
+            // ================================================================
+
+            // ----------------------------------------------------------
+            // проверка на незавершенный комментарий
+            if (isComment > 0)
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть незавершенный комментарий, начатый /*" + Environment.NewLine;
+            }
+            if (isComment < 0)
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть лишнее завершение комментария */" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // выполнить проверку скрипта на наличие ключевых фраз для liquibot
+            if (result.hasChangeset)
+            {
+                if (
+                    (scripttype != "table") &&
+                    (scripttype != "marker") &&
+                    (KeyWord.GetKeyWord("--changeset").Rows.Count > 1)
+                )
+                {
+                    result.isBAD = true;
+                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - строк --changeset больше одной и это не таблица или маркер!" + Environment.NewLine;
+                }
+
+                if (
+                    Utilities.GITProjects.IsDEVProject(Project) &&
+                    (scripttype != "test")
+                )
+                {
+                    // проверка на наличие номера задачи в changeset
+                    bool isexist = false;
+                    foreach (var rowpair in KeyWord.GetKeyWord("--changeset").Rows)
+                    {
+                        var line = rowpair.Value;
+                        var arr = line.Split(' ');
+                        foreach (var pair in arr)
+                        {
+                            var arrw = pair.Split(':');
+                            if (
+                                (arrw.Length > 1) &&
+                                (!string.IsNullOrWhiteSpace(arrw[1])) &&
+                                (!string.IsNullOrWhiteSpace(Utilities.Task.GetTaskNumber(arrw[1])))
+                            )
+                            {
+                                isexist = true;
+                            }
+                        }
+
+                    }
+
+                    if (!isexist)
+                    {
+                        result.isBAD = true;
+                        Errors += "ОШИБКА: " + reportSQLFile + " - changeset не содержит номер задачи" + Environment.NewLine;
+                    }
+
+                }
+
+                // проверка на корректность тегов в составе changset
+                foreach (var rowpair in KeyWord.GetKeyWord("--changeset").Rows)
+                {
+                    var line = rowpair.Value;
+                    var arr = line.Split(' ');
+                    foreach (var pair in arr)
+                    {
+                        if (
+                            (!string.IsNullOrWhiteSpace(pair)) &&
+                            (pair != "--changeset")
+                        )
+                        {
+                            var arrw = pair.Split(':');
+                            if (
+                                (arrw.Length == 1) ||
+                                (string.IsNullOrWhiteSpace(arrw[1]))
+                            )
+                            {
+                                result.isBAD = true;
+                                Errors += "ОШИБКА: " + reportSQLFile + $" - в строке --changeset тег {arrw[0]} не содержит значение, либо знак ':' отделен пробелами" + Environment.NewLine;
+                            }
+                        }
+                    }
+
+                }
+
+                if (!isstripcomments)
+                {
+                    result.isBAD = true;
+                    Errors += "ОШИБКА: " + reportSQLFile + " - не содержит stripComments:false" + Environment.NewLine;
+                }
+
+                if (MainWindow.APPinfo.isImproveSQLinVersion && isCheckLabel)
+                {
+                    if (scripttype == "table" && !isLabelStruct && !isLabelFinish)
+                    {
+                        result.isBAD = true;
+                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:struct или labels:finish" + Environment.NewLine;
+                    }
+
+                    if ((scripttype == "data" || scripttype == "marker") && !isLabelData)
+                    {
+                        result.isBAD = true;
+                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:data" + Environment.NewLine;
+                    }
+
+                    if ((scripttype == "proc" || scripttype == "view") && !isLabelCode && !isLabelFinish)
+                    {
+                        result.isBAD = true;
+                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:code или labels:finish" + Environment.NewLine;
+                    }
+                }
+
+                if ((DBType == "MSSQL") && (!isdbmsMSsql))
+                {
+                    result.isBAD = true;
+                    Errors += "ОШИБКА: " + reportSQLFile + " - не содержит dbms:mssql" + Environment.NewLine;
+                }
+
+                if ((DBType == "PGSQL") && (!isdbmsPGsql))
+                {
+                    result.isBAD = true;
+                    Errors += "ОШИБКА: " + reportSQLFile + " - не содержит dbms:postgresql" + Environment.NewLine;
+                }
+
+                if ((DBType == "PGSQL") && (!isenddelimiterSemicolon))
+                {
+                    result.isBAD = true;
+                    Errors += "ОШИБКА: " + reportSQLFile + " - не содержит endDelimiter:;;" + Environment.NewLine;
+                }
+            }
+
+            if ((DBType == "MSSQL") && isdbmsPGsql)
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - скрипт для MS SQL содержит тег dbms:postgresql" + Environment.NewLine;
+            }
+
+            if ((DBType == "PGSQL") && isdbmsMSsql)
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - скрипт для Postgre SQL содержит тег dbms:mssql" + Environment.NewLine;
+            }
+
+            if ((DBType == "MSSQL") && (!isenddelimiterGO) && isGO)
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть GO, но нет тега endDelimiter:GO" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // выполнить проверку скрипта на наличие ON CONFLICT после INSERT
+            if ((DBType == "PGSQL") && (cntINSERT > 0) && (scripttype == "data") && (!reportSQLFile.ToLower().Contains("stg.localdblist")))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - INSERT без ON CONFLICT" + Environment.NewLine;
+            }
+            if ((DBType == "PGSQL") && (cntINSERT < 0) && (scripttype == "data"))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - ON CONFLICT без INSERT" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие/отсутствие проверки на региональность
+            if (isBaseRegion && isRegion)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в задаче стоит Базовая региональность БД, но в скрипте есть проверка на региональность" + Environment.NewLine;
+            }
+
+            /*if (isRelease)
+            {
+                if ((!isBaseRegion) && isCheckRegion && (!isRegionRelease))
+                {
+                    result.isBAD = true;
+
+                    Errors += reportSQLFile + ": в скрипте возможно нет проверки на региональность + ProMedWebRelease/promedrelease" + Environment.NewLine;
+                }
+            }
+            else
+            {*/
+            if ((!isBaseRegion) && isCheckRegion && (!isRegion))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте возможно нет проверки на региональность" + Environment.NewLine;
+            }
+            //}
+
+            // ----------------------------------------------------------
+            // наличие DROP
+            if ((DBType == "PGSQL") && (scripttype == "proc") && (!isDropfns))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет xp_dropfns" + Environment.NewLine;
+            }
+            if ((DBType == "PGSQL") && (scripttype == "view") && (!isGenView))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет xp_gen_view" + Environment.NewLine;
+            }
+
+            if ((DBType == "MSSQL") && (scripttype == "proc") && (!isDrop))
+            {
+                result.isBAD = true;
+                Errors += reportSQLFile + ": в скрипте нет DROP PROCEDURE / DROP FUNCTION" + Environment.NewLine;
+            }
+            if ((DBType == "MSSQL") && (scripttype == "view") && (!isDrop))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет DROP VIEW" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // выполнить проверку скрипта на одинаковое кол-во SET IDENTITY ON, SET IDENTITY OFF
+            if ((DBType == "MSSQL") && (cntIDENTITY != 0) && (scripttype == "data"))
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - кол-во SET IDENTITY_INSERT ON не совпадает с кол-вом SET IDENTITY_INSERT OFF" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие CREATE TABLE IF NOT EXISTS
+            if ((DBType == "PGSQL") && (scripttype == "table") && result.hasCreateTable && (!isCreateNotExists))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет IF NOT EXISTS для CREATE TABLE" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие ID при добавлении в таблицы, в которых не следует заполнять ID
+            if ((scripttype == "data" || scripttype == "marker") && isInsert && isCheckNotId_Table && isCheckNotId_FieldId)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - возможно, что в INSERT INTO " + CheckNotId_TableName + " заполняется " + CheckNotId_TableName + "_id" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие drop column
+            if ((scripttype == "table") && isDropColumn)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть DROP COLUMN" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие rename column
+            if ((scripttype == "table") && isRenameColumn)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть RENAME COLUMN" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // наличие sp_rename
+            if ((DBType == "MSSQL") && (scripttype == "table") && isSp_Rename)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда переименования поля в таблице sp_rename" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // выполнить проверку скрипта на наличие SET
+            if ((DBType == "MSSQL") && (scripttype == "table") && isSet)
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда SET" + Environment.NewLine;
+            }
+            if ((DBType == "MSSQL") && ((scripttype == "view") || (scripttype == "proc")) && (MinRowSet > 0) && (MinRowSet < MinRowCreateStored))
+            {
+                result.isBAD = true;
+                Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда SET до команды CREATE" + Environment.NewLine;
+            }
+
+            // ----------------------------------------------------------
+            // выполнить проверки на LOOP, WHILE, COMMIT, runInTransaction:false
+            if (
+                (scripttype == "data") &&
+                isWhile &&
+                (!isCommit)
+                )
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть WHILE, но нет COMMIT" + Environment.NewLine;
+            }
+            if (
+                (scripttype == "data") &&
+                isLoop &&
+                (!isCommit)
+                )
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть LOOP, но нет COMMIT" + Environment.NewLine;
+            }
+            if (
+                (scripttype == "data" || scripttype == "test") &&
+                (isCommit || isRollback) &&
+                (!isRunInTransaction)
+                )
+            {
+                result.isBAD = true;
+                Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть COMMIT или ROLLBACK, но нет тега runInTransaction:false" + Environment.NewLine;
+            }
+
+            return result;
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------
         /// <summary>Проверка содержимого sql-файла</summary>
         /// <param name="Project">проект GIT</param>
         /// <param name="path">тип объекта GIT или путь к папке GIT</param>
@@ -202,7 +833,7 @@ namespace SQLGen.Utilities
             {
                 scripttype = "data";
             }
-            if (
+            else if (
                 path.Contains("/table/") ||
                 path.Contains("\\table\\") ||
                 path.StartsWith("table\\") ||
@@ -214,7 +845,7 @@ namespace SQLGen.Utilities
             {
                 scripttype = "table";
             }
-            if (
+            else if (
                 path.Contains("/view/") ||
                 path.Contains("\\view\\") ||
                 path.StartsWith("view\\") ||
@@ -226,7 +857,7 @@ namespace SQLGen.Utilities
             {
                 scripttype = "view";
             }
-            if (
+            else if (
                 path.Contains("/procedure/") ||
                 path.Contains("\\procedure\\") ||
                 path.StartsWith("procedure\\") ||
@@ -246,6 +877,25 @@ namespace SQLGen.Utilities
                 )
             {
                 scripttype = "proc";
+            }
+            else if (
+                path.Contains("/freedocrelationship/") ||
+                path.Contains("\\freedocrelationship\\") ||
+                path.StartsWith("freedocrelationship\\") ||
+                path.StartsWith("freedocrelationship/") ||
+                path.EndsWith("\\freedocrelationship") ||
+                path.EndsWith("/freedocrelationship") ||
+                (path == "freedocrelationship") ||
+                path.Contains("/freedocmarker/") ||
+                path.Contains("\\freedocmarker\\") ||
+                path.StartsWith("freedocmarker\\") ||
+                path.StartsWith("freedocmarker/") ||
+                path.EndsWith("\\freedocmarker") ||
+                path.EndsWith("/freedocmarker") ||
+                (path == "freedocmarker") 
+                )
+            {
+                scripttype = "marker";
             }
 
             // ----------------------------------------------------------
@@ -296,9 +946,6 @@ namespace SQLGen.Utilities
                 // Анализ содержимого скрипта
                 // ================================================================
 
-                // инициализируем поиск ключевых слов
-                KeyWord.InitKeyWords();
-
                 bool isBOM;
                 string encoding = Utilities.Files.GetEncoding(fullSQLFile, out isBOM);
 
@@ -312,7 +959,8 @@ namespace SQLGen.Utilities
                 if (
                     (scripttype == "table") ||
                     (scripttype == "view") ||
-                    (scripttype == "proc")
+                    (scripttype == "proc") ||
+                    (scripttype == "marker")
                 )
                 {
                     // делим на changeset
@@ -339,6 +987,16 @@ namespace SQLGen.Utilities
                         if (item.isTestChangeset)
                         {
                             hasTestChangeset = true;
+
+                            // проверим тестовый changeset
+                            string[] testlines = item.text.Trim('\n').Split('\n');
+
+                            var checktest = SQLTextCheck(Project, reportSQLFile, "test", testlines, false, true, isRelease, ref Errors, logFile, isCheckLabel);
+
+                            if (checktest.isBAD)
+                            {
+                                result = true;
+                            }
                         }
 
                         if (!item.isContextNewDb && !item.isMarkRun && !item.isTestChangeset)
@@ -356,283 +1014,25 @@ namespace SQLGen.Utilities
 
                 App.AddLog($"Файл {fullSQLFile} прочитан", null, App.ShowMessageMode.NONE, true, logFile);
 
-                bool isRegion = false;
-                bool isRegionRelease = false;
-                bool isCheckNotId_Table = false;
-                bool isCheckNotId_FieldId = false;
-                string CheckNotId_TableName = "";
-                int cntINSERT = 0; // счетчик insert (+1) и on conflict (-1)
-                int cntIDENTITY = 0; // счетчик idenity on (+1) и idenity off (-1)
-                int row = 0;
-
-                int isComment = 0; // кол-во стартов блока комментариев
-                int ii;
-
-                int NoEmptyRow = 0; // кол-во НЕ пустых строк
-
-                // находим ключевые фразы в файле, перебирая строки
-                foreach (var line in lines)
+                // ================================================================
+                // Анализируем содержимое, выполняем первичную проверку
+                // ================================================================
+                var checkresult = SQLTextCheck(Project, reportSQLFile, scripttype, lines, isCheckRegion, isBaseRegion, isRelease, ref Errors, logFile, isCheckLabel);
+                if (checkresult.isBAD)
                 {
-                    if (line.Length > 10000)
-                    {
-                        result = true;
-                        Errors += "ВНИМАНИЕ: Проверка файла " + reportSQLFile + " прервана из-за того, в нем содержатся строки больше 10000 символов" + Environment.NewLine;
-                        return result;
-                    }
-
-                    // приводим строку к нужному для анализа виду
-                    string s = line.ToLower().Trim();
-                    // номер строки в файле
-                    row++;
-
-                    // прогоняем строку по поиску всех ключевых слов, которые могут быть в комментариях
-                    foreach (var item in KeyWord.ListKeyWords.Where(x => x.Value.CheckWithComment == true))
-                    {
-                        item.Value.Check(row, s);
-                    }
-
-                    /* убираем комментарии из строки*/
-                    bool flag;
-                    do
-                    {
-                        // флаг повторного выполнения
-                        flag = false;
-
-                        // словарь символов комментария, найденных в строке
-                        SortedDictionary<int, string> com = new SortedDictionary<int, string>();
-
-                        // заполняем словарь
-                        ii = 0;
-                        while (ii > -1)
-                        {
-                            ii = s.IndexOf("/*", ii);
-                            if (ii > -1)
-                            {
-                                com.Add(ii, "/*");
-                                ii++;
-                            }
-                        }
-                        ii = 0;
-                        while (ii > -1)
-                        {
-                            ii = s.IndexOf("*/", ii);
-                            if (ii > -1)
-                            {
-                                com.Add(ii, "*/");
-                                ii++;
-                            }
-                        }
-                        ii = 0;
-                        while (ii > -1)
-                        {
-                            ii = s.IndexOf("--", ii);
-                            if (ii > -1)
-                            {
-                                com.Add(ii, "--");
-                                ii++;
-                            }
-                        }
-
-                        // анализируем наличие в строке символов комментария
-                        if (com.Count > 0)
-                        {
-                            // первый символ с начала строки
-                            var first = com.First();
-
-                            if (first.Value == "--")
-                            {
-                                // если комментарий начинается с --, проверяем, может в предыдущих строках был /* и в этой строке есть */
-                                var next = com.Where(x => (x.Key > first.Key) && (x.Value == "*/")).FirstOrDefault();
-                                if ((isComment > 0) && (!next.Equals(default(KeyValuePair<int, string>))))
-                                {
-                                    // если в предыдущих строках был /*, а в этой строке есть символ завершения комментария */ - вырезаем комментарий с начала строки по */
-                                    s = s.Substring(next.Key + 2).Trim();
-                                    // уменьшаем счетчик
-                                    isComment--;
-                                    // и начинаем анализ заново
-                                    flag = true;
-                                    continue;
-                                }
-                                else
-                                {
-                                    // если НЕТ символа завершения комментария */ - убираем начиная с -- до конца строки
-                                    s = s.Substring(0, first.Key).Trim();
-                                }
-                            }
-                            else if (first.Value == "/*")
-                            {
-                                // если комментарий начинается с /*, ищем в этой же строке символ */
-                                var next = com.Where(x => (x.Key > first.Key) && (x.Value == "*/")).FirstOrDefault();
-                                if (!next.Equals(default(KeyValuePair<int, string>)))
-                                {
-                                    // если комментарий начинаяется и завершается в этой же строке - вырезаем комментарий
-                                    s = (s.Substring(0, first.Key) + s.Substring(next.Key + 2)).Trim();
-                                    // и начинаем анализ заново
-                                    flag = true;
-                                    continue;
-                                }
-                                else
-                                {
-                                    // если комментарий начинается /*, но не завершается */ в этой же строке - убираем все начиная с /* до конца строки
-                                    s = s.Substring(0, first.Key).Trim();
-                                    // увеличиваем счетчик
-                                    isComment++;
-                                }
-                            }
-                            else
-                            {
-                                // если первым идет символ */ - вырезаем все с начала строки по */ включительно
-                                s = s.Substring(first.Key + 2).Trim();
-                                // уменьшаем счетчик
-                                isComment--;
-                                // и начинаем анализ заново
-                                flag = true;
-                                continue;
-                            }
-                        }
-                    } while (flag);
-
-                    if (isComment > 0)
-                    {
-                        // комментарий начат на предыдущей строке, убираем всю строку
-                        s = "";
-                    }
-
-                    // прогоняем строку по поиску всех ключевых слов, игнорируя комментарии
-                    foreach (var item in KeyWord.ListKeyWords.Where(x => x.Value.CheckWithComment == false))
-                    {
-                        item.Value.Check(row, s);
-                    }
-
-                    /*
-                    if (s.Contains("go"))
-                    {
-                        // для тестирования
-                        int i = 0;
-                    }
-                    */
-
-                    // прогоняем строку по списку таблиц, для которых в скриптах по дате не должно быть идентифкаторов
-                    foreach (var item in MainWindow.APPinfo.CheckNoIdTables)
-                    {
-                        if (item != "")
-                        {
-                            string _schema = "dbo";
-                            string _table = item.ToLower();
-
-                            var arr = _table.Split('.');
-                            if (arr.Length > 1)
-                            {
-                                _schema = arr[0];
-                                _table = arr[1];
-                            }
-
-                            string _nick;
-                            if (_schema == "dbo") _nick = _table;
-                            else _nick = _schema + "." + _table;
-
-                            string _id = _table + "_id";
-
-                            if (!isCheckNotId_Table)
-                            {
-                                isCheckNotId_Table = s.Contains(_nick);
-                                CheckNotId_TableName = _table;
-                            }
-                            if (!isCheckNotId_FieldId) isCheckNotId_FieldId = s.Contains(_id);
-                        }
-                    }
-
-                    // кол-во НЕ пустых строк
-                    if (!string.IsNullOrWhiteSpace(s)) NoEmptyRow++;
+                    result = true;
                 }
-
-
-                /*
-                if (fullSQLFile.Contains("dbo_curestandartref_70188_20210719.sql"))
-                {
-                    // для тестирования
-                    int i = 0;
-                }
-                */
-
-                // проверяем наличие ключевых фраз, проставляем флаги
-                bool isliquibase = KeyWord.GetKeyWord("--liquibase formatted sql").isFound;
-                bool ischangeset = KeyWord.GetKeyWord("--changeset").isFound;
-                bool isstripcomments = KeyWord.GetKeyWord("stripcomments:false").isFound;
-                bool isdbmsMSsql = KeyWord.GetKeyWord("dbms:mssql").isFound;
-                bool isdbmsPGsql = KeyWord.GetKeyWord("dbms:postgresql").isFound;
-                bool isenddelimiterGO = KeyWord.GetKeyWord("enddelimiter:go").isFound;
-                bool isenddelimiterSemicolon = KeyWord.GetKeyWord("enddelimiter:;;").isFound;
-                bool isAutogen = KeyWord.GetKeyWord("autogen").isFound;
-                bool isGenView = KeyWord.GetKeyWord("xp_gen_view").isFound;
-                bool isDropfns = KeyWord.GetKeyWord("xp_dropfns").isFound;
-                bool isGenIdentity = KeyWord.GetKeyWord("xp_genidentity").isFound;
-                bool isDrop = KeyWord.GetKeyWord("DROP").isFound;
-                bool isCreate = KeyWord.GetKeyWord("CREATE").isFound;
-                bool isCreateNotExists = KeyWord.GetKeyWord("CREATE_NOT_EXISTS").isFound;
-                bool isInsert = KeyWord.GetKeyWord("INSERT").isFound;
-                bool isDropColumn = KeyWord.GetKeyWord("DROP_COLUMN").isFound;
-                bool isRenameColumn = KeyWord.GetKeyWord("RENAME_COLUMN").isFound;
-                bool isSp_Rename = KeyWord.GetKeyWord("sp_rename").isFound;
-
-                bool isCreateStored = KeyWord.GetKeyWord("CREATE_STORED").isFound;
-                int MinRowCreateStored = KeyWord.GetKeyWord("CREATE_STORED").MinRow.Key;
-
-                bool isSetDate = KeyWord.GetKeyWord("SET_DATE").isFound;
-                bool isSetRegion = KeyWord.GetKeyWord("SET_REGION").isFound;
-                bool isGetRegion = KeyWord.GetKeyWord("GET_REGION").isFound;
-                bool isGetRegionRelease = KeyWord.GetKeyWord("GET_REGION_RELEASE").isFound;
-
-                bool isSet = KeyWord.GetKeyWord("SET").isFound;
-                int MinRowSet = KeyWord.GetKeyWord("SET").MinRow.Key;
-
-                bool isLabelStruct = false;
-                bool isLabelCode = false;
-                bool isLabelData = false;
-                bool isLabelFinish = false;
-
-                if (MainWindow.APPinfo.isImproveSQLinVersion && isCheckLabel)
-                {
-                    isLabelStruct = KeyWord.GetKeyWord("labels:struct").isFound;
-                    isLabelCode = KeyWord.GetKeyWord("labels:code").isFound;
-                    isLabelData = KeyWord.GetKeyWord("labels:data").isFound;
-                    isLabelFinish = KeyWord.GetKeyWord("labels:finish").isFound;
-                }
-
-                /*
-                bool isSetIdenity = KeyWord("SET_IDENTITY_ON").isFound;
-                if (!isSetIdenity) isSetIdenity = KeyWord("SET_IDENTITY_OFF").isFound;
-                */
-
-                bool isCommentInScript = KeyWord.GetKeyWord("COMMENT").isFound;
-
-                cntINSERT = KeyWord.GetKeyWord("INSERT").CountRows - KeyWord.GetKeyWord("ON_CONFLICT").CountRows;
-                cntIDENTITY = KeyWord.GetKeyWord("SET_IDENTITY_ON").CountRows - KeyWord.GetKeyWord("SET_IDENTITY_OFF").CountRows;
-
-                if (isSetRegion && isGetRegion)
-                {
-                    // подавляем ложное срабатывание
-                    //int i = 0;
-                }
-                else
-                {
-                    isRegion = isGetRegion;
-                    isRegionRelease = isGetRegionRelease; //-V3137
-                }
-
-                bool isGO = KeyWord.GetKeyWord("GO").isFound;
 
                 // ================================================================
-                // Проверки содержимого скрипта
+                // Анализируем файл в целом
                 // ================================================================
-
-                if (NoEmptyRow == 0)
+                if (checkresult.NoEmptyRow == 0)
                 {
                     result = true;
                     if (hasContextNewDb || hasMarkRun || hasTestChangeset)
                     {
                         //Errors += "ВНИМАНИЕ: " + reportSQLFile + " - кроме --changset init в файле больше ничего нет!" + Environment.NewLine;
-                }
+                    }
                     else
                     {
                         Errors += "ВНИМАНИЕ: " + reportSQLFile + " - файл пустой!" + Environment.NewLine;
@@ -640,33 +1040,20 @@ namespace SQLGen.Utilities
                 }
 
                 // ----------------------------------------------------------
-                // проверка на незавершенный комментарий
-                if (isComment > 0)
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть незавершенный комментарий, начатый /*" + Environment.NewLine;
-                }
-                if (isComment < 0)
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть лишнее завершение комментария */" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
                 // выполнить проверку скрипта на наличие ключевых фраз для liquibot
-                if (!isliquibase)
+                if (!checkresult.hasLiquibase)
                 {
                     result = true;
                     Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте нет --liquibase formatted sql" + Environment.NewLine;
                 }
 
-                if ((!isliquibase) && (ischangeset || hasContextNewDb || hasMarkRun || hasTestChangeset))
+                if ((!checkresult.hasLiquibase) && (checkresult.hasChangeset || hasContextNewDb || hasMarkRun || hasTestChangeset))
                 {
                     result = true;
                     Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте нет --liquibase formatted sql, но есть --changeset" + Environment.NewLine;
                 }
 
-                if (!ischangeset)
+                if (!checkresult.hasChangeset)
                 {
                     result = true;
                     if (hasContextNewDb)
@@ -687,158 +1074,23 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                if (ischangeset)
-                {
-                    if (
-                        (scripttype != "table") &&
-                        (KeyWord.GetKeyWord("--changeset").Rows.Count > 1)
-                    )
-                    {
-                        result = true;
-                        Errors += "ВНИМАНИЕ: " + reportSQLFile + " - строк --changeset больше одной и это не таблица!" + Environment.NewLine;
-                    }
-
-                    if (Utilities.GITProjects.IsDEVProject(Project))
-                    {
-                        // проверка на наличие номера задачи в changeset
-                        bool isexist = false;
-                        foreach (var rowpair in KeyWord.GetKeyWord("--changeset").Rows)
-                        {
-                            var line = rowpair.Value;
-                            var arr = line.Split(' ');
-                            foreach (var pair in arr)
-                            {
-                                var arrw = pair.Split(':');
-                                if (
-                                    (arrw.Length > 1) &&
-                                    (!string.IsNullOrWhiteSpace(arrw[1])) &&
-                                    (!string.IsNullOrWhiteSpace(Utilities.Task.GetTaskNumber(arrw[1])))
-                                )
-                                {
-                                    isexist = true;
-                                }
-                            }
-
-                        }
-
-                        if (!isexist)
-                        {
-                            result = true;
-                            Errors += "ОШИБКА: " + reportSQLFile + " - changeset не содержит номер задачи" + Environment.NewLine;
-                        }
-
-                    }
-
-                    // проверка на корректность тегов в составе changset
-                    {
-                        foreach (var rowpair in KeyWord.GetKeyWord("--changeset").Rows)
-                        {
-                            var line = rowpair.Value;
-                            var arr = line.Split(' ');
-                            foreach (var pair in arr)
-                            {
-                                if (
-                                    (!string.IsNullOrWhiteSpace(pair)) &&
-                                    (pair != "--changeset")
-                                )
-                                {
-                                    var arrw = pair.Split(':');
-                                    if (
-                                        (arrw.Length == 1) ||
-                                        (string.IsNullOrWhiteSpace(arrw[1]))
-                                    )
-                                    {
-                                        result = true;
-                                        Errors += "ОШИБКА: " + reportSQLFile + $" - в строке --changeset тег {arrw[0]} не содержит значение, либо знак ':' отделен пробелами" + Environment.NewLine;
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-
-                    if (!isstripcomments)
-                    {
-                        result = true;
-                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит stripComments:false" + Environment.NewLine;
-                    }
-
-                    if (MainWindow.APPinfo.isImproveSQLinVersion && isCheckLabel)
-                    {
-                        if (scripttype == "table" && !isLabelStruct && !isLabelFinish)
-                        {
-                            result = true;
-                            Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:struct или labels:finish" + Environment.NewLine;
-                        }
-
-                        if (scripttype == "data" && !isLabelData)
-                        {
-                            result = true;
-                            Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:data" + Environment.NewLine;
-                        }
-
-                        if ( (scripttype == "proc" || scripttype == "view" ) && !isLabelCode && !isLabelFinish)
-                        {
-                            result = true;
-                            Errors += "ОШИБКА: " + reportSQLFile + " - не содержит labels:code или labels:finish" + Environment.NewLine;
-                        }
-                    }
-
-                    if ((DBType == "MSSQL") && (!isdbmsMSsql))
-                    {
-                        result = true;
-                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит dbms:mssql" + Environment.NewLine;
-                    }
-
-                    if ((DBType == "PGSQL") && (!isdbmsPGsql))
-                    {
-                        result = true;
-                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит dbms:postgresql" + Environment.NewLine;
-                    }
-
-                    if ((DBType == "PGSQL") && (!isenddelimiterSemicolon))
-                    {
-                        result = true;
-                        Errors += "ОШИБКА: " + reportSQLFile + " - не содержит endDelimiter:;;" + Environment.NewLine;
-                    }
-                }
-
-                if ((DBType == "MSSQL") && isdbmsPGsql)
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - скрипт для MS SQL содержит тег dbms:postgresql" + Environment.NewLine;
-                }
-
-                if ((DBType == "PGSQL") && isdbmsMSsql)
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - скрипт для Postgre SQL содержит тег dbms:mssql" + Environment.NewLine;
-                }
-
-                if ((DBType == "MSSQL") && (!isenddelimiterGO) && isGO)
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - в скрипте есть GO, но нет тега endDelimiter:GO" + Environment.NewLine;
-                }
-
                 // ----------------------------------------------------------
                 // выполнить проверку кодировки скрипта
                 if (
 
-                    ((scripttype == "data") &&
+                    ((scripttype == "data" || scripttype == "marker") &&
                      (encoding != "UTF8") && (encoding != "UTF-16LE") && (encoding != "UTF32")
                     ) ||
 
-                    (((scripttype == "view") || (scripttype == "proc")) && (!isAutogen) &&
+                    (((scripttype == "view") || (scripttype == "proc")) && (!checkresult.hasAutogen) &&
                      (encoding != "UTF8") && (encoding != "UTF-16LE") && (encoding != "UTF32")
                     ) ||
 
-                    ((scripttype == "table") && isCommentInScript &&
+                    ((scripttype == "table") && checkresult.hasCommentInScript &&
                      (encoding != "UTF8") && (encoding != "UTF-16LE") && (encoding != "UTF32")
                     )
                 )
                 {
-
                     if (
                             (encoding == "1251") && IsCorrectEncoding &&
                             (System.Windows.Forms.MessageBox.Show("Кодировка файла " + reportSQLFile + " - Windows 1251 !\nИсправить на UTF8 ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
@@ -846,7 +1098,7 @@ namespace SQLGen.Utilities
                     {
                         App.AddLog("Кодировка файла " + reportSQLFile + " - Windows 1251, выбрано исправление на UTF8", null, App.ShowMessageMode.NONE, true, logFile);
 
-                        if (!Utilities.Files.SetEncodingToUTF8(fullYMLFile, ref fullSQLFile, ref Errors))
+                        if (!Utilities.Files.SetEncodingToUTF8(ref fullSQLFile, ref Errors))
                         {
                             result = true;
                             Errors += "ОШИБКА: " + reportSQLFile + " - кодировка отличается от UTF8" + Environment.NewLine;
@@ -871,7 +1123,7 @@ namespace SQLGen.Utilities
                     {
                         App.AddLog("Кодировка файла " + reportSQLFile + " - UTF8 BOM, выбрано исправление на UTF8", null, App.ShowMessageMode.NONE, true, logFile);
 
-                        if (!Utilities.Files.SetEncodingToUTF8(fullYMLFile, ref fullSQLFile, ref Errors))
+                        if (!Utilities.Files.SetEncodingToUTF8(ref fullSQLFile, ref Errors))
                         {
                             result = true;
                             Errors += "ВНИМАНИЕ: " + reportSQLFile + " - кодировка осталась UTF8 BOM" + Environment.NewLine;
@@ -890,135 +1142,11 @@ namespace SQLGen.Utilities
                 }
 
                 // ----------------------------------------------------------
-                // выполнить проверку скрипта на наличие ON CONFLICT после INSERT
-                if ((DBType == "PGSQL") && (cntINSERT > 0) && (scripttype == "data") && (!fullSQLFile.ToLower().Contains("stg.localdblist")))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - INSERT без ON CONFLICT" + Environment.NewLine;
-                }
-                if ((DBType == "PGSQL") && (cntINSERT < 0) && (scripttype == "data"))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - ON CONFLICT без INSERT" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие/отсутствие проверки на региональность
-                if (isBaseRegion && isRegion)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в задаче стоит Базовая региональность БД, но в скрипте есть проверка на региональность" + Environment.NewLine;
-                }
-
-                /*if (isRelease)
-                {
-                    if ((!isBaseRegion) && isCheckRegion && (!isRegionRelease))
-                    {
-                        result = true;
-
-                        Errors += reportSQLFile + ": в скрипте возможно нет проверки на региональность + ProMedWebRelease/promedrelease" + Environment.NewLine;
-                    }
-                }
-                else
-                {*/
-                if ((!isBaseRegion) && isCheckRegion && (!isRegion))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте возможно нет проверки на региональность" + Environment.NewLine;
-                }
-                //}
-
-                // ----------------------------------------------------------
-                // наличие DROP
-                if ((DBType == "PGSQL") && (scripttype == "proc") && (!isDropfns))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет xp_dropfns" + Environment.NewLine;
-                }
-                if ((DBType == "PGSQL") && (scripttype == "view") && (!isGenView))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет xp_gen_view" + Environment.NewLine;
-                }
-
-                if ((DBType == "MSSQL") && (scripttype == "proc") && (!isDrop))
-                {
-                    result = true;
-                    Errors += reportSQLFile + ": в скрипте нет DROP PROCEDURE / DROP FUNCTION" + Environment.NewLine;
-                }
-                if ((DBType == "MSSQL") && (scripttype == "view") && (!isDrop))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет DROP VIEW" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // выполнить проверку скрипта на одинаковое кол-во SET IDENTITY ON, SET IDENTITY OFF
-                if ((DBType == "MSSQL") && (cntIDENTITY != 0) && (scripttype == "data"))
-                {
-                    result = true;
-                    Errors += "ОШИБКА: " + reportSQLFile + " - кол-во SET IDENTITY_INSERT ON не совпадает с кол-вом SET IDENTITY_INSERT OFF" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
                 // наличие xp_genidentity
-                if ((DBType == "PGSQL") && (scripttype == "table") && isCreate && (!hasContextNewDb) && (!hasMarkRun) && (!isGenIdentity))
+                if ((DBType == "PGSQL") && (scripttype == "table") && checkresult.hasCreateTable && (!hasContextNewDb) && (!hasMarkRun) && (!checkresult.hasGenIdentity))
                 {
                     result = true;
                     Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет xp_genidentity" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие CREATE TABLE IF NOT EXISTS
-                if ((DBType == "PGSQL") && (scripttype == "table") && isCreate && (!isCreateNotExists))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте нет IF NOT EXISTS для CREATE TABLE" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие ID при добавлении в таблицы, в которых не следует заполнять ID
-                if ((scripttype == "data") && isInsert && isCheckNotId_Table && isCheckNotId_FieldId)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - возможно, что в INSERT INTO " + CheckNotId_TableName + " заполняется " + CheckNotId_TableName + "_id" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие drop column
-                if ((scripttype == "table") && isDropColumn)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть DROP COLUMN" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие rename column
-                if ((scripttype == "table") && isRenameColumn)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть RENAME COLUMN" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // наличие sp_rename
-                if ((DBType == "MSSQL") && (scripttype == "table") && isSp_Rename)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда переименования поля в таблице sp_rename" + Environment.NewLine;
-                }
-
-                // ----------------------------------------------------------
-                // выполнить проверку скрипта на наличие SET
-                if ((DBType == "MSSQL") && (scripttype == "table") && isSet)
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда SET" + Environment.NewLine;
-                }
-                if ((DBType == "MSSQL") && ((scripttype == "view") || (scripttype == "proc")) && (MinRowSet > 0) && (MinRowSet < MinRowCreateStored))
-                {
-                    result = true;
-                    Errors += "ВНИМАНИЕ: " + reportSQLFile + " - в скрипте есть команда SET до команды CREATE" + Environment.NewLine;
                 }
 
                 App.AddLog($"Файл {fullSQLFile} проверен" + Environment.NewLine, null, App.ShowMessageMode.NONE, true, logFile);
@@ -1216,13 +1344,14 @@ namespace SQLGen.Utilities
         /// <param name="ScriptType">тип скрипта или папка в проекте git</param>
         /// <param name="DBType">тип БД</param>
         /// <param name="isAddVersion">=true - добавить номер версии к имени changeset</param>
-        /// <param name="Version">номер версии</param>
+        /// <param name="version_no_prefix">номер версии БЕЗ префикса</param>
         /// <returns></returns>
-        public static string MakeChangeset (string changesetStr, bool setAuthor, bool isInit, string ScriptType, string DBType, bool isAddVersion, string Version)
+        public static string MakeChangeset (string changesetStr, bool setAuthor, bool isInit, string ScriptType, string DBType, bool isAddVersion, string version_no_prefix)
         {
             if (string.IsNullOrWhiteSpace(changesetStr)) changesetStr = "";
 
             if (string.IsNullOrWhiteSpace(ScriptType)) ScriptType = "1";
+            ScriptType = ScriptType.ToUpper();
 
             // заполняем текущие значения тегов
             var Tags = GetTagsFromChangeset(changesetStr);
@@ -1337,39 +1466,43 @@ namespace SQLGen.Utilities
                 {
                     Id = MainWindow.Task.TaskNumber;
 
-                    // Добавляем номер версии
+                    // Добавляем номер версии для кода и маркеров
                     if (
                         isAddVersion &&
-                        !string.IsNullOrWhiteSpace(Version) &&
+                        !string.IsNullOrWhiteSpace(version_no_prefix) &&
                         (
                             ScriptType == "FUNCTION" ||
                             ScriptType == "PROCEDURE" ||
                             ScriptType == "TRIGGER" ||
-                            ScriptType == "VIEW"
+                            ScriptType == "VIEW" ||
+                            ScriptType == "FREEDOCRELATIONSHIP" ||
+                            ScriptType == "FREEDOCMARKER"
                         )
                     )
                     {
-                        Id += "_" + Version.Replace(".", "_");
+                        Id += "_" + version_no_prefix.Replace(".", "_");
                     }
                 }
             }
             else
             {
-                // Добавляем номер версии для FUNCTION, PROCEDURE, VIEW, TRIGGER
+                // Добавляем номер версии для кода и маркеров
                 if (
                     isAddVersion && 
-                    !string.IsNullOrWhiteSpace(Version) &&
+                    !string.IsNullOrWhiteSpace(version_no_prefix) &&
                     (
                         ScriptType == "FUNCTION" ||
                         ScriptType == "PROCEDURE" ||
                         ScriptType == "TRIGGER" ||
-                        ScriptType == "VIEW"
+                        ScriptType == "VIEW" ||
+                        ScriptType == "FREEDOCRELATIONSHIP" ||
+                        ScriptType == "FREEDOCMARKER"
                     )
                 )
                 {
                     if (SQLChangeset.IsGoodChangesetName(Id))
                     {
-                        Id = SQLGen.Task.ClearTaskNumber(Id) + "_" + Version.Replace(".", "_");
+                        Id = SQLGen.Task.ClearTaskNumber(Id) + "_" + version_no_prefix.Replace(".", "_");
                     }
                 }
             }
@@ -1441,5 +1574,51 @@ namespace SQLGen.Utilities
                 App.AddLog("", ex, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
             }
         }
+    }
+
+    /// <summary>
+    /// результат проверки sql-текста
+    /// </summary>
+    public class SQLTextCheckResult
+    {
+        /// <summary>
+        /// sql-текст содержит ошибки
+        /// </summary>
+        public bool isBAD { get; set; } = false;
+
+        /// <summary>
+        /// кол-во НЕ пустых строк
+        /// </summary>
+        public long NoEmptyRow { get; set; } = 0;
+
+        /// <summary>
+        /// есть строка --liquibase formatted sql
+        /// </summary>
+        public bool hasLiquibase { get; set; } = false;
+
+        /// <summary>
+        /// есть строка --changeset
+        /// </summary>
+        public bool hasChangeset { get; set; } = false;
+
+        /// <summary>
+        /// в скрипте есть CREATE TABLE
+        /// </summary>
+        public bool hasCreateTable { get; set; } = false;
+
+        /// <summary>
+        /// в скрипте есть xp_genidentity
+        /// </summary>
+        public bool hasGenIdentity { get; set; } = false;
+
+        /// <summary>
+        /// в скрипте есть AUTOGEN
+        /// </summary>
+        public bool hasAutogen { get; set; } = false;
+
+        /// <summary>
+        /// в скрипте есть изменения описаний таблиц и полей (ms_description или comment on)
+        /// </summary>
+        public bool hasCommentInScript { get; set; } = false;
     }
 }

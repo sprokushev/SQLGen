@@ -17,7 +17,7 @@ namespace SQLGen
 {
     // =========================================================================================================
     /// <summary>Класс для загрузки страниц Jira</summary>
-    public partial class HTML
+    public partial class JiraHTML
     {
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Окно подключения к Jira</summary>
@@ -274,8 +274,9 @@ namespace SQLGen
         /// </summary>
         /// <param name="url">url</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
+        /// <param name="login_url">страница для login</param>
         /// <returns></returns>
-        public async static Task<string> SendRequest(string url, string logFile)
+        public async static Task<string> SendRequest(string url, string logFile, string login_url = "https://jira.rtmis.ru/login.jsp")
         {
             App.AddLog($"Парсинг {url}", null, App.ShowMessageMode.NONE, true, logFile);
 
@@ -286,7 +287,7 @@ namespace SQLGen
             while (!isexit)
             {
                 var baseAddress = new Uri(url); //Базовый адрес 
-                var loginAddress = new Uri("https://jira.rtmis.ru/login.jsp"); //Страница для login
+                var loginAddress = new Uri(login_url); //Страница для login
                 //var cookieContainer = new CookieContainer(); //Показываю как отправлять Cookie (для примера, если необходимо). Можно убрать.
 
                 FormUrlEncodedContent contentJira = new FormUrlEncodedContent(new[]
@@ -304,6 +305,9 @@ namespace SQLGen
                 try
                 {
                     handler = new HttpClientHandler() /*{ CookieContainer = cookieContainer }*/;
+
+                    handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true; // Принять сертификат
+
                     client = new HttpClient(handler) { BaseAddress = baseAddress };
 
                     //Добавляем нужные нам параметры в запрос (на примере UserAgent'a)
@@ -404,11 +408,11 @@ namespace SQLGen
         /// <param name="_action_finish">применить финишное действие _action_finish при любом результате</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
         public async System.Threading.Tasks.Task LoadJiraPages(Dictionary<string, string> _listtask, System.Windows.Window _win,
-            System.Action<HTML> _action_before_all,
+            System.Action<JiraHTML> _action_before_all,
             System.Action<JiraPage> _action_task,
             System.Action<JiraPage> _action_after_task,
-            System.Action<HTML> _action_after_all,
-            System.Action<HTML> _action_finish,
+            System.Action<JiraHTML> _action_after_all,
+            System.Action<JiraHTML> _action_finish,
             string logFile
         )
         {
@@ -493,7 +497,7 @@ namespace SQLGen
                     // парсинг страницы
                     try
                     {
-                        html = await HTML.SendRequest(jiraPage.URL, logFile);
+                        html = await JiraHTML.SendRequest(jiraPage.URL, logFile);
 
                         if (html == "skip")
                         {
@@ -906,8 +910,8 @@ namespace SQLGen
         public async System.Threading.Tasks.Task LoadTaskListJiraPages(
             string url,
             System.Windows.Window _win,
-            System.Action<HTML> _action,
-            System.Action<HTML> _action_finish,
+            System.Action<JiraHTML> _action,
+            System.Action<JiraHTML> _action_finish,
             string logFile
         )
         {
@@ -959,7 +963,7 @@ namespace SQLGen
                         url = base_url + $"&startIndex={cnt}";
                     }
 
-                    html = await HTML.SendRequest(url, logFile);
+                    html = await JiraHTML.SendRequest(url, logFile);
 
                     if (html == "skip")
                     {
@@ -1380,7 +1384,7 @@ namespace SQLGen
 
                             string mask = Utilities.GITProjects.GetURLTaskByProject(project);
 
-                            if (HTML.GetYMLFileFromURL(info.URLFile, mask, out yml, out path, out branch, out rest))
+                            if (JiraHTML.GetYMLFileFromURL(info.URLFile, mask, out yml, out path, out branch, out rest))
                             {
                                 info.Filename = yml;
                                 info.Project = project;
@@ -1408,9 +1412,9 @@ namespace SQLGen
             {
                 foreach (var item in ListYML.Where(x => !string.IsNullOrWhiteSpace(x.Filename)))
                 {
-                    return HTML.SetTaskOrder(item.Filename);
+                    return JiraHTML.SetTaskOrder(item.Filename);
                 }
-                return HTML.SetTaskOrder(TaskNumber);
+                return JiraHTML.SetTaskOrder(TaskNumber);
             }
         }
 

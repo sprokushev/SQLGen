@@ -55,31 +55,34 @@
         <ComboBox x:Name="cbHosts" HorizontalAlignment="Left" Margin="220,526,0,0" VerticalAlignment="Top" Width="370" ItemsSource="{Binding ListHosts}" SelectedItem="{Binding Path=Hosts, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
         <Label Content="Проверочный запрос:" HorizontalAlignment="Left" Margin="10,544,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbCheck" HorizontalAlignment="Left" Margin="10,568,0,0" VerticalScrollBarVisibility="Visible" TextWrapping="Wrap" Height="120" VerticalAlignment="Top" Width="580" Text="{Binding Path=check, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" />
+        <TextBox x:Name="tbCheck" HorizontalAlignment="Left" Margin="10,568,0,0" VerticalScrollBarVisibility="Visible" TextWrapping="Wrap" Height="120" VerticalAlignment="Top" Width="580" Text="{Binding Path=check, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" TextChanged="tbCheck_TextChanged" />
 
-        <Label Content="Команда РТМИС:" HorizontalAlignment="Left" Margin="10,690,0,0" VerticalAlignment="Top"/>
+        <Label Content="Команда:" HorizontalAlignment="Left" Margin="10,690,0,0" VerticalAlignment="Top"/>
         <local:HistoryTextBox x:Name="tbTeam" HorizontalAlignment="Left" Height="24" Margin="220,692,0,0" VerticalAlignment="Top" Width="370" Text="{Binding Path=team, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" SelectionChanged="tbTeam_SelectionChanged" LostFocus="tbTeam_LostFocus" DropDownClosed="tbTeam_DropDownClosed"/>
 
         <CheckBox x:Name="cbIsTemp" Content="Временное задание" HorizontalAlignment="Left" Margin="10,718,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=isTemp, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
         <Label Content="Целевые регионы:" HorizontalAlignment="Left" Margin="619,10,0,0" VerticalAlignment="Top"/>
 
-        <ListBox x:Name="lcbRegions" Height="250" HorizontalAlignment="Left" Margin="619,41,0,0" VerticalAlignment="Top" Width="295" ItemsSource="{Binding lcbListRegions}" SelectionMode="Multiple">
+        <ListBox x:Name="lcbRegions" Height="180" HorizontalAlignment="Left" Margin="619,41,0,0" VerticalAlignment="Top" Width="295" ItemsSource="{Binding lcbListRegions}" SelectionMode="Multiple">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding TheText}"/>
+                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding TheText}" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Label Content="Кроме регионов:" HorizontalAlignment="Left" Margin="619,307,0,0" VerticalAlignment="Top"/>
-        <ListBox x:Name="lcbExcludeRegions" Height="250" HorizontalAlignment="Left" Margin="619,338,0,0" VerticalAlignment="Top" Width="295" ItemsSource="{Binding lcbListExcludeRegions}" SelectionMode="Multiple">
+        <Label Content="Кроме регионов:" HorizontalAlignment="Left" Margin="619,228,0,0" VerticalAlignment="Top"/>
+        <ListBox x:Name="lcbExcludeRegions" Height="180" HorizontalAlignment="Left" Margin="619,258,0,0" VerticalAlignment="Top" Width="295" ItemsSource="{Binding lcbListExcludeRegions}" SelectionMode="Multiple">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding TheText}"/>
+                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding TheText}" Unchecked="CheckBox_Unchecked_1" Checked="CheckBox_Checked_1"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+        <Label Content="Действия при обновлении:" HorizontalAlignment="Left" Margin="619,438,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbDescription" HorizontalAlignment="Left" Margin="619,468,0,0" VerticalScrollBarVisibility="Visible" TextWrapping="Wrap" Height="250" VerticalAlignment="Top" Width="295" IsReadOnly="True" Text="{Binding Path=Description, Mode=OneWay}"/>
 
         <Button x:Name="btSave" Content="Сохранить" Margin="98,746,0,0" Click="btSave_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsDefault="True"/>
         <Button x:Name="btCancel" Content="Отмена" Margin="374,746,0,0" Click="btCancel_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsCancel="True"/>

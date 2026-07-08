@@ -1,6 +1,9 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using Microsoft.SqlServer.Management.Smo;
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -17,8 +21,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using SQLGen.Controls;
-using SQLGen.Utilities;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace SQLGen
 {
@@ -219,6 +222,17 @@ namespace SQLGen
             {
                 if (string.IsNullOrWhiteSpace(this.TaskNumber)) return "";
                 else return Path.Combine(this.TaskPath, this.TaskNumber + ".log");
+            }
+        }
+
+        // -------------------------------------------------------------------------------------------------------
+        /// <summary>zip-архив для log-файлов задачи</summary>
+        public string ZipLogFiles
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this.TaskNumber)) return "";
+                else return Path.Combine(this.TaskPath, this.TaskNumber + "_logs.zip");
             }
         }
 
@@ -895,16 +909,15 @@ namespace SQLGen
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Сохранить описание задачи в файл номерзадачи.task</summary>
         /// <param name="_task">Экземпляр задачи</param>
-        public void SaveTask(Task _task)
+        /// <param name="isPush">=true - выполнить push</param>
+        public static void SaveTask(Task _task, bool isPush)
         {
-            if ((_task != null) && (!string.IsNullOrWhiteSpace(APPinfo.TaskFolder)) && (!string.IsNullOrWhiteSpace(_task.TaskNumber)))
+            if (
+                (_task != null) && 
+                (!string.IsNullOrWhiteSpace(APPinfo.TaskFolder)) && 
+                (!string.IsNullOrWhiteSpace(_task.TaskNumber))
+            )
             {
-                var options = new JsonSerializerOptions
-                {
-                    IgnoreReadOnlyProperties = true,
-                    WriteIndented = true
-                };
-
                 if (!Directory.Exists(APPinfo.TaskFolder))
                 {
                     Directory.CreateDirectory(APPinfo.TaskFolder);
@@ -915,47 +928,126 @@ namespace SQLGen
                     Directory.CreateDirectory(_task.TaskPath);
                 }
 
-                Utilities.Files.BackupFile(_task.TaskFile);
+                string _path = Path.GetDirectoryName(_task.TaskFile);
+                string _file = Path.GetFileName(_task.TaskFile);
+
+                if (
+                    APPinfo.isTaskReleaseCooperative && // если включен кооперативный режим работы с релизными задачами
+                    _task.TaskNumber.ToLower().StartsWith("rm-") // это релизная задача
+                )
+                {
+                    _path = APPinfo.TaskReleasePath;
+                }
+
+                if (!Directory.Exists(_path))
+                {
+                    Directory.CreateDirectory(_path);
+                }
+
+                string filename = Path.Combine(_path, _file);
+
+                Utilities.Files.BackupFile(filename, _task.TaskPath);
 
                 try
                 {
-                    string jsonString = JsonSerializer.Serialize<Task>(_task, options);
-                    File.WriteAllText(_task.TaskFile, jsonString);
+                    string jsonString = JsonSerializer.Serialize<Task>(_task, Other.OptionsJSON);
+                    File.WriteAllText(filename, jsonString);
+
+                    if (
+                        isPush &&
+                        APPinfo.isTaskReleaseCooperative && // если включен кооперативный режим работы с релизными задачами
+                        _task.TaskNumber.ToLower().StartsWith("rm-") // это релизная задача //-V3125
+                    )
+                    {
+                        string folder = APPinfo.SqlGenReleasePath;
+                        if (folder.Contains(" ")) folder = "\"" + folder + "\"";
+
+                        App.AddLog($"git push в проект sqlgen-release в папке {APPinfo.SqlGenReleasePath}", null, App.ShowMessageMode.NONE, true, "");
+
+                        Utilities.External.ExecuteFile(
+                                APPinfo.SqlGenReleasePath,
+                                Path.Combine(APPinfo.SqlGenReleasePath, "push.sh"),
+                                _task.TaskNumber,
+                                true,
+                                false,
+                                false,
+                                false,
+                                ""
+                            );
+
+                        if (
+                            File.Exists(filename) &&
+                            filename != _task.TaskFile &&
+                            File.Exists(_task.TaskFile)
+                        )
+                        {
+                            // удалим локальный дубль
+                            File.Delete(_task.TaskFile);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, _task.LogFile);
+                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, "");
                 }
-
             }
         }
 
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Считать описание задачи из файла</summary>
         /// <param name="filename">Файл с описанием задачи</param>
-        public bool LoadTask(string filename)
+        /// <param name="isManual">=true - файл выбран вручную</param>
+        public bool LoadTask(string filename, bool isManual)
         {
             bool result = false;
+
+            string _path = Path.GetDirectoryName(filename);
+            string _file = Path.GetFileName(filename);
+
+            if (
+                !isManual &&
+                APPinfo.isTaskReleaseCooperative && // если включен кооперативный режим работы с релизными задачами
+                Task.TaskNumber.ToLower().StartsWith("rm-") // это релизная задача
+            )
+            {
+                App.AddLog($"git pull из проекта sqlgen-release в папке {APPinfo.SqlGenReleasePath}", null, App.ShowMessageMode.NONE, true, "");
+
+                string folder = APPinfo.SqlGenReleasePath;
+                if (folder.Contains(" ")) folder = "\"" + folder + "\"";
+
+                Utilities.External.ExecuteFile(
+                        APPinfo.SqlGenReleasePath,
+                        Path.Combine(APPinfo.SqlGenReleasePath, "pull.sh"),
+                        folder,
+                        true,
+                        false,
+                        false,
+                        false,
+                        ""
+                    );
+
+                _path = APPinfo.TaskReleasePath;
+
+                // проверим наличие файла в кооперативном проекте
+                if (File.Exists(Path.Combine(_path, _file))) 
+                {
+                    filename = Path.Combine(_path, _file);
+                }
+            }
 
             if ((!string.IsNullOrWhiteSpace(filename)) && File.Exists(filename))
             {
                 try
                 {
-                    var options = new JsonSerializerOptions
-                    {
-                        IgnoreReadOnlyProperties = true,
-                        WriteIndented = true
-                    };
-
                     string jsonString = File.ReadAllText(filename);
-                    Task loadTask = JsonSerializer.Deserialize<Task>(jsonString, options);
+                    Task loadTask = JsonSerializer.Deserialize<Task>(jsonString, Other.oldOptionsJSON);
                     SetTask(loadTask);
 
                     result = true;
                 }
                 catch (Exception ex)
                 {
-                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, Task.LogFile);
+                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, "");
                 }
             }
 
@@ -971,7 +1063,10 @@ namespace SQLGen
         private bool TaskNumberChanged(bool isAlways = false)
         {
             // если случайно добавили имя файла + переводим в верхний регистр (кроме test)
-            tbTaskNumber.Text = tbTaskNumber.Text.Trim();
+            tbTaskNumber.Text = tbTaskNumber.Text
+                .Replace("\"","")
+                .Replace("/", "")
+                .Trim();
 
             if (!APPinfo.NoUpperBranch.Contains(tbTaskNumber.Text, StringComparer.OrdinalIgnoreCase))
             {
@@ -984,61 +1079,31 @@ namespace SQLGen
 
             if (isAlways || (Task.TaskNumber.Trim().ToUpper() != tbTaskNumber.Text.Trim().ToUpper()))
             {
-                bool isLoad = false;
+                // сохранить предыдущую задачу
+                SaveTask(Task, false);
 
-                if ((!string.IsNullOrWhiteSpace(Task.TaskNumber)) && (!string.IsNullOrWhiteSpace(tbTaskNumber.Text)))
+                if (!string.IsNullOrWhiteSpace(tbTaskNumber.Text))
                 {
-                    if (File.Exists(Path.Combine(APPinfo.TaskFolder, tbTaskNumber.Text.Trim(), tbTaskNumber.Text.Trim() + ".task")))
-                    {
-                        // если до изменения был не пустой номер, новый номер тоже не пустой и для нового номера есть файл задачи
-                        if (System.Windows.Forms.MessageBox.Show("Загрузить существующую задачу " + tbTaskNumber.Text + " ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                        {
-                            // сохранить предыдущую задачу
-                            SaveTask(Task);
-                            // флаг загрузки
-                            isLoad = true;
-                        }
-                        else
-                        {
-                            tbTaskNumber.Text = Task.TaskNumber;
-                            return false;
-                        }
-                    }
+                    // сохраняем новый номер
+                    string num = tbTaskNumber.Text;
+
+                    // сбрасываем задачу
+                    SetTask(null);
+
+                    // восстанавливаем номер
+                    tbTaskNumber.Text = num;
                 }
-
-                if ((!string.IsNullOrWhiteSpace(Task.TaskNumber)) && (!isLoad))
+                else
                 {
-                    // если предыдущий номер не пустой
-                    if (System.Windows.Forms.MessageBox.Show("Новая задача " + tbTaskNumber.Text + " ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    {
-                        // сохранить предыдущую задачу
-                        SaveTask(Task);
-                        // новая задача
-                        string num = tbTaskNumber.Text;
-                        SetTask(null);
-                        tbTaskNumber.Text = num;
-                        Directory.CreateDirectory(Path.Combine(APPinfo.TaskFolder, tbTaskNumber.Text.Trim()));
-                    }
-                    else
-                    {
-                        tbTaskNumber.Text = Task.TaskNumber;
-                        return false;
-                    }
+                    // сбрасываем задачу
+                    SetTask(null);
                 }
 
                 string dir = Path.Combine(APPinfo.TaskFolder, tbTaskNumber.Text.Trim()); //-V3095
 
                 if ((!string.IsNullOrWhiteSpace(tbTaskNumber.Text)) && (!Directory.Exists(dir)))
                 {
-                    if (System.Windows.Forms.MessageBox.Show("Создать папку задачи " + dir + " ?", "Создать", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
-                    {
-                        Directory.CreateDirectory(dir);
-                    }
-                    else
-                    {
-                        tbTaskNumber.Text = Task.TaskNumber;
-                        return false;
-                    }
+                    Directory.CreateDirectory(dir);
                 }
 
                 //Task.LastTaskNumber = Task.TaskNumber;
@@ -1048,10 +1113,10 @@ namespace SQLGen
 
                 if (!string.IsNullOrWhiteSpace(Task.TaskNumber))
                 {
-                    if (!LoadTask(Task.TaskFile))
+                    if (!LoadTask(Task.TaskFile, false))
                     {
                         // создать task-файл, если его еще нет
-                        SaveTask(Task);
+                        SaveTask(Task, false);
                     }
                 }
 
@@ -1095,7 +1160,7 @@ namespace SQLGen
         /// <summary>Выход из поля Номер задачи</summary>
         private void tbTaskNumber_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (!TaskNumberChanged())
+            if (!TaskNumberChanged()) //-V3022
             {
                 Dispatcher.BeginInvoke((ThreadStart)delegate
                 {
@@ -1126,31 +1191,10 @@ namespace SQLGen
             if (!btOpenTask.IsFocused) btOpenTask.Focus();
 
             // сохранить предыдущую задачу
-            SaveTask(Task);
+            SaveTask(Task, false);
             // инициализировать новую
             SetTask(null);
         }
-
-        // -------------------------------------------------------------------------------------------------------
-        /// <summary>
-        /// Сохранить текущую задачу без отображения сообщений
-        /// </summary>
-        public void SaveTaskNoShow()
-        {
-            if (!tabTask.IsSelected) tabTask.IsSelected = true;
-            if (!btOpenTask.IsFocused) btOpenTask.Focus();
-
-            if (string.IsNullOrWhiteSpace(Task.TaskNumber))
-            {
-                MessageBox.Show("Необходимо заполнить Номер задачи !");
-                tbTaskNumber.Focus();
-                return;
-            }
-
-            // сохранить текущую задачу
-            SaveTask(Task);
-        }
-
 
         // -------------------------------------------------------------------------------------------------------
         /// <summary>
@@ -1160,11 +1204,16 @@ namespace SQLGen
         /// <param name="e">event</param>
         public void miSaveTask_Click(object sender, RoutedEventArgs e)
         {
-            SaveTaskNoShow();
+            if (string.IsNullOrWhiteSpace(Task.TaskNumber))
+            {
+                MessageBox.Show("Необходимо заполнить Номер задачи !");
+                return;
+            }
+
+            SaveTask(Task, true);
+
             MessageBox.Show("Задача " + Task.TaskNumber + " сохранена !");
-
         }
-
 
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Выбран пункт меню Открыть задачу</summary>
@@ -1177,7 +1226,7 @@ namespace SQLGen
             miNewTask_Click(sender, e);
             // открыть задачу из файла
             string filename = Controls.Dialogs.OpenTaskDialog(APPinfo.TaskFolder);
-            LoadTask(filename);
+            LoadTask(filename, true);
         }
 
 
@@ -1193,9 +1242,9 @@ namespace SQLGen
         /// <summary>Нажата кнопка Обновить из Jira</summary>
         private void btFromJira_Click(object sender, RoutedEventArgs e)
         {
-            if ((!string.IsNullOrWhiteSpace(Task.TaskUrl)) && HTML.OpenLoginJira(MainWindow.Task.LogFile))
+            if ((!string.IsNullOrWhiteSpace(Task.TaskUrl)) && JiraHTML.OpenLoginJira(MainWindow.Task.LogFile))
             {
-                HTML html = new HTML();
+                JiraHTML html = new JiraHTML();
 
                 var task = new Dictionary<string, string>
                 {

@@ -266,7 +266,7 @@ namespace SQLGen
         /// <param name="cron_timeout">ограничение времени выполнения задания</param>
         /// <param name="cron_hosts">возможность параллельного запуска задачи</param>
         /// <param name="cron_check">проверочный запрос</param>
-        /// <param name="cron_team">команда РТМИС, ответственная за задание</param>
+        /// <param name="cron_team">команда, ответственная за задание</param>
         /// <param name="cron_istemp">флаг временного задания</param>
         public void SetCron(
             int cron_order, 
@@ -423,6 +423,32 @@ namespace SQLGen
         public string dbregion { get; set; }
 
         /// <summary>
+        /// DBRegion для Description
+        /// </summary>
+        private string dbregion_descr
+        {
+            get
+            {
+                string result = "на " + this.DBRegion;
+
+                if (
+                    !string.IsNullOrWhiteSpace(this.regions_str) &&
+                    (this.regions_str != "all")
+                )
+                {
+                    result = result + $" в {this.regions_str}";
+                }
+
+                if (!string.IsNullOrWhiteSpace(this.exclude_regions_str))
+                {
+                    result += $", кроме {this.exclude_regions_str}";
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
         /// Тип региона по типу основной БД - для формы
         /// </summary>
         [JsonIgnore]
@@ -458,6 +484,7 @@ namespace SQLGen
                 OnPropertyChanged(nameof(dbregion));
                 OnPropertyChanged(nameof(DBMS));
                 OnPropertyChanged(nameof(Project));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -487,6 +514,37 @@ namespace SQLGen
                 OnPropertyChanged(nameof(application_name));
                 OnPropertyChanged(nameof(filename));
                 OnPropertyChanged(nameof(Filepath));
+                OnPropertyChanged(nameof(Description));
+            }
+        }
+
+        /// <summary>
+        /// Наименование задания для Description
+        /// </summary>
+        private string application_name_descr
+        {
+            get
+            {
+                if (
+                    !string.IsNullOrWhiteSpace(comment) &&
+                    !string.IsNullOrWhiteSpace(application_name) &&
+                    comment.ToLower().StartsWith(application_name.ToLower())
+                )
+                {
+                    return $"{comment}";
+                }
+                else if (string.IsNullOrWhiteSpace(comment))
+                {
+                    return application_name;
+                }
+                else if (string.IsNullOrWhiteSpace(application_name))
+                {
+                    return comment;
+                }
+                else
+                {
+                    return $"{application_name} {comment}";
+                }
             }
         }
 
@@ -510,6 +568,7 @@ namespace SQLGen
                 }
 
                 OnPropertyChanged(nameof(comment));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -533,6 +592,7 @@ namespace SQLGen
                 }
 
                 OnPropertyChanged(nameof(command));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -556,6 +616,7 @@ namespace SQLGen
                 }
 
                 OnPropertyChanged(nameof(schedule));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -583,6 +644,7 @@ namespace SQLGen
                 OnPropertyChanged(nameof(timeout_hour));
                 OnPropertyChanged(nameof(timeout_minute));
                 OnPropertyChanged(nameof(timeout_second));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -646,6 +708,7 @@ namespace SQLGen
 
                 OnPropertyChanged(nameof(timeout_hour));
                 OnPropertyChanged(nameof(hasTimeout));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -688,6 +751,7 @@ namespace SQLGen
 
                 OnPropertyChanged(nameof(timeout_minute));
                 OnPropertyChanged(nameof(hasTimeout));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -730,6 +794,7 @@ namespace SQLGen
 
                 OnPropertyChanged(nameof(timeout_second));
                 OnPropertyChanged(nameof(hasTimeout));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -789,6 +854,7 @@ namespace SQLGen
 
                 OnPropertyChanged(nameof(state));
                 OnPropertyChanged(nameof(State));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -873,6 +939,7 @@ namespace SQLGen
                 OnPropertyChanged(nameof(Project));
                 OnPropertyChanged(nameof(folder));
                 OnPropertyChanged(nameof(Filepath));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -1008,9 +1075,9 @@ namespace SQLGen
             {
                 return new List<string> {
                     "all - все типы стендов (прод + продлайк + релизные + тестовые)",
-                    "prod - только на прод + релизные + тестовые",
-                    "prodlike - только на продлайк + релизные + тестовые",
-                    "release -  релизные + тестовые",
+                    "prod - только на прод",
+                    "prodlike - только на продлайк",
+                    "release -  релизные",
                     "test -  тестовые"
                 };
             }
@@ -1020,6 +1087,92 @@ namespace SQLGen
         /// Тип целевой БД - для json
         /// </summary>
         public string stage { get; set; } = "all";
+
+        /// <summary>
+        /// Целевая БД - для Description
+        /// </summary>
+        private string database_stage_descr
+        {
+            get
+            {
+                if (database == "promed" && stage == "all")
+                {
+                    return "основной, отчетной и реестровой БД прод и продлайк";
+                }
+                else if (database == "promed" && stage == "prod")
+                {
+                    return "основной, отчетной и реестровой БД прод";
+                }
+                else if (database == "main" && stage == "all")
+                {
+                    return "основной БД прод и продлайк";
+                }
+                else if (database == "main" && stage == "prod")
+                {
+                    return "основной БД прод";
+                }
+                else if ((database == "promed" || database == "main" || database == "report" || database == "reestr") && stage == "prodlike")
+                {
+                    return "основной БД продлайк";
+                }
+                else if ((database == "promed" || database == "main" || database == "report" || database == "reestr") && stage == "release")
+                {
+                    return "основной релизной БД";
+                }
+                else if ((database == "promed" || database == "main" || database == "report" || database == "reestr") && stage == "test")
+                {
+                    return "основной тестовой БД";
+                }
+                else if (database == "report")
+                {
+                    return "отчетной БД прод";
+                }
+                else if (database == "reestr")
+                {
+                    return "реестровой БД прод";
+                }
+                else
+                {
+                    string _db = "";
+                    if (database == "emd")
+                    {
+                        _db = "ЕМД";
+                    }
+                    else if (database == "lis")
+                    {
+                        _db = "ЛИС";
+                    }
+                    else
+                    {
+                        _db = database;
+                    }
+
+                    string _st = "";
+                    if (stage == "all")
+                    {
+                        _st = "прод и продлайк";
+                    }
+                    else if (stage == "prod")
+                    {
+                        _st = "прод";
+                    }
+                    else if (stage == "prodlike")
+                    {
+                        _st = "продлайк";
+                    }
+                    else if (stage == "release")
+                    {
+                        _st = "релизной";
+                    }
+                    else if (stage == "test")
+                    {
+                        _st = "тестовой";
+                    }
+
+                    return $"{_st} {_db}";
+                }
+            }
+        }
 
         /// <summary>
         /// Тип целевой БД - для формы
@@ -1056,6 +1209,7 @@ namespace SQLGen
                 }
 
                 OnPropertyChanged(nameof(Stage));
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -1187,6 +1341,8 @@ namespace SQLGen
             }
 
             if (regions.Count == 0) regions.Add("all");
+
+            OnPropertyChanged(nameof(Description));
         }
 
         /// <summary>
@@ -1261,6 +1417,8 @@ namespace SQLGen
                     .ToList()
                 );
             }
+
+            OnPropertyChanged(nameof(Description));
         }
 
         /// <summary>
@@ -1368,7 +1526,7 @@ namespace SQLGen
 
         string _team;
         /// <summary>
-        /// команда РТМИС, ответственная за задание
+        /// команда, ответственная за задание
         /// </summary>
         public string team
         {
@@ -1410,6 +1568,38 @@ namespace SQLGen
 
                 OnPropertyChanged(nameof(istemp));
                 OnPropertyChanged(nameof(isTemp));
+                OnPropertyChanged(nameof(Description));
+            }
+        }
+
+        /// <summary>
+        /// Описание для Действия при обновлении
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                string result = "";
+
+                if (this.state == "absent")
+                {
+                    result = $"{this.dbregion_descr} - отключить задание на {this.database_stage_descr}:\nНаименование: {this.application_name_descr}\nКоманда: {this.command}";
+                }
+                else
+                {
+                    result = $"{this.dbregion_descr} - создать задание на {this.database_stage_descr}:\nНаименование: {this.application_name_descr}\nКоманда: {this.command}\nРасписание: {this.schedule}";
+
+                    if (this.isTemp)
+                    {
+                        result += "\nЗадание выполняется на временной основе";
+                    }
+                    if (this.hasTimeout)
+                    {
+                        result += $"\nТаймаут {this.timeout_hour} часов {this.timeout_minute} минут {this.timeout_second} секунд";
+                    }
+                }
+
+                return result;
             }
         }
 
@@ -1466,7 +1656,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.application_name))
                 {
                     info = $"{info_file}задача {_json.task} номер {_json.order} - пустой application_name или без application_name";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.application_name = null;
@@ -1479,7 +1669,7 @@ namespace SQLGen
                 if (!Cron.IsApplicationNameCorrect(_json.application_name))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - наименование задания содержит не разрешенные символы!{Environment.NewLine}Разрешены символы латинского алфавита (a-z A-Z), знак подчеркивания (_), знак тире (-)";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
                 }
 
@@ -1487,7 +1677,7 @@ namespace SQLGen
                 if (_json.order == 0)
                 {
                     info = $"{info_file}задание {_json.application_name} - order = 0 (или отсутствует), исправлено на минимальное значение 1";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+                    App.AddLog(info, null, App.ShowMessageMode.NONE, true, logFile);
 
                     _json.order = 1;
                 }
@@ -1496,7 +1686,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.task))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - пустой task или без task";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.task = null;
@@ -1509,7 +1699,7 @@ namespace SQLGen
                 if (!Task.IsTaskNumberCorrect(_json.task))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - номер задачи {_json.task} содержит не разрешенные символы!{Environment.NewLine}Разрешены символы латинского алфавита в верхнем регистре (A-Z), знак подчеркивания (_), знак тире (-)";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
                 }
 
@@ -1527,7 +1717,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.command))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - пустой command или без command";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.command = null;
@@ -1541,7 +1731,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.schedule))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - пустой schedule или без schedule";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.schedule = null;
@@ -1555,7 +1745,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.state))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - пустой state или без state";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.state = null;
@@ -1574,7 +1764,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(found))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение state = {_json.state}";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.state = null;
@@ -1584,7 +1774,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(_json.database))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - пустой database или без database";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.database = null;
@@ -1603,7 +1793,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(found))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение database = {_json.database}";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.database = null;
@@ -1622,7 +1812,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(found))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение stage = {_json.stage}";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.stage = "all";
@@ -1637,7 +1827,7 @@ namespace SQLGen
                     if (!ListRegionsName.Contains(_reg, StringComparer.OrdinalIgnoreCase) && _reg != "all")
                     {
                         info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение в поле regions = {_reg}";
-                        App.AddLog(info, null, showMessageMode, true, logFile);
+
                         err += Environment.NewLine + Environment.NewLine + info;
                     }
                 }
@@ -1650,7 +1840,7 @@ namespace SQLGen
                         if (!ListRegionsName.Contains(_reg, StringComparer.OrdinalIgnoreCase) && _reg != "all")
                         {
                             info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение в поле exclude_regions = {_reg}";
-                            App.AddLog(info, null, showMessageMode, true, logFile);
+
                             err += Environment.NewLine + Environment.NewLine + info;
                         }
                     }
@@ -1669,7 +1859,7 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(found))
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение hosts = {_json.hosts}";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.hosts = "single";
@@ -1701,7 +1891,7 @@ namespace SQLGen
                 if (_json.istemp != 1 && _json.istemp != 2)
                 {
                     info = $"{info_file}задание {_json.application_name} номер {_json.order} - ошибочное значение istemp = {_json.istemp}";
-                    App.AddLog(info, null, showMessageMode, true, logFile);
+
                     err += Environment.NewLine + Environment.NewLine + info;
 
                     _json.istemp = 1;
@@ -1710,6 +1900,7 @@ namespace SQLGen
 
             // проверяем на наличие дублей "наименование задания + номер"
             foreach (var item in cron_list
+                .Where(x => !string.IsNullOrWhiteSpace(x.application_name))
                 .GroupBy(
                     x => $"application_name = {x.application_name.ToLower()}, order = {x.order}",
                     (uniq_name, crons) => new
@@ -1722,11 +1913,17 @@ namespace SQLGen
             )
             {
                 info = $"{info_file}больше одного задания {item.uniq_name}. Будет загружено только первое.";
-                App.AddLog(info, null, showMessageMode, true, logFile);
                 err += Environment.NewLine + Environment.NewLine + info;
             }
 
-            return string.IsNullOrWhiteSpace(err);
+            bool isOk = string.IsNullOrWhiteSpace(err);
+
+            if (!isOk)
+            {
+                App.AddLog(err, null, showMessageMode, true, logFile);
+            }
+
+            return isOk;
         }
 
 
@@ -1747,13 +1944,7 @@ namespace SQLGen
                 {
                     // версия
 
-                    var json_version = JsonSerializer.Deserialize<CronVersionLoad>(_jsontext, new JsonSerializerOptions
-                    {
-                        IgnoreReadOnlyProperties = true,
-                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                        WriteIndented = true,
-                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                    });
+                    var json_version = JsonSerializer.Deserialize<CronVersionLoad>(_jsontext, Other.TaskJSON);
 
                     if (json_version != null)
                     {
@@ -1801,25 +1992,13 @@ namespace SQLGen
                     if (isMulti)
                     {
                         // если несколько заданий
-                        result = JsonSerializer.Deserialize<List<CronToJson>>(_jsontext, new JsonSerializerOptions
-                        {
-                            IgnoreReadOnlyProperties = true,
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                            WriteIndented = true,
-                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        });
+                        result = JsonSerializer.Deserialize<List<CronToJson>>(_jsontext, Other.TaskJSON);
                     }
                     else
                     {
                         // если одно задание
                         result = new List<CronToJson>();
-                        result.Add(JsonSerializer.Deserialize<CronToJson>(_jsontext, new JsonSerializerOptions
-                        {
-                            IgnoreReadOnlyProperties = true,
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                            WriteIndented = true,
-                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        }));
+                        result.Add(JsonSerializer.Deserialize<CronToJson>(_jsontext, Other.TaskJSON));
                     }
                 }
             }
@@ -2052,10 +2231,11 @@ namespace SQLGen
         /// <param name="cron">Одно задание</param>
         /// <param name="cron_list">Список заданий</param>
         /// <param name="logFile">лог-файл</param>
-        /// <param name="version">номер версии</param>
-        /// <param name="isBox">собираем коробочную версию</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="isBox">=true - собираем коробочную версию</param>
+        /// <param name="isMultiForce">=true - принудительная генерация в виде массива</param>
         /// <returns></returns>
-        public static string GenerateJSON(Cron cron, ObservableCollection<Cron> cron_list, string logFile, string version, bool isBox)
+        public static string GenerateJSON(Cron cron, ObservableCollection<Cron> cron_list, string logFile, string version, bool isBox, bool isMultiForce)
         {
             string result = "";
 
@@ -2158,59 +2338,33 @@ namespace SQLGen
                         v.listcron = ListToJsonForVersion;
                         v.listtemp = ListToJsonForVersionTemp;
 
-                        result = JsonSerializer.Serialize<CronVersionSave>(v,
-                            new JsonSerializerOptions
-                            {
-                                IgnoreReadOnlyProperties = true,
-                                WriteIndented = true,
-                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                            });
+                        result = JsonSerializer.Serialize<CronVersionSave>(v, Other.VersionJSON);
                     }
 
                     // сохрянем в коробочную версию
-                    if (!string.IsNullOrWhiteSpace(version) && isBox)
+                    else if (!string.IsNullOrWhiteSpace(version) && isBox)
                     {
                         var v = new CronBoxSave();
                         v.version = version;
                         v.listcron = ListToJsonBox;
                         v.listtemp = new List<CronToJsonBox>();
 
-                        result = JsonSerializer.Serialize<CronBoxSave>(v,
-                            new JsonSerializerOptions
-                            {
-                                IgnoreReadOnlyProperties = true,
-                                WriteIndented = true,
-                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                            });
+                        result = JsonSerializer.Serialize<CronBoxSave>(v, Other.VersionJSON);
                     }
 
                     // сохраняем задания задачи
-                    if (string.IsNullOrWhiteSpace(version) &&
+                    else if (string.IsNullOrWhiteSpace(version) &&
                         ListToJson != null &&
                         ListToJson.Count() > 0
                     )
                     {
-                        if (ListToJson.Count == 1)
+                        if (ListToJson.Count > 1 || isMultiForce)
                         {
-                            result = JsonSerializer.Serialize<CronToJson>(ListToJson.First(),
-                                new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                            result = JsonSerializer.Serialize<List<CronToJson>>(ListToJson, Other.TaskJSON);
                         }
                         else
                         {
-                            result = JsonSerializer.Serialize<List<CronToJson>>(ListToJson,
-                                new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                            result = JsonSerializer.Serialize<CronToJson>(ListToJson.First(), Other.TaskJSON);
                         }
                     }
 
@@ -2227,14 +2381,7 @@ namespace SQLGen
                 try
                 {
                     // сохраняем одно задание
-                    result = JsonSerializer.Serialize<CronToJson>(cron.ToJson(),
-                        new JsonSerializerOptions
-                        {
-                            IgnoreReadOnlyProperties = true,
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                            WriteIndented = true,
-                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        });
+                    result = JsonSerializer.Serialize<CronToJson>(cron.ToJson(), Other.TaskJSON);
                 }
                 catch (Exception ex)
                 {
@@ -2260,20 +2407,22 @@ namespace SQLGen
         /// Найти по номеру json-файл версии
         /// </summary>
         /// <param name="project">проект</param>
-        /// <param name="version">номер версии</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="ext">расширение файла</param>
         /// <param name="json_filepath">полный путь к найденному файлу</param>
         /// <param name="logFile">лог-файл</param>
         /// <returns></returns>
-        public static bool FindVersion(string project, string version, out string json_filepath, string logFile)
+        public static bool FindVersion(string project, string version, string ext, out string json_filepath, string logFile)
         {
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
             string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
-            double numversion = Release.VerAsNum(version);
+            string version_no_prefix = Release.GetNumVersion(prefix, version);
+            double numversion = Release.VerAsNum(version_no_prefix);
             json_filepath = "";
 
             // Ищем существующий файл в папке version по номеру версии
-            var files = Directory.GetFiles(path_ver, version + "*_cron.json").ToList();
+            var files = Directory.GetFiles(path_ver, version + "*_cron." + ext).ToList();
             if (files == null) files = new List<string>(); //-V3022
             foreach (var filepath in files)
             {
@@ -2301,8 +2450,11 @@ namespace SQLGen
         /// </summary>
         /// <param name="_cron">экземпляр Cron для сравнения с текущей</param>
         /// <returns></returns>
-        public bool IsInFile(Cron _cron) => (this.dbregion == _cron.dbregion) && this.ToJson().IsInFile(_cron.ToJson());
-
+        public bool IsInFile(Cron _cron) => 
+            (this.dbregion == _cron.dbregion) &&
+            (this.folder == _cron.folder) &&
+            (this.DBMS == _cron.DBMS) &&
+            (this.application_name.ToLower() == _cron.application_name.ToLower());
     }
 
     /// <summary>
@@ -2394,7 +2546,7 @@ namespace SQLGen
         public string check { get; set; }
 
         /// <summary>
-        /// команда РТМИС, ответственная за задание
+        /// команда, ответственная за задание
         /// </summary>
         public string team { get; set; }
 
@@ -2554,23 +2706,6 @@ namespace SQLGen
 
             return true;
         }
-
-        /// <summary>
-        /// =true - оба экземпляра входят в один файл
-        /// </summary>
-        /// <param name="_cron">экземпляр Cron для сравнения с текущей</param>
-        /// <returns></returns>
-        public bool IsInFile(CronToJson _cron)
-        {
-            // сравниваем необходимые параметры задания для включения в один файл
-            bool result =
-                    this.dbms == _cron.dbms &&
-                    this.application_name.ToLower() == _cron.application_name.ToLower() &&
-                    this.database == _cron.database;
-
-            return result;
-
-        }
     }
 
     /// <summary>
@@ -2665,7 +2800,7 @@ namespace SQLGen
         public string check { get; set; }
 
         /// <summary>
-        /// команда РТМИС, ответственная за задание
+        /// команда, ответственная за задание
         /// </summary>
         public string team { get; set; }
 
@@ -2768,7 +2903,7 @@ namespace SQLGen
         public string check { get; set; }
 
         /// <summary>
-        /// команда РТМИС, ответственная за задание
+        /// команда, ответственная за задание
         /// </summary>
         public string team { get; set; }
 
@@ -2793,7 +2928,7 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// номер версии
+        /// номер версии с префиксом
         /// </summary>
         public string version { get; set; }
 
@@ -2823,7 +2958,7 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// номер версии
+        /// номер версии с префиксом
         /// </summary>
         public string version { get; set; }
 
@@ -2853,7 +2988,7 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// номер версии
+        /// номер версии с префиксом
         /// </summary>
         public string version { get; set; }
 

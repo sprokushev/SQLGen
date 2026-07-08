@@ -41,7 +41,7 @@ namespace SQLGen.Forms
             // 
             this.btnPRMD.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnPRMD.Location = new System.Drawing.Point(13, 64);
-            this.btnPRMD.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnPRMD.Margin = new System.Windows.Forms.Padding(4);
             this.btnPRMD.Name = "btnPRMD";
             this.btnPRMD.Size = new System.Drawing.Size(210, 28);
             this.btnPRMD.TabIndex = 1;
@@ -53,7 +53,7 @@ namespace SQLGen.Forms
             // 
             this.btnRPMS.DialogResult = System.Windows.Forms.DialogResult.Yes;
             this.btnRPMS.Location = new System.Drawing.Point(241, 64);
-            this.btnRPMS.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnRPMS.Margin = new System.Windows.Forms.Padding(4);
             this.btnRPMS.Name = "btnRPMS";
             this.btnRPMS.Size = new System.Drawing.Size(210, 28);
             this.btnRPMS.TabIndex = 2;
@@ -65,7 +65,7 @@ namespace SQLGen.Forms
             // 
             this.btnSMP.DialogResult = System.Windows.Forms.DialogResult.No;
             this.btnSMP.Location = new System.Drawing.Point(472, 64);
-            this.btnSMP.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnSMP.Margin = new System.Windows.Forms.Padding(4);
             this.btnSMP.Name = "btnSMP";
             this.btnSMP.Size = new System.Drawing.Size(210, 28);
             this.btnSMP.TabIndex = 3;
@@ -77,7 +77,7 @@ namespace SQLGen.Forms
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(353, 124);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(229, 28);
             this.btnCancel.TabIndex = 0;
@@ -109,10 +109,10 @@ namespace SQLGen.Forms
             this.Controls.Add(this.btnSMP);
             this.Controls.Add(this.btnRPMS);
             this.Controls.Add(this.btnPRMD);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "FormAskModule";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Какой модуль (префикс) версии?";
+            this.Text = "Какой префикс версии - Сервис ?";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormAskModule_FormClosed);
             this.ResumeLayout(false);
 

@@ -50,6 +50,7 @@ namespace SQLGen
             addProcs.IsChecked = true;
             addTriggers.IsChecked = false;
             addSequences.IsChecked = false;
+            addMarkers.IsChecked = false;
 
             // инициализация фонового воркера
             backgroundWorker1 = new BackgroundWorker();
@@ -194,6 +195,11 @@ namespace SQLGen
                     if (addSequences.IsChecked == true)
                     {
                         ListResults.AddRange(list.Where(x => x.objecttype == "SEQUENCE"));
+                    }
+
+                    if (addMarkers.IsChecked == true)
+                    {
+                        ListResults.AddRange(list.Where(x => x.objecttype == "FREEDOCMARKER" || x.objecttype == "FREEDOCRELATIONSHIP"));
                     }
 
                     dgResults.ItemsSource = ListResults;
@@ -655,7 +661,7 @@ namespace SQLGen
                 else project = cbItem.Tag.ToString();
 
                 // переключение на выбранную ветку
-                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false))
+                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false, ""))
                 {
                     isRefreshed = true;
 

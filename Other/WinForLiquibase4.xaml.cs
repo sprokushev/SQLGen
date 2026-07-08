@@ -203,7 +203,7 @@ namespace SQLGen
                 else project = cbItem.Tag.ToString();
 
                 // переключение на выбранную ветку
-                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false))
+                if (GIT.SelectGITBranch(project, null, out string branch, MainWindow.Task.LogFile, true, false, ""))
                 {
                     isRefreshed = true;
 

@@ -62,6 +62,8 @@
 
         <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="295,220,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
         <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="410,220,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+        <Button x:Name="btToDEV" Content="Влить в dev" HorizontalAlignment="Left" Margin="410,245,0,0" VerticalAlignment="Top" Width="100" Click="btToDEV_Click" ToolTip="Влить версию в ветку dev"/>
+        <Button x:Name="btCronJSON" Content="Пересобрать cron.json" HorizontalAlignment="Left" Margin="410,270,0,0" VerticalAlignment="Top" Width="150" ToolTip="Пересобрать \cron\cron.json в ветке dev" Click="btCronJSON_Click"/>
 
         <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="520,220,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
 

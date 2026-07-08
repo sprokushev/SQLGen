@@ -25,6 +25,7 @@
         <CheckBox x:Name="addProcs" Content="Добавить процедуры и функции" HorizontalAlignment="Left" Margin="470,58,0,0" VerticalAlignment="Top" Width="Auto" Height="15"/>
         <CheckBox x:Name="addTriggers" Content="Добавить триггеры" HorizontalAlignment="Left" Margin="140,78,0,0" VerticalAlignment="Top" Width="Auto" Height="15"/>
         <CheckBox x:Name="addSequences" Content="Добавить сиквенсы" HorizontalAlignment="Left" Margin="284,78,0,0" VerticalAlignment="Top" Width="Auto" Height="15"/>
+        <CheckBox x:Name="addMarkers" Content="Добавить маркеры" HorizontalAlignment="Left" Margin="470,78,0,0" VerticalAlignment="Top" Width="Auto" Height="15"/>
 
         <DataGrid x:Name="dgResults" Margin="10,105,10,0" VerticalScrollBarVisibility="Visible" ItemsSource="{Binding ListResults}" AutoGenerateColumns="False" MouseDoubleClick="dgResults_MouseDoubleClick" Height="204" VerticalAlignment="Top" IsReadOnly="True" CanUserDeleteRows="False" CanUserAddRows="False" >
             <DataGrid.Columns>

@@ -319,6 +319,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.IO.FileSystem.AccessControl, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.IO.FileSystem.AccessControl.5.0.0\lib\net461\System.IO.FileSystem.AccessControl.dll</HintPath>
     </Reference>
@@ -444,6 +445,7 @@
     <Compile Include="Databases\SQLParser.cs" />
     <Compile Include="Databases\Utilities.cs" />
     <Compile Include="Deployment\Deployment.cs" />
+    <Compile Include="Deployment\DeploymentPlan.cs" />
     <Compile Include="Deployment\WinAddDeployment.xaml.cs">
       <DependentUpon>WinAddDeployment.xaml</DependentUpon>
     </Compile>
@@ -498,6 +500,9 @@
     </Compile>
     <Compile Include="Release\WinReleaseDeployment.xaml.cs">
       <DependentUpon>WinReleaseDeployment.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Release\WinUpdRelBD.xaml.cs">
+      <DependentUpon>WinUpdRelBD.xaml</DependentUpon>
     </Compile>
     <Compile Include="Release\YMLFileInfo.cs" />
     <Compile Include="Task\Utilities.cs" />
@@ -795,6 +800,10 @@
     <Page Include="Release\WinReleaseDeployment.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Release\WinUpdRelBD.xaml">
+      <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
     <Page Include="Search\WinSearch.xaml">
       <SubType>Designer</SubType>

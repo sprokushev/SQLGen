@@ -290,7 +290,7 @@ namespace SQLGen.Utilities
         /// <summary>
         /// Получим список локальных справочников из всех тестовых БД
         /// </summary>
-        /// <param name="connect">ComboBox с подключением к БД</param>
+        /// <param name="connect">подключение к БД</param>
         /// <param name="tables">список таблиц</param>
         /// <param name="query">запрос</param>
         /// <param name="localerror">информация об отсутствии локальных справочниках в БД</param>
@@ -412,7 +412,7 @@ namespace SQLGen.Utilities
                "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
                 // добавляем с других тестовых
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_ms", "promeddev");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_ms", "promeddev", true);
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -448,7 +448,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_ms", "promedtest");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_ms", "promedtest", true);
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -484,7 +484,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_ms", "promedufa");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_ms", "promedufa", true);
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -520,7 +520,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_ms", "promedwebrelease");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_ms", "promedwebrelease", false, false, "RELEASE");
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -556,7 +556,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_ms", "promedwebufarelease");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_ms", "promedwebufarelease",false, false, "RELEASE");
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -592,7 +592,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_pg", "promedtest");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_pg", "promedtest", true);
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -628,7 +628,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_pg", "promedadygea");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_pg", "promedadygea", true);
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -664,7 +664,7 @@ namespace SQLGen.Utilities
                     }
                 }
 
-                connect = MainWindow.GetMainTestConnectByGITProject("dev_promed_pg", "promedrelease");
+                connect = MainWindow.GetConnectByGITProject("dev_promed_pg", "promedrelease", false, false, "RELEASE");
                 if (
                     (connect != null) &&
                     (connect.DBConnectionName != lastconn)
@@ -1373,7 +1373,7 @@ namespace SQLGen.Utilities
                     (!FirstLines[i].Trim().ToLower().StartsWith("--liquibase formatted sql")) &&
                     (!FirstLines[i].Trim().ToLower().StartsWith("--changeset ")) &&
                     (!FirstLines[i].Trim().ToLower().StartsWith("--comment:")) &&
-                    (FirstLines[i].Trim().ToLower() != "-- sqlgen --") &&
+                    (!FirstLines[i].Trim().ToLower().StartsWith("-- sqlgen")) &&
                     (!FirstLines[i].Trim().ToLower().StartsWith("-- внимание!")) &&
                     (!FirstLines[i].Trim().ToLower().StartsWith("-- warning!")) &&
                     (!FirstLines[i].Trim().ToLower().StartsWith("error:")) &&
@@ -1425,7 +1425,7 @@ namespace SQLGen.Utilities
                 {
                     FirstLines[i] = "";
                 }
-                if (FirstLines[i].ToLower() == "-- sqlgen --")
+                if (FirstLines[i].ToLower().StartsWith("-- sqlgen"))
                 {
                     FirstLines[i] = "";
                 }
@@ -1521,7 +1521,7 @@ namespace SQLGen.Utilities
                 }
 
                 FormAskProc dlg1 = new FormAskProc();
-                dlg1.tbProcName.Text = SchemaName + '.' + ObjectName;
+                dlg1.tbProcName.Text = ((TypeScript == "freedocmarker" || TypeScript == "freedocrelationship") ? "" : (SchemaName + '.')) + ObjectName;
                 dlg1.tbProcFile.Text = NewFile;
                 dlg1.tbWarning.Text = warning;
                 dlg1.tbProcText.Lines = buffer;
@@ -1685,12 +1685,28 @@ namespace SQLGen.Utilities
                             line = line.Trim(new char[] { '\t', ' ' }).ToLower();
                             next_line = next_line.Trim(new char[] { '\t', ' ' }).ToLower();
 
-                            if (line == "-- sqlgen --")
+                            if (line.StartsWith("-- sqlgen"))
                             {
                                 isnew = true;
                             }
 
                             // определяем тип скрипта и имя объекта
+                            if (prev_line.StartsWith("-- sqlgen: freedocrelationship"))
+                            {
+                                TypeScript = "freedocrelationship";
+                                string s = prev_line.Substring(30).Trim();
+                                SchemaName = "dbo";
+                                ObjectName = s.Split(' ')[0];
+                            }
+
+                            if (prev_line.StartsWith("-- sqlgen: freedocmarker"))
+                            {
+                                TypeScript = "freedocmarker";
+                                string s = prev_line.Substring(24).Trim();
+                                SchemaName = "dbo";
+                                ObjectName = s.Split(' ')[0];
+                            }
+
                             if (prev_line.StartsWith("create view "))
                             {
                                 TypeScript = "view";
@@ -1931,6 +1947,9 @@ namespace SQLGen.Utilities
                             if (line.StartsWith("create or replace ")) TypeDB = "pg";
                             if (line.Contains("xp_gen_view")) TypeDB = "pg";
                             if (line.Contains("xp_dropfns")) TypeDB = "pg";
+                            if (line.Contains("on conflict do nothing")) TypeDB = "pg";
+                            if (line.Contains("localtimestamp")) TypeDB = "pg";
+                            if (line.Contains(":=")) TypeDB = "pg";
 
                             // тестовая заглушка
                             if (line.ToLower().StartsWith("--liquibase formatted sql"))
@@ -2003,7 +2022,7 @@ namespace SQLGen.Utilities
                                         (
                                             (i > 0) &&
                                             isnew &&
-                                            (line == "-- sqlgen --")
+                                            line.StartsWith("-- sqlgen")
                                         ) ||
                                         (i == cnt - 1)
                                     ) &&
@@ -2019,7 +2038,7 @@ namespace SQLGen.Utilities
                                     Prefix = TypeDB;
                                 }
 
-                                string newFilename = Path.Combine(Path.GetDirectoryName(filename), Prefix + " " + TaskNumber + " " + NumFile + " " + TypeScript + " " + SchemaName + " " + ObjectName + ".sql");
+                                string newFilename = Path.Combine(Path.GetDirectoryName(filename), Prefix + " " + TaskNumber + " " + NumFile + " " + TypeScript + " " + SchemaName.Replace("\"", "") + " " + ObjectName.Replace("\"", "") + ".sql");
 
                                 int index;
                                 if (i == cnt - 1) index = i; else index = i - 1;

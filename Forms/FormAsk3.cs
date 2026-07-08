@@ -14,7 +14,7 @@ using SQLGen.Controls;
 namespace SQLGen.Forms
 {
     /// <summary>
-    /// Форма выбора модуля
+    /// Форма выбора с 3-мя решениями
     /// </summary>
     public partial class FormAsk3 : Form
     {

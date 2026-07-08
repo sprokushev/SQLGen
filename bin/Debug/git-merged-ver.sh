@@ -21,10 +21,14 @@ function script_main () {(
   local TASK
   TASK=$3
 
-  for VER in $(git branch -r --merged="origin/$TASK" --format="%(refname:short)" --list "origin/$VER_PREFIX".* | sort -Vr | head -1)
+  for VER in $(git branch -r --merged="origin/$TASK" --format="%(refname:short)" --list "origin/$VER_PREFIX".* | sort -Vr | head -20)
   do
     echo $VER
-    break
+  done
+
+  for VER in $(git ls-tree -r "origin/$TASK" --full-tree --name-only version | grep .yml | sort -Vr | head -20)
+  do
+    echo $VER
   done
 )}
 

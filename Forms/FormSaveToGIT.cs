@@ -73,7 +73,7 @@ namespace SQLGen
         /// <param name="e"></param>
         private void btChoose_Click(object sender, EventArgs e)
         {
-            if (GIT.SelectGITBranch(tbProject.Text, tbBranch.Text, out string branch, LogFile, true, false))
+            if (GIT.SelectGITBranch(tbProject.Text, tbBranch.Text, out string branch, LogFile, true, false, ""))
             {
                 tbBranch.Text = branch;
             }

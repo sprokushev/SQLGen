@@ -181,7 +181,7 @@ namespace SQLGen
 
             if (scriptkind == "STRUCT" || scriptkind == "CODE")
             {
-                // если это скрипт для таблицы/хранимки/вьюхи - делим на chageset и каждый changeset рассматриваем как отдельный файл
+                // если это скрипт для таблицы/хранимки/вьюхи/маркера - делим на chageset и каждый changeset рассматриваем как отдельный файл
                 var list = SQLChangeset.ReadChangeset(filename, false, execLogFile);
 
                 foreach (var item in list)

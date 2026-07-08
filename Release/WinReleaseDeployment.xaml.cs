@@ -1,21 +1,22 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using ICSharpCode.AvalonEdit.Highlighting;
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web.UI.WebControls;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Path = System.IO.Path;
-using SQLGen.Controls;
-using SQLGen.Utilities;
-using System.Collections.ObjectModel;
-using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace SQLGen
 {
@@ -61,11 +62,19 @@ namespace SQLGen
             }
         }
 
-        /// <summary>Полный список версий</summary>
+        /// <summary>Список ВСЕХ версий (с учетом кумулятивности)</summary>
         public SortedDictionary<double, Version> Versions = new SortedDictionary<double, Version>();
 
-        /// <summary>Список СЛЕДУЮЩИХ версий</summary>
+        /// <summary>Список СЛЕДУЮЩИХ версий (с учетом кумулятивности)</summary>
         public SortedDictionary<double, Version> NextVersions = new SortedDictionary<double, Version>();
+
+        /// <summary>
+        /// признак кумулятивности текущей версии
+        /// </summary>
+        bool isCumulative = true;
+
+        /// <summary>Следующая версия</summary>
+        string lastNextVersion = "";
 
         /// <summary>Конструктор WinReleaseDeployment</summary>
         public WinReleaseDeployment()
@@ -108,22 +117,7 @@ namespace SQLGen
             tbReleaseTaskNumber.Text = MainWindow.Task.TaskNumber;
 
             // url на Deployment Plan в Confluence
-            if (tbNumVersion.Text.StartsWith("smp"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=SMP-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else if (tbNumVersion.Text.StartsWith("bi"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=BI-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else if (tbNumVersion.Text.StartsWith("rpms"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=UserPortal-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=PROMED-DeploymentPlan-" + tbNumVersion.Text;
-            }
+            tbDeploymentConfVersion.Text = GITProjects.GetURLDeploymentPlan(tbNumVersion.Text);
         }
 
         /// <summary>При закрытии окна WinReleaseDeployment</summary>
@@ -131,6 +125,9 @@ namespace SQLGen
         {
             // пользовательские настройки GUI
             Default.SaveGUI("WinReleaseDeployment", this, null);
+
+            // сохранить текущую задачу
+            MainWindow.SaveTask(MainWindow.Task, true);
         }
 
         /// <summary>
@@ -138,9 +135,19 @@ namespace SQLGen
         /// </summary>
         private void ClearFields()
         {
+            Versions.Clear();
+            NextVersions.Clear();
+
+            cbPrevVersion.Items.Clear();
+            cbNextVersion.Items.Clear();
+            cbPrevVersion.Items.Add("");
+            cbNextVersion.Items.Add("");
+
             tbBranch.Text = "";
+            cbPrevVersion.Text = "";
             tbDeploymentFileVersion.Text = "";
             tbDeploymentGITVersion.Text = "";
+            cbNextVersion.Text = "";
 
             btGitPull.IsEnabled = false;
             btGitPush.IsEnabled = false;
@@ -214,10 +221,63 @@ namespace SQLGen
             string err = "";
             tbBranch.Text = GIT.GitCurrentBranch(project, out err, MainWindow.Task.LogFileRelease);
 
+            // Заполним Versions
+            FillVersions(false, true);
+
+            // текущая yml-версия
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, tbNumVersion.Text));
+
+            YMLStruct loadyml = new YMLStruct(null, MainWindow.Task.LogFileRelease);
+
+            if (Versions.ContainsKey(numversion))
+            {
+                loadyml = Versions[numversion].YMLFile;
+            }
+
             // Найдем среди версий json-файл с Действиями при обновлении
             bool isexist = false;
             tbDeploymentFileVersion.Text = Release.GetJsonFile(project, tbNumVersion.Text, "deployment", out isexist);
             tbDeploymentFileVersion.IsReadOnly = isexist;
+
+            //проставляем флаг кумулятивности
+            isCumulative = loadyml.IsCumulative;
+
+            // определяем предыдущую версию
+            string PrevVersion = loadyml.FirstPrevVersion?.NumVersionLine;
+
+            string DEVStartVer = Utilities.GITProjects.GetDEVStartVerByProject(project);
+
+            // выбираем предыдущую версию
+            var ver = WinRelease.GetPrevVersion(project, path, tbDeploymentFileVersion.Text.Trim(), Release.GetNumVersion(prefix, tbNumVersion.Text), PrevVersion, Versions, false);
+            if (
+                  (ver != null) &&
+                  (numversion >= Release.VerAsNum(DEVStartVer))
+            )
+            {
+                cbPrevVersion.SelectedItem = ver.VisibleName;
+            }
+            else
+            {
+                cbPrevVersion.SelectedIndex = -1;
+            }
+
+            // выбираем следующую версию
+            ver = WinRelease.GetNextVersion(project, path, tbDeploymentFileVersion.Text.Trim(), Release.GetNumVersion(prefix, tbNumVersion.Text), NextVersions, false);
+            if (
+                  (ver != null) &&
+                  (numversion >= Release.VerAsNum(DEVStartVer))
+            )
+            {
+                cbNextVersion.SelectedItem = ver.VisibleName;
+                // сохраняем выбранную следующую версию
+                lastNextVersion = ver.VisibleName;
+            }
+            else
+            {
+                cbNextVersion.SelectedIndex = -1;
+                // сохраняем выбранную следующую версию
+                lastNextVersion = "";
+            }
 
             // url на версию в GIT
             URL = URL.Replace("%BRANCH%", tbBranch.Text);
@@ -281,10 +341,7 @@ namespace SQLGen
             if (cbGITProject.SelectedIndex != -1)
             {
                 string project = cbGITProject.SelectedItem.ToString().Trim();
-                if (Utilities.GITProjects.IsDEVProject(project))
-                {
-                    BranchName.Visibility = System.Windows.Visibility.Visible;
-                }
+                BranchName.Visibility = System.Windows.Visibility.Visible;
             }
 
             foreach (var item in MainWindow.Task.ReleaseYMLFiles.Where(x => x.PathInGIT.ToLower() == "deployment"))
@@ -598,11 +655,7 @@ namespace SQLGen
                 dgJSONFilesRefresh();
 
                 // сохраняем задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                    btSaveTask.Focus();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
             }
         }
 
@@ -624,11 +677,49 @@ namespace SQLGen
         private void btTortoiseGIT_Click(object sender, RoutedEventArgs e)
         {
             if (!CheckBranch(out string branch)) return;
+            if (!isCorrectPrevVersion(out string err))
+            {
+                cbPrevVersion.Focus();
+                return;
+            }
 
             string GITProject = cbGITProject.SelectedItem.ToString().Trim();
 
-            // Отправляем в GIT
-            GIT.GitAdd(new string[] { GITProject }, tbBranch.Text.Trim(), true, false, MainWindow.Task.LogFileRelease);
+            // Проверяем, убрали следующую версию ?
+            if (
+                (!string.IsNullOrWhiteSpace(lastNextVersion)) &&
+                (
+                    (cbNextVersion.SelectedIndex == -1) ||
+                    (cbNextVersion.SelectedItem == null) ||
+                    string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString())
+                )
+            )
+            {
+                App.AddLog($"У текущей версии {tbNumVersion.Text} была убрана следующая версия. Необходимо вручную поменять ссылку на предыдущую версию в версии {lastNextVersion}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                lastNextVersion = "";
+            }
+
+            // Вливаем в следующую версию
+            if (
+                (cbNextVersion.SelectedIndex != -1) &&
+                (cbNextVersion.SelectedItem != null) &&
+                (!string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString())) 
+                //(cbNextVersion.SelectedItem.ToString() != lastNextVersion)
+            )
+            {
+                SetNextVersion(true);
+
+                lastNextVersion = cbNextVersion.SelectedItem.ToString();
+            }
+            else
+            {
+                // Отправляем в GIT
+                GIT.GitAdd(new string[] { GITProject }, tbBranch.Text.Trim(), true, false, MainWindow.Task.LogFileRelease);
+            }
+
+            // сохранить текущую задачу
+            MainWindow.SaveTask(MainWindow.Task, true);
         }
 
         /// <summary>
@@ -771,6 +862,55 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Проверяем корректность выбора\смены предыдущей версии, с учетом кумулятивности текущей версии
+        /// </summary>
+        /// <param name="error">текст ошибки</param>
+        /// <returns></returns>
+        private bool isCorrectPrevVersion(out string error)
+        {
+            error = "";
+
+            if (
+                // Если выбрана предыдущая ветка
+                (cbPrevVersion.SelectedIndex != -1) &&
+                !string.IsNullOrWhiteSpace(cbPrevVersion.SelectedItem.ToString())
+                )
+            {
+                string project = cbGITProject.SelectedItem.ToString().Trim();
+                string prevbranch = cbPrevVersion.SelectedItem.ToString().Trim();
+                double prevnumversion = Release.VerAsNum(prevbranch);
+
+                if (
+                        (!Versions.ContainsKey(prevnumversion)) ||
+                        (!Versions[prevnumversion].isBranchExists)
+                )
+                {
+                    error = $"ОШИБКА: Ветка {prevbranch} не найдена в проекте {project}";
+
+                    App.AddLog(error, null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    return false;
+                }
+
+                Version prever = Versions[prevnumversion];
+
+                if (
+                    isCumulative == true &&
+                    prever.isNoCumulative
+                )
+                {
+                    error = $"ОШИБКА: Версия {prevbranch} в проекте {project} НЕ кумулятивная и не может быть предыдущей версией у КУМУЛЯТИВНОЙ версии {tbNumVersion.Text}";
+
+                    App.AddLog(error, null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Нажата кнопка Переключиться на ветку
         /// </summary>
         /// <param name="sender"></param>
@@ -896,6 +1036,9 @@ namespace SQLGen
             {
                 // git push
                 GIT.GitPush(new string[] { project }, branch, true, MainWindow.Task.LogFileRelease);
+
+                // сохранить текущую задачу
+                MainWindow.SaveTask(MainWindow.Task, true);
             }
         }
 
@@ -1006,10 +1149,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgJSONFilesRefresh();
             }
@@ -1046,10 +1186,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgJSONFilesRefresh();
             }
@@ -1067,10 +1204,21 @@ namespace SQLGen
             string project = cbGITProject.SelectedItem.ToString().Trim();
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
             string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
 
             WinDeployment WinDeployment = new WinDeployment();
             WinDeployment.mainWindow = mainWindow;
             WinDeployment.logFile = MainWindow.Task.LogFileRelease;
+            WinDeployment.prevversion = "";
+
+            if (
+                (cbPrevVersion.SelectedIndex != -1) &&
+                !string.IsNullOrWhiteSpace(cbPrevVersion.SelectedItem.ToString())
+            )
+            {
+                WinDeployment.prevversion = cbPrevVersion.SelectedItem.ToString().Trim();
+            }
+
             WinDeployment.ProjectDeploymentMS = this.ProjectDeploymentMS;
             WinDeployment.ProjectDeploymentPG = this.ProjectDeploymentPG;
             WinDeployment.ProjectDefault = project;
@@ -1101,6 +1249,29 @@ namespace SQLGen
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
             double numversion = Release.VerAsNum(tbNumVersion.Text);
+
+            // получаем номер предыдущей версии из yml-файла версии
+            string prevver = "";
+
+            if (
+                (cbPrevVersion.SelectedIndex != -1) &&
+                !string.IsNullOrWhiteSpace(cbPrevVersion.SelectedItem.ToString())
+            )
+            {
+                prevver = cbPrevVersion.SelectedItem.ToString().Trim();
+                string prevver_no_prefix = Release.GetNumVersion(prefix, prevver);
+                double prevnum = Release.VerAsNum(prevver_no_prefix);
+
+                if (
+                    (prevnum == 0) ||
+                    !Versions.ContainsKey(prevnum)
+                )
+                {
+                    App.AddLog($"yml-файл версии для ветки {prevver} не найден!", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                    cbPrevVersion.Focus();
+                    return;
+                }
+            }
 
             string dbregion_ver = "";
             if (project == this.ProjectDeploymentMS)
@@ -1141,7 +1312,7 @@ namespace SQLGen
                         x.dbregion == item.dbregion &&
                         x.position == item.position &&
                         x.type == item.type &&
-                        x.script == item.script
+                        (x.script??"").TrimStartAllSpace().TrimEndAllSpace() == (item.script??"").TrimStartAllSpace().TrimEndAllSpace()
                     ).FirstOrDefault();
 
                 if (found == null)
@@ -1325,7 +1496,7 @@ namespace SQLGen
                             x.dbregion == new_deployment.dbregion &&
                             x.position == new_deployment.position &&
                             x.type == new_deployment.type &&
-                            x.script == new_deployment.script
+                            (x.script ?? "").TrimStartAllSpace().TrimEndAllSpace() == (new_deployment.script??"").TrimStartAllSpace().TrimEndAllSpace()
                         ).FirstOrDefault();
 
                     if (found == null)
@@ -1376,10 +1547,10 @@ namespace SQLGen
             }
 
             // сгенерировать текст json-файла
-            string jsonString = Deployment.GenerateJSON(ListDeployment, tbBranch.Text, MainWindow.Task.LogFileRelease, tbNumVersion.Text);
+            string jsonString = Deployment.GenerateJSON(ListDeployment, tbBranch.Text, MainWindow.Task.LogFileRelease, tbNumVersion.Text, prevver);
 
             // сохранить json-файл
-            bool isSaved = WinDeployment.SaveJSON(project, tbBranch.Text, "version", tbDeploymentFileVersion.Text, false, false, ListDeployment, ref jsonString, true, out string jsonfile, out string jsonurl, MainWindow.Task.LogFileRelease, tbNumVersion.Text);
+            bool isSaved = WinDeployment.SaveJSON(project, tbBranch.Text, "version", tbDeploymentFileVersion.Text, false, false, ListDeployment, ref jsonString, true, out string jsonfile, out string jsonurl, MainWindow.Task.LogFileRelease, tbNumVersion.Text, prevver);
 
             if (isSaved)
             {
@@ -1397,16 +1568,16 @@ namespace SQLGen
                 }
 
                 // завершение            
-                if (System.Windows.Forms.MessageBox.Show($"Открыть файл {tbDeploymentFileVersion.Text} ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                if (System.Windows.Forms.MessageBox.Show($"Редактировать файл {tbDeploymentFileVersion.Text} ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
-                    App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbDeploymentFileVersion.Text}, открытие внешнего файла", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
+                    /*App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbDeploymentFileVersion.Text}, открытие внешнего файла", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
 
-                    Utilities.External.OpenExternalFile(jsonfile);
+                    Utilities.External.OpenExternalFile(jsonfile);*/
+
+                    btDeploymentEdit_Click(null, null);
                 }
-                else
-                {
-                    App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbDeploymentFileVersion.Text}", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
-                }
+
+                App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbDeploymentFileVersion.Text}", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
             }
         }
 
@@ -1415,6 +1586,11 @@ namespace SQLGen
         {
             if (!CheckBranch(out string branch)) return;
             if (!CheckMerged()) return;
+            if (!isCorrectPrevVersion(out string err))
+            {
+                cbPrevVersion.Focus();
+                return;
+            }
 
             if (System.Windows.Forms.MessageBox.Show($"Собрать Deployment Plan для версии {tbNumVersion.Text} в файл {tbDeploymentFileVersion.Text}?",
             "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
@@ -1427,31 +1603,63 @@ namespace SQLGen
         /// Заполнить Versions 
         /// </summary>
         /// <param name="isForcedGitRefresh">=true - выполнять принудительно git-refresh.sh, =false - выполнять git-refresh.sh только если после предыдущего вызова прошло MainWindow.APPinfo.GitRefreshDelay минут</param>
-        public void FillVersions(bool isForcedGitRefresh)
+        /// <param name="isLoadNextVersions">=true - заполнить NextVersions</param>
+        public void FillVersions(bool isForcedGitRefresh, bool isLoadNextVersions)
         {
             string project = cbGITProject.SelectedItem.ToString().Trim();
-            if (Utilities.GITProjects.IsDEVProject(project))
+
+            // Очистить Versions
+            Versions.Clear();
+
+            // Очистить NextVersions
+            NextVersions.Clear();
+
+            var oldPrevIndex = cbPrevVersion.SelectedIndex;
+            var oldNextIndex = cbNextVersion.SelectedIndex;
+            string oldPrev = "";
+            string oldNext = "";
+            if (oldPrevIndex != -1) oldPrev = cbPrevVersion.SelectedItem.ToString().Trim();
+            if (oldNextIndex != -1) oldNext = cbNextVersion.SelectedItem.ToString().Trim();
+            cbPrevVersion.Items.Clear();
+            cbNextVersion.Items.Clear();
+            cbPrevVersion.Items.Add("");
+            cbNextVersion.Items.Add("");
+
+            // текущая версия
+            string currentbranch = tbBranch.Text;
+            double numversion = Release.VerAsNum(currentbranch);
+
+            // обновить проект GIT
+            GitPull_Sync(currentbranch, isForcedGitRefresh);
+
+            // заполнить Versions и NextVersions
+            WinRelease.FillVersionsInDev(project, ref currentbranch, tbNumVersion.Text, "", null, Versions, NextVersions, MainWindow.Task.LogFileRelease, false, isLoadNextVersions);
+
+            if (!string.IsNullOrWhiteSpace(currentbranch))
             {
-                // Очистить Versions
-                Versions.Clear();
-
-                // Очистить NextVersions
-                NextVersions.Clear();
-
-                // текущая версия
-                string currentbranch = tbBranch.Text;
-
-                // обновить проект GIT
-                GitPull_Sync(currentbranch, isForcedGitRefresh);
-
-                // заполнить Versions и NextVersions
-                WinRelease.FillVersionsInDev(project, ref currentbranch, tbNumVersion.Text, "", Versions, NextVersions, MainWindow.Task.LogFileRelease, false);
-
-                if (!string.IsNullOrWhiteSpace(currentbranch))
-                {
-                    tbBranch.Text = currentbranch;
-                }
+                tbBranch.Text = currentbranch;
             }
+
+            // заполнить cbPrevVersion (в обратном порядке)
+            foreach (var item in Versions
+                .Where(x => x.Key < numversion)
+                .OrderByDescending(x => x.Key)
+                )
+            {
+                cbPrevVersion.Items.Add(item.Value.VisibleName);
+            }
+
+            // заполнить cbNextVersion (в прямом порядке)
+            foreach (var item in NextVersions
+                .Where(x => x.Key > numversion)
+                .OrderBy(x => x.Key)
+                )
+            {
+                cbNextVersion.Items.Add(item.Value.VisibleName);
+            }
+
+            if (oldPrevIndex != -1) cbPrevVersion.SelectedItem = oldPrev;
+            if (oldNextIndex != -1) cbNextVersion.SelectedItem = oldNext;
         }
 
         /// <summary>
@@ -1462,16 +1670,120 @@ namespace SQLGen
         private void btMergeNextVersion_Click(object sender, RoutedEventArgs e)
         {
             if (!CheckBranch(out string cur_branch)) return;
+            if (!isCorrectPrevVersion(out string err))
+            {
+                cbPrevVersion.Focus();
+                return;
+            }
 
             string project = cbGITProject.SelectedItem.ToString().Trim();
-            if (!Utilities.GITProjects.IsDEVProject(project)) return;
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            string branch = tbBranch.Text;
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, branch));
 
+            // Проверяем, убрали СЛЕДУЮЩУЮ версию ?
+            if (
+                (!string.IsNullOrWhiteSpace(lastNextVersion)) &&
+                (
+                    (cbNextVersion.SelectedIndex == -1) ||
+                    (cbNextVersion.SelectedItem == null) ||
+                    string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString())
+                )
+            )
+            {
+                App.AddLog($"У текущей версии {tbNumVersion.Text} была убрана следующая версия. Необходимо вручную поменять ссылку на предыдущую версию в версии {lastNextVersion}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                lastNextVersion = "";
+            }
+
+            if (
+                (cbNextVersion.SelectedIndex != -1) &&
+                (cbNextVersion.SelectedItem != null) &&
+                (!string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString())) 
+            )
+            {
+                lastNextVersion = cbNextVersion.SelectedItem.ToString();
+                double nextversion = Release.VerAsNum(Release.GetNumVersion(prefix, lastNextVersion));
+
+                // Сначала вливаем в СЛЕДУЮЩУЮ, правим ссылку на ТЕКУЩУЮ
+                SetNextVersion(false);
+
+                // Теперь вливаем дальше
+                if (
+                    Versions == null ||
+                    Versions.Count == 0 ||
+                    Versions[numversion] == null ||
+                    Versions[numversion].YMLFile == null ||
+                    Versions[nextversion] == null ||
+                    Versions[nextversion].YMLFile == null
+                )
+                {
+                    MessageBox.Show($"Список версий пуст или не полный");
+                    return;
+                }
+
+                if (!Versions[numversion].YMLFile.IsFileExist)
+                {
+                    App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} НЕ собран основной yml-файл версии", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    return;
+                }
+
+                bool isNoCumulative = Versions[numversion].YMLFile.IsNoCumulative;
+
+                if (!Versions
+                    .Where(x =>
+                        (x.Value != null) &&
+                        (x.Value.YMLFile != null) &&
+                        (x.Value.NumOrder > numversion) && // есть версии после ТЕКУЩЕЙ
+                        (x.Value.PrevNumOrder > 0) && // у которых есть ссылка на предыдущую версию
+                        (x.Value.PrevNumOrder == numversion) // ссылаются на ТЕКУЩУЮ
+                    ).Any()
+                )
+                {
+                    MessageBox.Show($"После версии {branch} нет последующих версий, в которые ее можно влить");
+                    return;
+                }
+
+                // нашли минимум одну версию после ТЕКУЩЕЙ
+                if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во все последующие ветки ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    // вливаем во все последующие после ТЕКУЩЕЙ
+                    GIT.GitMergeNextVersion(project, branch, isNoCumulative, Versions, MainWindow.Task.LogFileRelease);
+
+                    // ----------------------------------------------------------------------------
+                    // показываем лог
+                    if (System.Windows.Forms.MessageBox.Show("Посмотреть итоговый лог ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        WinInfo WinInfo = new WinInfo(MainWindow.Task.LogFileRelease);
+                        WinInfo.tbInfo.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("LOG");
+                        WinInfo.tbInfo.Text = File.ReadAllText(MainWindow.Task.LogFileRelease);
+                        WinInfo.Title = "Лог в файле " + MainWindow.Task.LogFileRelease;
+                        WinInfo.Show();
+                    }
+
+                    // проверка текущей ветки и видимость кнопок и полей
+                    CheckBranch(out branch);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Нажата кнопка "Влить в dev"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btToDEV_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CheckBranch(out string cur_branch)) return;
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
             string branch = tbBranch.Text;
             double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, branch));
 
             // Заполним Versions
-            FillVersions(false);
+            // FillVersions(false, false);
 
             if (
                 Versions == null ||
@@ -1480,38 +1792,64 @@ namespace SQLGen
                 Versions[numversion].YMLFile == null
             )
             {
-                MessageBox.Show($"Список версий пуст или не полный");
-                return;
-            }
-
-            if (!Versions[numversion].YMLFile.IsFileExist)
-            {
-                App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} НЕ собран основной yml-файл версии", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
-
+                MessageBox.Show("Список версий пуст или не полный");
                 return;
             }
 
             bool isNoCumulative = Versions[numversion].YMLFile.IsNoCumulative;
 
-            if (!Versions
-                .Where(x =>
-                    (x.Value != null) &&
-                    (x.Value.YMLFile != null) &&
-                    (x.Value.NumOrder > numversion) && // следующие версии
-                    (x.Value.PrevNumOrder > 0) && // у которых есть ссылка на предыдущую версию
-                    (x.Value.PrevNumOrder == numversion) // ссылаются на текущую ветку
-                ).Any()
-            )
-            {
-                MessageBox.Show($"После версии {branch} нет последующих версий, в которые ее можно влить");
-                return;
-            }
+            if (isNoCumulative) return;
 
-            // нашли минимум одну версию после СЛЕДУЮЩЕЙ
-            if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во все последующие ветки ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во ветку dev ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                // вливаем по все последующие после СЛЕДУЮЩЕЙ
-                GIT.GitMergeNextVersion(project, branch, isNoCumulative, Versions, MainWindow.Task.LogFileRelease);
+                // проверим, нужен ли commit в текущую ветку
+                if (!GIT.CheckCommit(project, MainWindow.Task.LogFileRelease, $"Merge ветки {branch} в ветку dev прерван"))
+                {
+                    return;
+                }
+
+                // переключение на ветку dev
+                if (!GIT.GitSwitch(project, "dev", MainWindow.Task.LogFileRelease, out string currentbranch, out string err))
+                {
+                    App.AddLog($"Не получилось переключиться на ветку dev в проекте {project} или при переключении на ветку dev возникла ошибка: {err}\n\nMerge ветки {branch} в ветку dev прерван\n\nТекущая ветка - {currentbranch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    return;
+                }
+
+                // merge
+                if (GIT.GitMerge(project, branch, "dev", true, false, MainWindow.Task.LogFileRelease, false))
+                {
+                    // merge успешный, делаем push
+                    App.AddLog($"Успешный merge ветки {branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
+
+                    if (System.Windows.Forms.MessageBox.Show($"Успешный merge ветки {branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev\n\nВыполнить push ветки dev ?",
+                            "ВНИМАНИЕ",
+                            System.Windows.Forms.MessageBoxButtons.YesNo
+                        ) == System.Windows.Forms.DialogResult.Yes
+                    )
+                    {
+                        // git pull
+                        GIT.GitPull(new string[] { project }, "dev", false, false, true, MainWindow.Task.LogFileRelease, false);
+
+                        // пересобрать cron.json в ветке dev
+                        GIT.MakeCronJson(project);
+
+                        // git push
+                        GIT.GitPush(new string[] { project }, "dev", true, MainWindow.Task.LogFileRelease);
+
+                        // возврат на ветку версии
+                        if (!GIT.GitSwitch(project, branch, MainWindow.Task.LogFileRelease, out branch, out err))
+                        {
+                            App.AddLog($"Ветка {branch} в проекте {project} не существует или при переключении на ветку {branch} возникла ошибка: {err}\n\nТекущая ветка - {branch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    App.AddLog($"Merge ветки {branch} в проекте {project} в ветку dev НЕ был выполнен\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                }
 
                 // ----------------------------------------------------------------------------
                 // показываем лог
@@ -1529,6 +1867,259 @@ namespace SQLGen
                 // проверка текущей ветки и видимость кнопок и полей
                 CheckBranch(out branch);
             }
+        }
+
+        /// <summary>
+        /// Поиск предыдущей версии
+        /// </summary>
+        /// <param name="sender">sender</param>
+        /// <param name="e">e</param>
+        private void btFindPrevVersion_Click(object sender, RoutedEventArgs e)
+        {
+            if (
+                (cbGITProject.SelectedIndex == -1) ||
+                (cbGITProject.SelectedItem == null) ||
+                string.IsNullOrWhiteSpace(cbGITProject.SelectedItem.ToString())
+                )
+            {
+                {
+                    MessageBox.Show("Выберите проект ГИТ");
+                    cbGITProject.Focus();
+                    return;
+                }
+            }
+
+            FormFindInList dlg1 = new FormFindInList(MainWindow.Task.LogFileRelease);
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+
+            // текущая версия
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, tbNumVersion.Text));
+
+            dlg1.AddItems(Versions
+                .Where(x => x.Key < numversion)
+                .OrderByDescending(x => x.Key)
+                .Select(x => x.Value.VisibleName)
+                .ToList());
+
+            if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string result = "";
+
+                foreach (System.Windows.Forms.DataGridViewRow row in dlg1.dgListValues.SelectedRows)
+                {
+                    result = row.Cells[0].Value.ToString();
+                    // берем только первую
+                    break; //-V3020
+                }
+
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    cbPrevVersion.SelectedItem = result;
+                }
+            }
+
+            dlg1.Dispose();
+        }
+
+        /// <summary>
+        /// Поиск следующей версии
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btFindNextVersion_Click(object sender, RoutedEventArgs e)
+        {
+            if (
+                (cbGITProject.SelectedIndex == -1) ||
+                (cbGITProject.SelectedItem == null) ||
+                string.IsNullOrWhiteSpace(cbGITProject.SelectedItem.ToString())
+                )
+            {
+                {
+                    MessageBox.Show("Выберите проект ГИТ");
+                    cbGITProject.Focus();
+                    return;
+                }
+            }
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, tbNumVersion.Text));
+
+            FormFindInList dlg1 = new FormFindInList(MainWindow.Task.LogFileRelease);
+
+            dlg1.AddItems(NextVersions
+                .Where(x => x.Key > numversion)
+                .OrderBy(x => x.Key)
+                .Select(x => x.Value.VisibleName)
+                .ToList()
+            );
+
+            if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string result = "";
+
+                foreach (System.Windows.Forms.DataGridViewRow row in dlg1.dgListValues.SelectedRows)
+                {
+                    result = row.Cells[0].Value.ToString();
+                    // берем только первую
+                    break; //-V3020
+                }
+
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    cbNextVersion.SelectedItem = result;
+                }
+            }
+
+            dlg1.Dispose();
+        }
+
+        /// <summary>
+        /// Сменить в следующей версии ссылку на текущую, влить текущую версию в следующую
+        /// </summary>
+        /// <param name="askShowLog">=true - показывать лог</param>
+        /// <returns></returns>
+        private bool SetNextVersion(bool askShowLog)
+        {
+            if (!CheckBranch(out string branch)) return false;
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            string path = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
+
+            if (string.IsNullOrWhiteSpace(tbDeploymentFileVersion.Text))
+            {
+                MessageBox.Show("Не заполнено имя файла версии!");
+                return false;
+            }
+
+            string file_ver = Path.Combine(path, tbDeploymentFileVersion.Text);
+            if (!File.Exists(file_ver))
+            {
+                MessageBox.Show($"Файл версии {file_ver} не существует, соберите версию!");
+                return false;
+            }
+
+            if (
+                (cbNextVersion.SelectedIndex == -1) ||
+                string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString())
+            )
+            {
+                App.AddLog("Выберите СЛЕДУЮЩУЮ версию", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                return false;
+            }
+
+            Encoding encoding = new UTF8Encoding(false);
+
+            string version_no_prefix = Release.GetNumVersion(prefix, tbNumVersion.Text);
+
+            double nextnum = 0;
+            string nextbranch = "";
+            string json_filepath = "";
+
+            //string ask = "";
+            //string ask2 = "";
+
+            bool isOk = true;
+
+            if (
+                (cbNextVersion.SelectedIndex != -1) &&
+                (!string.IsNullOrWhiteSpace(cbNextVersion.SelectedItem.ToString()))
+                )
+            {
+                // в списке - имена веток версий
+                nextbranch = cbNextVersion.SelectedItem.ToString().Trim();
+
+                // номер следующей версии
+                nextnum = Release.VerAsNum(Release.GetNumVersion(prefix, nextbranch));
+
+                // проверим, нужен ли commit
+                if (!GIT.CheckCommit(project, MainWindow.Task.LogFileRelease, "Изменение следующей версии прервано"))
+                {
+                    cbNextVersion.Focus();
+                    return false;
+                }
+
+                // переключимся на ветку следующей версии
+                if (!GIT.GitSwitch(project, nextbranch, MainWindow.Task.LogFileRelease, out string cur_branch, out string err))
+                {
+                    App.AddLog($"В проекте {project} не смогли перелючиться на ветку {nextbranch} !\nТекущая ветка {cur_branch}\n{err}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    cbNextVersion.Focus();
+                    isOk = false;
+                }
+
+                if (isOk)
+                {
+                    // Ищем существующий файл СЛЕДУЮЩЕЙ версии в папке version по номеру
+                    bool isFound = Deployment.FindVersion(project, nextbranch, out json_filepath, MainWindow.Task.LogFileRelease);
+
+                    if (!isFound)
+                    {
+                        App.AddLog($"json-файл для версии {nextbranch} не найден!", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                        cbNextVersion.Focus();
+                        isOk = false;
+                    }
+
+                    //ask = $"Влить ветку {branch} в ветку {nextbranch} и изменить в файле версии {json_filepath} ссылку на предыдущую версию на {branch} ?";
+                    //ask2 = $"Ветка {branch} влита в {nextbranch} и в файле {json_filepath} ссылка на предыдущую версию изменена на {branch}";
+                }
+
+                if (isOk && (nextnum <= Release.VerAsNum(version_no_prefix)))
+                {
+                    App.AddLog("Выберите СЛЕДУЮЩУЮ версию", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                    cbNextVersion.Focus();
+
+                    isOk = false;
+                }
+
+                if (isOk)
+                {
+                    /*if (System.Windows.Forms.MessageBox.Show(ask, "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        if (isOk)
+                        {*/
+                    // merge
+                    if (GIT.GitMerge(project, branch, nextbranch, true, false, MainWindow.Task.LogFileRelease, askShowLog))
+                    {
+                        // merge успешный, делаем push
+                        GIT.GitPush(new string[] { project }, nextbranch, true, MainWindow.Task.LogFileRelease);
+                    }
+
+                    // заменить ссылку на предыдущую версию
+                    Deployment.SetPrevVersion(project, nextbranch, branch, json_filepath, MainWindow.Task.LogFileRelease, out bool isError);
+
+                    // проверим, нужен ли commit
+                    if (!GIT.CheckCommit(project, MainWindow.Task.LogFileRelease, $"Ветка {branch} влита в {nextbranch} и в файле {json_filepath} ссылка на предыдущую версию изменена на {branch},\nно для ветки {nextbranch} требуется commit & push!"))
+                    {
+                        isOk = false;
+                    }
+
+                    if (isOk)
+                    {
+                        // сохраняем выбранную следующую версию
+                        lastNextVersion = cbNextVersion.SelectedItem.ToString();
+
+                        App.AddLog($"Ветка {branch} влита в {nextbranch} и в файле {json_filepath} ссылка на предыдущую версию изменена на {branch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                    }
+                    /*}
+                }*/
+                }
+
+                // переключимся на ветку версии
+                if (!GIT.GitSwitch(project, branch, MainWindow.Task.LogFileRelease, out cur_branch, out err))
+                {
+                    App.AddLog($"Не смогли вернуться на ветку {branch} !\nТекущая ветка {cur_branch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    cbNextVersion.Focus();
+                    isOk = false; //-V3137
+                }
+            }
+
+            return isOk;
         }
     }
 }

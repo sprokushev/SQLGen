@@ -283,6 +283,25 @@ namespace SQLGen
         public string LuquibotAliasLTSUfa { get; set; }
 
         /// <summary>
+        /// Алиас бота для QA-Rel
+        /// </summary>
+        public string LuquibotAliasQARel { get; set; }
+
+        /// <summary>
+        /// Алиас бота для QA-Rel Уфа
+        /// </summary>
+        public string LuquibotAliasQARelUfa { get; set; }
+        /// <summary>
+        /// Алиас бота для QA
+        /// </summary>
+        public string LuquibotAliasQA { get; set; }
+
+        /// <summary>
+        /// Алиас бота для QA Уфа
+        /// </summary>
+        public string LuquibotAliasQAUfa { get; set; }
+
+        /// <summary>
         /// Проект для хранения действий при обновлении MS
         /// </summary>
         public string ProjectDeploymentMS { get; set; }

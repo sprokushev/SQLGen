@@ -1,6 +1,9 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using Microsoft.Office.Interop.Excel;
+using Microsoft.SqlServer.Management.Smo;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,8 +13,6 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
-using Microsoft.SqlServer.Management.Smo;
-using SQLGen.Utilities;
 
 namespace SQLGen
 {
@@ -395,8 +396,10 @@ namespace SQLGen
         /// <param name="IsProd_string">для основной БД</param>
         /// <param name="IsReg_string">для реестровой БД</param>
         /// <param name="IsReport_string">для отчетной БД</param>
+        /// <param name="pAddisDeleted_string">значение параметра paddisdeleted</param>
+        /// <param name="pAddisRegion_string">значение параметра paddisregion</param>
         /// <returns></returns>
-        public IndexDB AddIndex(string IndexName, string IsUnique_string, string Predicat, string Include, string Where, string IsNullsNotDistinct_string, string IndexToDel, string IsProd_string, string IsReg_string, string IsReport_string)
+        public IndexDB AddIndex(string IndexName, string IsUnique_string, string Predicat, string Include, string Where, string IsNullsNotDistinct_string, string IndexToDel, string IsProd_string, string IsReg_string, string IsReport_string, string pAddisDeleted_string, string pAddisRegion_string)
         {
             IndexDB newIndex = new IndexDB(this);
 
@@ -410,6 +413,8 @@ namespace SQLGen
             newIndex.IsProd_string = IsProd_string;
             newIndex.IsReg_string = IsReg_string;
             newIndex.IsReport_string = IsReport_string;
+            newIndex.pAddisDeleted_string = pAddisDeleted_string;
+            newIndex.pAddisRegion_string = pAddisRegion_string;
 
             IndexDB existIndex = FindIndex(newIndex);
 
@@ -430,6 +435,8 @@ namespace SQLGen
                 existIndex.IsProd_string = newIndex.IsProd_string;
                 existIndex.IsReg_string = newIndex.IsReg_string;
                 existIndex.IsReport_string = newIndex.IsReport_string;
+                existIndex.pAddisDeleted_string = newIndex.pAddisDeleted_string;
+                existIndex.pAddisRegion_string = newIndex.pAddisRegion_string;
             }
 
             return existIndex;
@@ -734,6 +741,12 @@ namespace SQLGen
 
                     if (index.ParentTableDB.TargetDB == Utilities.TargetDBType.MSSQL)
                     {
+                        if (index.ParentTableDB.TableEdit.isPartitionTable)
+                        {
+                            // индексы для секционированных таблиц на MS создаем командой
+                            isDDL = true;
+                        }
+
                         if (isDDL)
                         {
                             ScriptIndex += Environment.NewLine +
@@ -774,9 +787,18 @@ namespace SQLGen
                                 "\t\tONLINE = ON," + Environment.NewLine +
                                 "\t\tFILLFACTOR = 75," + Environment.NewLine +
                                 "\t\tSTATISTICS_NORECOMPUTE = ON" + Environment.NewLine +
-                                "\t)" + Environment.NewLine +
-                                "\tON [SECONDARY]" + Environment.NewLine +
-                                "END";
+                                "\t)" + Environment.NewLine;
+
+                            if (index.ParentTableDB.TableEdit.isPartitionTable)
+                            {
+                                ScriptIndex += $"\tON {index.ParentTableDB.TableEdit.PartitionSchemeName} ({index.ParentTableDB.TableEdit.PartitionField})" + Environment.NewLine;
+                            }
+                            else
+                            {
+                                ScriptIndex += "\tON [SECONDARY]" + Environment.NewLine;
+                            }
+
+                            ScriptIndex += "END";
 
                             if (!string.IsNullOrWhiteSpace(index.IndexToDelToScript))
                             {
@@ -916,6 +938,28 @@ namespace SQLGen
                             {
                                 ScriptIndex += Environment.NewLine +
                                     "\tpisnotdistinct := " + index.IsNullsNotDistinctToScript + ",";
+                            }
+
+                            if (index.pAddisDeleted != null)
+                            {
+                                ScriptIndex += Environment.NewLine +
+                                    "\tpaddisdeleted := " + index.pAddisDeletedToScript + ",";
+                            }
+                            else if (index.hasWhereDeleted)
+                            {
+                                ScriptIndex += Environment.NewLine +
+                                    "\tpaddisdeleted := 2,";
+                            }
+
+                            if (index.pAddisRegion != null)
+                            {
+                                ScriptIndex += Environment.NewLine +
+                                    "\tpaddisregion := " + index.pAddisRegionToScript + ",";
+                            } 
+                            else if (index.hasWhereRegionId)
+                            {
+                                ScriptIndex += Environment.NewLine +
+                                    "\tpaddisregion := 2,";
                             }
 
                             ScriptIndex = ScriptIndex.TrimEnd(',');
@@ -2788,19 +2832,19 @@ DROP TABLE IF EXISTS " + table.TableGen.FullTableNameToScript + @";";
             if (this.TargetDB == Utilities.TargetDBType.MSSQL) // для MS SQL
             {
                 Script = Script +
-                            "SET DATEFORMAT ymd" + Environment.NewLine +
-                            "SET IDENTITY_INSERT nsi.RefTableRegistry ON" + Environment.NewLine +
+                            "SET DATEFORMAT ymd" + Environment.NewLine + Environment.NewLine +
+                            "SET IDENTITY_INSERT nsi.RefTableRegistry ON" + Environment.NewLine + Environment.NewLine +
                             "IF NOT EXISTS (SELECT TOP(1) 1 FROM nsi.RefTableRegistry " + mshint_sel + "WHERE RefTableRegistry_id = " + RefTableRegistry.RefTableRegistry_id + ")" + Environment.NewLine +
                             "INSERT INTO nsi.RefTableRegistry " + mshint_change + "(RefTableRegistry_id, RefTableRegistry_Oid, RefTableRegistry_SysNick, RefTableRegistry_createDT, RefTableRegistry_publishDT, RefTableRegistry_IsArchive, RefTableRegistry_FullName, RefTableRegistry_Nick, pmUser_insID, pmUser_updID, RefTableRegistry_insDT, RefTableRegistry_updDT) " + Environment.NewLine +
                             "VALUES (" + RefTableRegistry.RefTableRegistry_id + ", '" + RefTableRegistry.OID + "', '" + TableEdit.FullTableNameReady + "', '" + RefTableRegistry.CreateDate.ToString("yyyy-MM-dd HH:mm") + "', '" +
-                            RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', 1, '" + RefTableRegistry.FullName + "', '" + RefTableRegistry.ShortName + "',  1, 1, getdate(), getdate()" + insert_end + Environment.NewLine +
+                              RefTableRegistry.CreateDate.ToString("yyyy-MM-dd HH:mm") + "', 1, '" + RefTableRegistry.FullName + "', '" + RefTableRegistry.ShortName + "',  1, 1, getdate(), getdate()" + insert_end + Environment.NewLine + Environment.NewLine +
                             "SET IDENTITY_INSERT nsi.RefTableRegistry OFF" + Environment.NewLine + Environment.NewLine;
 
                 Script = Script +
-                            "SET IDENTITY_INSERT nsi.RefTableRegistryVersion ON" + Environment.NewLine +
+                            "SET IDENTITY_INSERT nsi.RefTableRegistryVersion ON" + Environment.NewLine + Environment.NewLine +
                             "IF NOT EXISTS(SELECT TOP 1 1 FROM nsi.RefTableRegistryVersion " + mshint_sel + "WHERE RefTableRegistryVersion_id = " + RefTableRegistry.RefTableRegistryVersion_id + ")" + Environment.NewLine +
                             "INSERT INTO nsi.RefTableRegistryVersion " + mshint_change + "(RefTableRegistryVersion_id, RefTableRegistry_id, RefTableRegistryVersion_Num, RefTableRegistryVersion_createDate, RefTableRegistryVersion_publishDate, RefTableRegistryVersion_lastUpdateDate, pmUser_insID, pmUser_updID, RefTableRegistryVersion_insDT, RefTableRegistryVersion_updDT) " + Environment.NewLine +
-                            "VALUES(" + RefTableRegistry.RefTableRegistryVersion_id + ", " + RefTableRegistry.RefTableRegistry_id + ", '" + RefTableRegistry.Version + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', 1, 1, getdate(), getdate()" + insert_end + Environment.NewLine +
+                            "VALUES(" + RefTableRegistry.RefTableRegistryVersion_id + ", " + RefTableRegistry.RefTableRegistry_id + ", '" + RefTableRegistry.Version + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', '" + RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', 1, 1, getdate(), getdate()" + insert_end + Environment.NewLine + Environment.NewLine +
                             "SET IDENTITY_INSERT nsi.RefTableRegistryVersion OFF" + Environment.NewLine + Environment.NewLine;
 
                 Script = Script +
@@ -2819,7 +2863,7 @@ DROP TABLE IF EXISTS " + table.TableGen.FullTableNameToScript + @";";
                 Script = Script +
                             "INSERT INTO nsi.RefTableRegistry " + mshint_change + "(RefTableRegistry_id, RefTableRegistry_Oid, RefTableRegistry_SysNick, RefTableRegistry_createDT, RefTableRegistry_publishDT, RefTableRegistry_IsArchive, RefTableRegistry_FullName, RefTableRegistry_Nick, pmUser_insID, pmUser_updID, RefTableRegistry_insDT, RefTableRegistry_updDT) " + Environment.NewLine +
                             "VALUES (" + RefTableRegistry.RefTableRegistry_id + ", '" + RefTableRegistry.OID + "', '" + TableEdit.FullTableNameReady + "', '" + RefTableRegistry.CreateDate.ToString("yyyy-MM-dd HH:mm") + "', '" +
-                            RefTableRegistry.PublishDate.ToString("yyyy-MM-dd HH:mm") + "', 1, '" + RefTableRegistry.FullName + "', '" + RefTableRegistry.ShortName + "',  1, 1, localtimestamp, localtimestamp" + insert_end + Environment.NewLine + Environment.NewLine;
+                              RefTableRegistry.CreateDate.ToString("yyyy-MM-dd HH:mm") + "', 1, '" + RefTableRegistry.FullName + "', '" + RefTableRegistry.ShortName + "',  1, 1, localtimestamp, localtimestamp" + insert_end + Environment.NewLine + Environment.NewLine;
 
                 Script = Script +
                             "INSERT INTO nsi.RefTableRegistryVersion " + mshint_change + "(RefTableRegistryVersion_id, RefTableRegistry_id, RefTableRegistryVersion_Num, RefTableRegistryVersion_createDate, RefTableRegistryVersion_publishDate, RefTableRegistryVersion_lastUpdateDate, pmUser_insID, pmUser_updID, RefTableRegistryVersion_insDT, RefTableRegistryVersion_updDT) " + Environment.NewLine +
@@ -2839,8 +2883,8 @@ DROP TABLE IF EXISTS " + table.TableGen.FullTableNameToScript + @";";
             // Проверка
             Script = Script + "-- Проверка" + Environment.NewLine;
             Script = Script + "/*" + Environment.NewLine;
-            Script = Script + "SELECT * FROM nsi.RefTableRegistry WHERE RefTableRegistry_id = " + RefTableRegistry.RefTableRegistry_id + Environment.NewLine;
-            Script = Script + "SELECT * FROM nsi.RefTableRegistryVersion WHERE RefTableRegistryVersion_id = " + RefTableRegistry.RefTableRegistryVersion_id + Environment.NewLine;
+            Script = Script + "SELECT * FROM nsi.RefTableRegistry WHERE RefTableRegistry_id = " + RefTableRegistry.RefTableRegistry_id + ";" + Environment.NewLine;
+            Script = Script + "SELECT * FROM nsi.RefTableRegistryVersion WHERE RefTableRegistry_id = " + RefTableRegistry.RefTableRegistry_id + ";" + Environment.NewLine;
             Script = Script + "*/";
 
             return (
@@ -3767,6 +3811,16 @@ WHERE (1 = 1)
             return result;
         }
 
+        /// <summary>
+        /// в WHERE есть условие с полем _deleted
+        /// </summary>
+        public bool hasWhereDeleted => Where.ToLower().Contains("_deleted");
+
+        /// <summary>
+        /// в WHERE есть условие с полем region_id
+        /// </summary>
+        public bool hasWhereRegionId => Where.ToLower().Contains("region_id");
+
         /// <summary>уникальный индекс</summary>
         public bool IsUnique { get; set; }
 
@@ -3974,6 +4028,124 @@ WHERE (1 = 1)
             {
                 if (IsReport) return "2";
                 else return "1";
+            }
+        }
+
+        /// <summary>pAddisDeleted</summary>
+        public bool? pAddisDeleted { get; set; }
+
+        /// <summary>pAddisDeleted - в виде текста ("true", "false" или пусто)</summary>
+        [JsonIgnore]
+        public string pAddisDeleted_string
+        {
+            get
+            {
+                if (pAddisDeleted == null)
+                {
+                    return null;
+                }
+                else if (pAddisDeleted == true)
+                {
+                    return "true";
+                }
+                else
+                {
+                    return "false";
+                }
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    pAddisDeleted = null;
+                }
+                else if (value.Trim().ToLower() != "true")
+                {
+                    pAddisDeleted = false;
+                }
+                else
+                {
+                    pAddisDeleted = true;
+                }
+            }
+        }
+
+        /// <summary>параметр pAddisDeleted - для использования в скрипте</summary>
+        public string pAddisDeletedToScript
+        {
+            get
+            {
+                if (pAddisDeleted == null)
+                {
+                    return null;
+                }
+                else if (pAddisDeleted == true)
+                {
+                    return "2";
+                }
+                else
+                {
+                    return "1";
+                }
+            }
+        }
+
+        /// <summary>pAddisRegion</summary>
+        public bool? pAddisRegion { get; set; }
+
+        /// <summary>pAddisRegion - в виде текста ("true", "false" или пусто)</summary>
+        [JsonIgnore]
+        public string pAddisRegion_string
+        {
+            get
+            {
+                if (pAddisRegion == null)
+                {
+                    return null;
+                }
+                else if (pAddisRegion == true)
+                {
+                    return "true";
+                }
+                else
+                {
+                    return "false";
+                }
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    pAddisRegion = null;
+                }
+                else if (value.Trim().ToLower() != "true")
+                {
+                    pAddisRegion = false;
+                }
+                else
+                {
+                    pAddisRegion = true;
+                }
+            }
+        }
+
+        /// <summary>параметр pAddisRegion - для использования в скрипте</summary>
+        public string pAddisRegionToScript
+        {
+            get
+            {
+                if (pAddisRegion == null)
+                {
+                    return null;
+                }
+                else if (pAddisRegion == true)
+                {
+                    return "2";
+                }
+                else
+                {
+                    return "1";
+                }
             }
         }
 
@@ -4849,6 +5021,155 @@ WHERE (1 = 1)
         /// </summary>
         public bool HasInherit { get; set; }
 
+        string _partition_function_name;
+        /// <summary>Функция секционирования (MSSQL)</summary>
+        public string PartitionFunctionName
+        {
+            get
+            {
+                return _partition_function_name ?? "";
+            }
+            set
+            {
+                _partition_function_name = value;
+                if (string.IsNullOrWhiteSpace(_partition_function_name)) _partition_function_name = "";
+                _partition_function_name = _partition_function_name.Trim();
+            }
+        }
+
+        string _partition_field_type;
+        /// <summary>Тип поля секционирования</summary>
+        public string PartitionFieldType
+        {
+            get
+            {
+                return _partition_field_type ?? "";
+            }
+            set
+            {
+                _partition_field_type = value;
+                if (string.IsNullOrWhiteSpace(_partition_field_type)) _partition_field_type = "";
+                _partition_field_type = _partition_field_type.Trim();
+            }
+        }
+
+        string _partition_field_size;
+        /// <summary>Точность типа поля секционирования</summary>
+        public string PartitionFieldSize
+        {
+            get
+            {
+                return _partition_field_size ?? "";
+            }
+            set
+            {
+                _partition_field_size = value;
+                if (string.IsNullOrWhiteSpace(_partition_field_size)) _partition_field_size = "";
+                _partition_field_size = _partition_field_size.Trim();
+            }
+        }
+
+        string _partition_field_dec;
+        /// <summary>Масштаб типа поля секционирования</summary>
+        public string PartitionFieldDec
+        {
+            get
+            {
+                return _partition_field_dec ?? "";
+            }
+            set
+            {
+                _partition_field_dec = value;
+                if (string.IsNullOrWhiteSpace(_partition_field_dec)) _partition_field_dec = "";
+                _partition_field_dec = _partition_field_dec.Trim();
+            }
+        }
+
+        string _partition_type;
+        /// <summary>Тип секционирования</summary>
+        public string PartitionType
+        {
+            get
+            {
+                return _partition_type ?? "";
+            }
+            set
+            {
+                _partition_type = value;
+                if (string.IsNullOrWhiteSpace(_partition_type)) _partition_type = "";
+                _partition_type = _partition_type.Trim();
+            }
+        }
+
+        string _partition_boundary;
+        /// <summary>Выравнивание границ диапазона (MSSQL)</summary>
+        public string PartitionBoundary
+        {
+            get
+            {
+                return _partition_boundary ?? "";
+            }
+            set
+            {
+                _partition_boundary = value;
+                if (string.IsNullOrWhiteSpace(_partition_boundary)) _partition_boundary = "";
+                _partition_boundary = _partition_boundary.Trim();
+            }
+        }
+
+        string _partition_range_values;
+        /// <summary>Диапазоны значений</summary>
+        public string PartitionRangeValues
+        {
+            get
+            {
+                return _partition_range_values ?? "";
+            }
+            set
+            {
+                _partition_range_values = value;
+                if (string.IsNullOrWhiteSpace(_partition_range_values)) _partition_range_values = "";
+                _partition_range_values = _partition_range_values.Trim();
+            }
+        }
+
+        string _partition_scheme_name;
+        /// <summary>Схема секционирования (MSSQL)</summary>
+        public string PartitionSchemeName
+        {
+            get
+            {
+                return _partition_scheme_name ?? "";
+            }
+            set
+            {
+                _partition_scheme_name = value;
+                if (string.IsNullOrWhiteSpace(_partition_scheme_name)) _partition_scheme_name = "";
+                _partition_scheme_name = _partition_scheme_name.Trim();
+            }
+        }
+
+        string _partition_field;
+        /// <summary>Поле секционирования</summary>
+        public string PartitionField
+        {
+            get
+            {
+                return _partition_field ?? "";
+            }
+            set
+            {
+                _partition_field = value;
+                if (string.IsNullOrWhiteSpace(_partition_field)) _partition_field = "";
+                _partition_field = _partition_field.Trim();
+            }
+        }
+
+        /// <summary>
+        /// =true - это таблица с секционированием
+        /// </summary>
+        public bool isPartitionTable => !string.IsNullOrWhiteSpace(this.PartitionField);
+
         /// <summary>Полный список полей, в т.ч. унаследованных от родительской таблице</summary>
         public List<FieldDB> ListField { get; set; }
 
@@ -5218,15 +5539,47 @@ WHERE (1 = 1)
                     {
                         if (tableinfo.ParentTableDB.TableType ==  Utilities.TableType.TEMP)
                         {
-                            return /*"DROP TABLE IF EXISTS " + this.FullTableNameToScript + Environment.NewLine +*/
-                            "CREATE TABLE " + tableinfo.FullTableNameToScript + " (" + fields + Environment.NewLine + ")" + Environment.NewLine;
-                        }
+                            res = /*"DROP TABLE IF EXISTS " + this.FullTableNameToScript + Environment.NewLine +*/
+                                "CREATE TABLE " + tableinfo.FullTableNameToScript + " (" + 
+                                fields + Environment.NewLine + 
+                                ")" + Environment.NewLine;
+
+                            return res;                        }
                         else
                         {
-                            return "IF OBJECT_ID(N'" + tableinfo.FullTableNameToScript + "', 'U') IS NULL" +
-                            Environment.NewLine + "BEGIN" +
-                            Environment.NewLine + "CREATE TABLE " + tableinfo.FullTableNameToScript + " (" + fields + Environment.NewLine + ")" +
-                            Environment.NewLine + "END" + Environment.NewLine;
+                            res = "IF OBJECT_ID(N'" + tableinfo.FullTableNameToScript + "', 'U') IS NULL" + Environment.NewLine +
+                                "BEGIN" + Environment.NewLine;
+
+                            if (tableinfo.isPartitionTable)
+                            {
+                                res += Environment.NewLine + $"IF NOT EXISTS (SELECT 1 FROM sys.partition_functions with (nolock) WHERE name = '{tableinfo.PartitionFunctionName}')" + Environment.NewLine +
+                                    $"CREATE PARTITION FUNCTION {tableinfo.PartitionFunctionName} ({tableinfo.PartitionFieldType}) AS {tableinfo.PartitionType} {tableinfo.PartitionBoundary}" + Environment.NewLine +
+                                    $"FOR VALUES (" + Environment.NewLine +
+                                    $"\t{tableinfo.PartitionRangeValues}" + Environment.NewLine +
+                                    $")" + Environment.NewLine +
+                                    Environment.NewLine +
+                                    $"IF NOT EXISTS (SELECT 1 FROM sys.partition_schemes with (nolock) WHERE name = '{tableinfo.PartitionSchemeName}')" + Environment.NewLine +
+                                    $"CREATE PARTITION SCHEME {tableinfo.PartitionSchemeName}" + Environment.NewLine +
+                                    $"AS PARTITION {tableinfo.PartitionFunctionName}" + Environment.NewLine +
+                                    "ALL TO([PRIMARY])" + Environment.NewLine +
+                                    Environment.NewLine;
+                            }
+
+                            res += $"CREATE TABLE {tableinfo.FullTableNameToScript} (" +
+                                fields + Environment.NewLine +
+                                ")" + Environment.NewLine;
+
+                            if (tableinfo.isPartitionTable)
+                            {
+                                res += $"ON {tableinfo.PartitionSchemeName} ({tableinfo.PartitionField})" + Environment.NewLine +
+                                    Environment.NewLine +
+                                    $"ALTER TABLE {tableinfo.FullTableNameToScript} SET (LOCK_ESCALATION = AUTO)" + Environment.NewLine
+                                     + Environment.NewLine;
+                            }
+
+                            res += "END" + Environment.NewLine;
+
+                            return res;
                         }
                     }
                 case Utilities.TargetDBType.EMD:
@@ -5251,6 +5604,7 @@ WHERE (1 = 1)
                                 // если это таблица создается через наследование
                                 inherit = " INHERITS (" + tableinfo.FullParentEvnTableToScript + ")";
                             }
+
                             string foreign = " ";
                             string options = "WITH (oids = false);";
 
@@ -5271,14 +5625,22 @@ WHERE (1 = 1)
                                 }
                             }
 
-                            res += "CREATE" + foreign + "TABLE IF NOT EXISTS " + tableinfo.FullTableNameToScript + " (" + fields + Environment.NewLine + ")" + inherit + Environment.NewLine + options + Environment.NewLine;
+                            string partition = "";
+                            if (tableinfo.isPartitionTable)
+                            {
+                                partition = $"PARTITION BY {tableinfo.PartitionType} ({tableinfo.PartitionField})" + Environment.NewLine;
+                            }
+
+                            res += "CREATE" + foreign + "TABLE IF NOT EXISTS " + tableinfo.FullTableNameToScript + " (" + fields + Environment.NewLine + ")" + inherit + Environment.NewLine +
+                                partition +
+                                options + Environment.NewLine;
 
                             if (tableinfo.isForeignTable)
                             {
                                 res += "$table$, 2);" + Environment.NewLine;
                             }
-
                         }
+
                         return res;
                     }
                 default:

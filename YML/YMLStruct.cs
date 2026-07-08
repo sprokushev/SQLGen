@@ -338,25 +338,25 @@ namespace SQLGen
         public string relativeToChangelogFile { get; set; }
 
         /// <summary>
-        /// Номер версии по содержимому файла
+        /// Номер версии БЕЗ префикса по содержимому файла
         /// </summary>
         public string NumVersionFromChangeset
         {
             get
             {
-                string Num = "";
+                string version_no_prefix = "";
 
                 // определяем номер по changeSet начальный, поле id
                 if (
                     (changesetBefore != null) &&
                     (!string.IsNullOrWhiteSpace(changesetBefore.id)) &&
-                    string.IsNullOrWhiteSpace(Num) //-V3063
+                    string.IsNullOrWhiteSpace(version_no_prefix) //-V3063
                 )
                 {
-                    Num = Release.GetNumVersion(Prefix, changesetBefore.id);
-                    if (Release.VerAsNum(Num) == 0) //-V3024
+                    version_no_prefix = Release.GetNumVersion(Prefix, changesetBefore.id);
+                    if (Release.VerAsNum(version_no_prefix) == 0) //-V3024
                     {
-                        Num = "";
+                        version_no_prefix = "";
                     }
                 }
 
@@ -364,13 +364,13 @@ namespace SQLGen
                 if (
                     (changesetBefore != null) &&
                     (!string.IsNullOrWhiteSpace(changesetBefore.comment)) &&
-                    string.IsNullOrWhiteSpace(Num)
+                    string.IsNullOrWhiteSpace(version_no_prefix)
                 )
                 {
-                    Num = Release.GetNumVersion(Prefix, changesetBefore.comment);
-                    if (Release.VerAsNum(Num) == 0) //-V3024
+                    version_no_prefix = Release.GetNumVersion(Prefix, changesetBefore.comment);
+                    if (Release.VerAsNum(version_no_prefix) == 0) //-V3024
                     {
-                        Num = "";
+                        version_no_prefix = "";
                     }
                 }
 
@@ -378,13 +378,13 @@ namespace SQLGen
                 if (
                     (changesetAfter != null) &&
                     (!string.IsNullOrWhiteSpace(changesetAfter.id)) &&
-                    string.IsNullOrWhiteSpace(Num)
+                    string.IsNullOrWhiteSpace(version_no_prefix)
                 )
                 {
-                    Num = Release.GetNumVersion(Prefix, changesetAfter.id);
-                    if (Release.VerAsNum(Num) == 0) //-V3024
+                    version_no_prefix = Release.GetNumVersion(Prefix, changesetAfter.id);
+                    if (Release.VerAsNum(version_no_prefix) == 0) //-V3024
                     {
-                        Num = "";
+                        version_no_prefix = "";
                     }
                 }
 
@@ -392,27 +392,27 @@ namespace SQLGen
                 if (
                     (changesetAfter != null) &&
                     (!string.IsNullOrWhiteSpace(changesetAfter.comment)) &&
-                    string.IsNullOrWhiteSpace(Num)
+                    string.IsNullOrWhiteSpace(version_no_prefix)
                 )
                 {
-                    Num = Release.GetNumVersion(Prefix, changesetAfter.comment);
-                    if (Release.VerAsNum(Num) == 0) //-V3024
+                    version_no_prefix = Release.GetNumVersion(Prefix, changesetAfter.comment);
+                    if (Release.VerAsNum(version_no_prefix) == 0) //-V3024
                     {
-                        Num = "";
+                        version_no_prefix = "";
                     }
                 }
 
-                return Num.Trim();
+                return version_no_prefix.Trim();
             }
         }
 
         /// <summary>
-        /// Номер версии по имени файла
+        /// Номер версии БЕЗ префикса по имени файла
         /// </summary>
         public string NumVersionFromFilename => Release.GetNumVersion(Prefix, Path.GetFileName(Filename));
 
         /// <summary>
-        /// Номер версии
+        /// Номер версии БЕЗ префикса
         /// </summary>
         public string NumVersion
         {
@@ -1039,7 +1039,11 @@ namespace SQLGen
                                     else if (file.ToLower().EndsWith(".sql"))
                                     {
                                         _isinclude_task = true;
-                                        file = file.Replace(Path.DirectorySeparatorChar, '/').Replace("//", "/").Replace("../", "").Replace("./", "");
+                                        file = file
+                                            .Replace(Path.DirectorySeparatorChar, '/')
+                                            .Replace("//", "/")
+                                            .Replace("../", "")
+                                            .Replace("./", "");
                                         if (file.StartsWith("/")) file = file.Substring(1);
 
                                         ymlline.path = Path.GetDirectoryName(file).Replace(Path.DirectorySeparatorChar, '/');
@@ -1199,20 +1203,20 @@ namespace SQLGen
         /// Загрузка YML-файла версии по номеру версии
         /// </summary>
         /// <param name="Project">проект GIT</param>
-        /// <param name="Version">номер версии</param>
+        /// <param name="version_no_prefix">номер версии БЕЗ префикса</param>
         /// <param name="isLoadPrevVersion">скачать предыдущие версии</param>
         /// <param name="Versions">история загрузки версий - чтобы исключить зацикливание</param>
         /// <param name="isLoadTask">скачать задачи версии</param>
         /// <param name="isLoadReport">скачать отчетные yml версии</param>
-        public void LoadYMLByNumVersion(string Project, string Version, bool isLoadPrevVersion, List<string> Versions, bool isLoadTask, bool isLoadReport)
+        public void LoadYMLByNumVersion(string Project, string version_no_prefix, bool isLoadPrevVersion, List<string> Versions, bool isLoadTask, bool isLoadReport)
         {
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(Project);
             string path = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder);
 
             // ищем файл с версией, если он существует
-            var files = Directory.GetFiles(Path.Combine(path, "version"), "*." + Version + "_*.yml").ToList();
+            var files = Directory.GetFiles(Path.Combine(path, "version"), "*." + version_no_prefix + "_*.yml").ToList();
             if (files == null) files = new List<string>(); //-V3022
-            files.AddRange(Directory.GetFiles(Path.Combine(path, "version"), "*." + Version + ".yml").ToList());
+            files.AddRange(Directory.GetFiles(Path.Combine(path, "version"), "*." + version_no_prefix + ".yml").ToList());
             foreach (var fullfilename in files)
             {
                 if (
@@ -1227,7 +1231,7 @@ namespace SQLGen
                     if (
                         (! this.IsIgnore) &&
                         (this.IsFileExist) &&
-                        (Release.VerAsNum(Version) == this.NumVersionOrder) //-V3024
+                        (Release.VerAsNum(version_no_prefix) == this.NumVersionOrder) //-V3024
                     )
                     {
                         return;
@@ -1585,7 +1589,10 @@ namespace SQLGen
             }
 
             // добавляем sql текущего yml
-            foreach (var item in Lines.Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT).OrderBy(x => x.order))
+            foreach (var item in Lines
+                .Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT)
+                .OrderBy(x => x.order)
+            )
             {
                 result.Add(item);
             }
@@ -1769,7 +1776,9 @@ namespace SQLGen
             }
 
             // проверяем sql текущего yml
-            foreach (var line in Lines.Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT))
+            foreach (var line in Lines
+                .Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT)
+            )
             {
                 if (!string.IsNullOrWhiteSpace(line.file))
                 {
@@ -1907,7 +1916,9 @@ namespace SQLGen
             }
 
             // копируем sql текущего yml
-            foreach (var line in Lines.Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT))
+            foreach (var line in Lines
+                .Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT)
+            )
             {
                 if (!string.IsNullOrWhiteSpace(line.file))
                 {
@@ -2005,8 +2016,8 @@ namespace SQLGen
         /// <param name="isImproveSQLinVersion">=true - Улучшаем sql-скрипты в yml-файле (проставляем labels, дополняем changeset и пр)</param>
         /// <param name="root_to">если != "" - альтернативная папка, в которую надо сохранить yml-файл (в подпапке version или task или Report) </param>
         /// <param name="isAddVersion">=true - добавить номер версии к имени changeset</param>
-        /// <param name="Version">номер версии</param>
-        public void SaveYML(bool isReSavePrevVersion, bool isReSaveTask, bool isRelativePath, bool isTrimInnerNewLine, bool isReSaveReport, bool isImproveSQLinVersion, string root_to, bool isAddVersion, string Version)
+        /// <param name="version_no_prefix">номер версии БЕЗ префикса</param>
+        public void SaveYML(bool isReSavePrevVersion, bool isReSaveTask, bool isRelativePath, bool isTrimInnerNewLine, bool isReSaveReport, bool isImproveSQLinVersion, string root_to, bool isAddVersion, string version_no_prefix)
         {
             // принудительно меняем relativeToChangelogFile во всех yml-файлах
             this.SetRelativeToChangelogFile(isRelativePath);
@@ -2060,7 +2071,7 @@ namespace SQLGen
                     (! string.IsNullOrWhiteSpace(item.Filename))
                     )
                 {
-                    item.SaveYML(false, false, isRelativePath, isTrimInnerNewLine, isReSaveReport, isImproveSQLinVersion, root_to, isAddVersion, Version);
+                    item.SaveYML(false, false, isRelativePath, isTrimInnerNewLine, isReSaveReport, isImproveSQLinVersion, root_to, isAddVersion, version_no_prefix);
                 }
 
                 if (
@@ -2085,7 +2096,9 @@ namespace SQLGen
             // Улучшаем sql-скрипты в текущем yml-файле (проставляем labels, дополняем changeset и пр)
             if (isImproveSQLinVersion) 
             {
-                foreach (var line in this.Lines.Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT))
+                foreach (var line in this.Lines
+                    .Where(x => x.type == YMLLineType.SQLDATA || x.type == YMLLineType.SQLSTRUCT)
+                )
                 {
                     if (File.Exists(line.FullFilename))
                     {
@@ -2095,7 +2108,7 @@ namespace SQLGen
                             ScriptType = "SCHEMA";
                         }
                         string DBType = Utilities.GITProjects.GetDBTypeByProject(Project); // тип БД = MSSQL или PGSQL
-                        SQLChangeset.ImproveSQLinVersion(ScriptType, DBType, line.FullFilename, logFile, isAddVersion, Version);
+                        SQLChangeset.ImproveSQLinVersion(ScriptType, DBType, line.FullFilename, logFile, isAddVersion, version_no_prefix);
                     }
                 }
             }
@@ -2135,7 +2148,9 @@ namespace SQLGen
             }
 
             // компилируем\проверяем хранимки текущего yml
-            foreach (var line in Lines.Where(x => x.type == YMLLineType.SQLSTRUCT))
+            foreach (var line in Lines
+                .Where(x => x.type == YMLLineType.SQLSTRUCT)
+            )
             {
                 if (File.Exists(line.FullFilename))
                 {
@@ -2221,7 +2236,11 @@ namespace SQLGen
                     }
 
                     // ищем кириллицу
-                    if (!item.text.All(FilenameInYmlRange.Contains))
+                    if (
+                        !item.text.Contains("dbo/freedocmarker") &&
+                        !item.text.Contains("dbo/freedocrelationship") &&
+                        !item.text.All(FilenameInYmlRange.Contains)
+                        )
                     {
                         result = true;
                         Errors += $"ОШИБКА: {YMLFile} : строка {item.text} возможно содержит символы кириллицы или другие неразрешенные символы" + Environment.NewLine;
@@ -2681,7 +2700,7 @@ namespace SQLGen
                     task = parentYMLStruct.Filename;
                 }
 
-                string project = "";
+                /*string project = "";
 
                 if (parentYMLStruct != null)
                 {
@@ -2690,9 +2709,9 @@ namespace SQLGen
                 if (string.IsNullOrWhiteSpace(project))
                 {
                     project = loadYMLStruct.Project;
-                }
+                }*/
 
-                return "задача " + ReleaseTaskNumber.PadRight(20, ' ') + " скрипт " + task + " - " + project + "/" + this.path_to_file;
+                return "задача " + ReleaseTaskNumber.PadRight(20, ' ') + " файл " + task + " скрипт " + this.path_to_file;
 
             }
         }
@@ -2722,7 +2741,7 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// Название объекта
+        /// Название объекта в БД
         /// </summary>
         public string ObjectName
         {
@@ -2747,18 +2766,39 @@ namespace SQLGen
                         return this.file;
                     case YMLLineType.SQLDATA:
                         {
-                            return this.path.Replace(Path.DirectorySeparatorChar, '/').Replace("data/", "").Replace("data_new/", "").Replace("Report/", "");
+                            return Utilities.Databases.GetFullTableName(
+                                this.path
+                                .Replace(Path.DirectorySeparatorChar, '/')
+                                .Replace("data/", "")
+                                .Replace("data_new/", "")
+                                .Replace("Report/", "")
+                            );
                         }
                     case YMLLineType.SQLSTRUCT:
                         {
+                            string result = "";
+
                             if (Utilities.GITProjects.IsGITProject(project))
                             {
-                                return this.path;
+                                result = this.path;
                             }
                             else
                             {
-                                return this.path.Replace(Path.DirectorySeparatorChar, '/') + "/" + Path.GetFileNameWithoutExtension(this.file);
+                                result = this.path + "/" + Path.GetFileNameWithoutExtension(this.file);
                             }
+
+                            return Utilities.Databases.GetFullTableName(
+                                result
+                                .Replace(Path.DirectorySeparatorChar, '/')
+                                .Replace("FUNCTION/", "")
+                                .Replace("PROCEDURE/", "")
+                                .Replace("SEQUENCE/", "")
+                                .Replace("TABLE/", "")
+                                .Replace("TRIGGER/", "")
+                                .Replace("TYPE/", "")
+                                .Replace("VIEW/", "")
+                                .Replace('/', '.')
+                            );
                         }
                     case YMLLineType.COMMENT:
                     case YMLLineType.EMPTYLINE:
@@ -2844,7 +2884,9 @@ namespace SQLGen
                                 type_lower == "procedure" ||
                                 type_lower == "function" ||
                                 type_lower == "view" ||
-                                type_lower == "trigger"
+                                type_lower == "trigger" ||
+                                type_lower == "freedocmarker" ||
+                                type_lower == "freedocrelationship"
                             )
                             {
                                 return "CODE";
@@ -2876,7 +2918,13 @@ namespace SQLGen
                     case YMLLineType.TASK:
                     case YMLLineType.REPORT:
                     case YMLLineType.SQLDATA:
-                        return "";
+                        return Utilities.Databases.GetSchemaName(
+                                this.path
+                                .Replace(Path.DirectorySeparatorChar, '/')
+                                .Replace("data/", "")
+                                .Replace("data_new/", "")
+                                .Replace("Report/", "")
+                                );
                     case YMLLineType.SQLSTRUCT:
                         {
                             var arr = this.path.Replace(Path.DirectorySeparatorChar, '/').Split('/');
@@ -2914,7 +2962,13 @@ namespace SQLGen
                         return "";
                     case YMLLineType.SQLDATA:
                         {
-                            return this.path.Replace(Path.DirectorySeparatorChar, '/').Replace("data/", "").Replace("data_new/", "").Replace("Report/", "");
+                            return Utilities.Databases.GetTableName(
+                                this.path
+                                .Replace(Path.DirectorySeparatorChar, '/')
+                                .Replace("data/", "")
+                                .Replace("data_new/", "")
+                                .Replace("Report/", "")
+                                );
                         }
                     case YMLLineType.SQLSTRUCT:
                         {

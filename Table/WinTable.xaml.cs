@@ -78,27 +78,35 @@ namespace SQLGen
 
         /// <summary>Список типов полей</summary>
         public List<string> ListTypes = new List<string> {
+            "----- ОСНОВНЫЕ ТИПЫ -----",
             "BIGINT",
-            "BIT",
-            "BOOLEAN",
             "BYTEA",
-            "CHAR",
-            "DATE",
             "DATETIME",
-            "DECIMAL",
             "DOUBLE PRECISION",
             "FLOAT",
-            "IMAGE",
             "INT",
-            "INTEGER",
             "JSONB",
             "MONEY",
             "NUMERIC",
+            "UNIQUEIDENTIFIER",
+            "UUID",
+            "VARBINARY",
+            "VARCHAR",
+            "XML",
+            "-- ВСПОМОГАТЕЛЬНЫЕ ТИПЫ --",
+            "BIT",
+            "BOOLEAN",
+            "CHAR",
+            "DATE",
+            "DECIMAL",
+            "IMAGE",
+            "INTEGER",
+            "NTEXT",
             "NVARCHAR",
             "REAL",
             "SMALLINT",
+            "TEXT",
             "TINYINT",
-            "VARCHAR",
             "TIME",
             "TIME WITH TIME ZONE",
             "TIME WITHOUT TIME ZONE",
@@ -106,11 +114,7 @@ namespace SQLGen
             "TIMESTAMP WITHOUT TIME ZONE",
             "TIMESTAMPTZ",
             "TIMETZ",
-            "TIMESTAMP",
-            "UNIQUEIDENTIFIER",
-            "UUID",
-            "XML",
-            "VARBINARY"
+            "TIMESTAMP"
         };
 
 
@@ -650,6 +654,25 @@ namespace SQLGen
             Table.TableEdit.HasSequence = false;
             Table.TableOrig.HasInherit = false;
             Table.TableEdit.HasInherit = false;
+
+            Table.TableOrig.PartitionFunctionName = "";
+            Table.TableEdit.PartitionFunctionName = "";
+            Table.TableOrig.PartitionFieldType = "";
+            Table.TableEdit.PartitionFieldType = "";
+            Table.TableOrig.PartitionFieldSize = "";
+            Table.TableEdit.PartitionFieldSize = "";
+            Table.TableOrig.PartitionFieldDec = "";
+            Table.TableEdit.PartitionFieldDec = "";
+            Table.TableOrig.PartitionType = "";
+            Table.TableEdit.PartitionType = "";
+            Table.TableOrig.PartitionBoundary = "";
+            Table.TableEdit.PartitionBoundary = "";
+            Table.TableOrig.PartitionRangeValues = "";
+            Table.TableEdit.PartitionRangeValues = "";
+            Table.TableOrig.PartitionSchemeName = "";
+            Table.TableEdit.PartitionSchemeName = "";
+            Table.TableOrig.PartitionField = "";
+            Table.TableEdit.PartitionField = "";
 
             cbTableType.SelectedIndex = 0;
 
@@ -1191,9 +1214,9 @@ namespace SQLGen
                         tbPKName.Text = Table.TableOrig.PKName;
                         cbParentEvnTable.SelectedItem = Table.TableOrig.ParentEvnTable;
 
-                        if (Table.TableEdit.isForeignTable)
+                        if (Table.TableOrig.isForeignTable)
                         {
-                            App.AddLog("Таблица " + Table.TableOrig.FullTableName + " - внешняя (FOREIGN) !" + Environment.NewLine + "Возможная некорректная генерация скриптов либо потребуется ручная доработка, например имена внешних таблиц и полей для маппинга!", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
+                            App.AddLog("Таблица " + Table.TableOrig.FullTableName + " - внешняя (FOREIGN) !" + Environment.NewLine + "Возможна некорректная генерация скриптов либо потребуется ручная доработка, например имена внешних таблиц и полей для маппинга!", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
 
                             Table.TableEdit.ForeignServer = Table.TableOrig.ForeignServer;
                             Table.TableEdit.ForeignWord = Table.TableOrig.ForeignWord;
@@ -1203,6 +1226,21 @@ namespace SQLGen
                         Table.TableEdit.HasRegionDescr = Table.TableOrig.HasRegionDescr;
                         Table.TableEdit.HasSequence = Table.TableOrig.HasSequence;
                         Table.TableEdit.HasInherit = Table.TableOrig.HasInherit;
+
+                        if (Table.TableOrig.isPartitionTable)
+                        {
+                            App.AddLog("Таблица " + Table.TableOrig.FullTableName + " - секционированная !" + Environment.NewLine + "Возможна некорректная генерация скриптов либо потребуется ручная доработка, например добавление секций!", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
+
+                            Table.TableEdit.PartitionFunctionName = Table.TableOrig.PartitionFunctionName;
+                            Table.TableEdit.PartitionFieldType = Table.TableOrig.PartitionFieldType;
+                            Table.TableEdit.PartitionFieldSize = Table.TableOrig.PartitionFieldSize;
+                            Table.TableEdit.PartitionFieldDec = Table.TableOrig.PartitionFieldDec;
+                            Table.TableEdit.PartitionType = Table.TableOrig.PartitionType;
+                            Table.TableEdit.PartitionBoundary = Table.TableOrig.PartitionBoundary;
+                            Table.TableEdit.PartitionRangeValues = Table.TableOrig.PartitionRangeValues;
+                            Table.TableEdit.PartitionSchemeName = Table.TableOrig.PartitionSchemeName;
+                            Table.TableEdit.PartitionField = Table.TableOrig.PartitionField;
+                        }
                     }
                     else
                     {
@@ -1661,8 +1699,8 @@ namespace SQLGen
                         .Replace("\n", "\r\n"); ;
 
                     dlg1.Connect = ConnectSQL;
-                    dlg1.ConnectPG = MainWindow.GetMainTestConnectByGITProject("dev_promed_pg", "");
-                    dlg1.ConnectPromedadygea = MainWindow.GetMainTestConnectByGITProject("dev_promed_pg", "promedadygea");
+                    dlg1.ConnectPG = MainWindow.GetConnectByGITProject("dev_promed_pg", "", true, true);
+                    dlg1.ConnectPromedadygea = MainWindow.GetConnectByGITProject("dev_promed_pg", "promedadygea", true);
                     dlg1.FindClick();
 
                     if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -2269,13 +2307,24 @@ namespace SQLGen
                 string isreg = "";
                 string isreport = "";
                 string isnullsnotdistinct = "";
+                string paddisdeleted = "";
+                string paddisregion = "";
+
                 if (dlg1.cbIsUnique.Checked) isuniq = "true";
                 if (dlg1.cbIsProd.Checked) isprod = "true";
                 if (dlg1.cbIsReg.Checked) isreg = "true";
                 if (dlg1.cbIsReport.Checked) isreport = "true";
                 if (dlg1.cbIsNullsNotDistinct.Checked) isnullsnotdistinct = "true";
 
-                var index = Table.AddIndex(dlg1.tbIndexName.Text, isuniq, dlg1.tbIndexPredicat.Text, dlg1.tbIndexInclude.Text, dlg1.tbIndexWhere.Text, isnullsnotdistinct, dlg1.tbIndexToDel.Text, isprod, isreg, isreport);
+                if (dlg1.rbDeleted_NULL.Checked) paddisdeleted = null;
+                if (dlg1.rbDeleted_1.Checked) paddisdeleted = "false";
+                if (dlg1.rbDeleted_2.Checked) paddisdeleted = "true";
+
+                if (dlg1.rbRegion_NULL.Checked) paddisregion = null;
+                if (dlg1.rbRegion_1.Checked) paddisregion = "false";
+                if (dlg1.rbRegion_2.Checked) paddisregion = "true";
+
+                var index = Table.AddIndex(dlg1.tbIndexName.Text, isuniq, dlg1.tbIndexPredicat.Text, dlg1.tbIndexInclude.Text, dlg1.tbIndexWhere.Text, isnullsnotdistinct, dlg1.tbIndexToDel.Text, isprod, isreg, isreport, paddisdeleted, paddisregion);
                 dgIndexesRefresh();
 
                 tbScriptCreate.Text = "";
@@ -2341,13 +2390,24 @@ namespace SQLGen
                     string isreg = "";
                     string isreport = "";
                     string isnullsnotdistinct = "";
+                    string paddisdeleted = "";
+                    string paddisregion = "";
+
                     if (dlg1.cbIsUnique.Checked) isuniq = "true";
                     if (dlg1.cbIsProd.Checked) isprod = "true";
                     if (dlg1.cbIsReg.Checked) isreg = "true";
                     if (dlg1.cbIsReport.Checked) isreport = "true";
                     if (dlg1.cbIsNullsNotDistinct.Checked) isnullsnotdistinct = "true";
 
-                    var index = Table.AddIndex(dlg1.tbIndexName.Text, isuniq, dlg1.tbIndexPredicat.Text, dlg1.tbIndexInclude.Text, dlg1.tbIndexWhere.Text, isnullsnotdistinct, dlg1.tbIndexToDel.Text, isprod, isreg, isreport);
+                    if (dlg1.rbDeleted_NULL.Checked) paddisdeleted = null;
+                    if (dlg1.rbDeleted_1.Checked) paddisdeleted = "false";
+                    if (dlg1.rbDeleted_2.Checked) paddisdeleted = "true";
+
+                    if (dlg1.rbRegion_NULL.Checked) paddisregion = null;
+                    if (dlg1.rbRegion_1.Checked) paddisregion = "false";
+                    if (dlg1.rbRegion_2.Checked) paddisregion = "true";
+
+                    var index = Table.AddIndex(dlg1.tbIndexName.Text, isuniq, dlg1.tbIndexPredicat.Text, dlg1.tbIndexInclude.Text, dlg1.tbIndexWhere.Text, isnullsnotdistinct, dlg1.tbIndexToDel.Text, isprod, isreg, isreport, paddisdeleted, paddisregion);
                     dgIndexesRefresh();
 
                     tbScriptCreate.Text = "";
@@ -2415,6 +2475,14 @@ namespace SQLGen
                 dlg1.cbIsReg.Checked = index.IsReg;
                 dlg1.cbIsReport.Checked = index.IsReport;
 
+                if (index.pAddisDeleted == null) dlg1.rbDeleted_NULL.Checked = true;
+                else if (index.pAddisDeleted == false) dlg1.rbDeleted_1.Checked = true;
+                else if (index.pAddisDeleted == true) dlg1.rbDeleted_2.Checked = true;
+
+                if (index.pAddisRegion == null) dlg1.rbRegion_NULL.Checked = true;
+                else if (index.pAddisRegion == false) dlg1.rbRegion_1.Checked = true;
+                else if (index.pAddisRegion == true) dlg1.rbRegion_2.Checked = true;
+
                 if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     index.IndexName = dlg1.tbIndexName.Text;
@@ -2427,6 +2495,14 @@ namespace SQLGen
                     index.IsProd = dlg1.cbIsProd.Checked;
                     index.IsReg = dlg1.cbIsReg.Checked;
                     index.IsReport = dlg1.cbIsReport.Checked;
+
+                    if (dlg1.rbDeleted_NULL.Checked) index.pAddisDeleted = null;
+                    else if (dlg1.rbDeleted_1.Checked) index.pAddisDeleted = false;
+                    else if (dlg1.rbDeleted_2.Checked) index.pAddisDeleted = true;
+
+                    if (dlg1.rbRegion_NULL.Checked) index.pAddisRegion = null;
+                    else if (dlg1.rbRegion_1.Checked) index.pAddisRegion = false;
+                    else if (dlg1.rbRegion_2.Checked) index.pAddisRegion = true;
 
                     Utilities.ScriptType ScriptType = dlg1.ScriptType;
                     dlg1.Dispose();

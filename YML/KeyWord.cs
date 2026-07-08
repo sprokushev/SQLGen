@@ -233,7 +233,6 @@ namespace SQLGen
             return "";
         }
 
-
         /// <summary>Словарь ключевых слов</summary>
         public static Dictionary<string, KeyWord> ListKeyWords = new Dictionary<string, KeyWord>();
 
@@ -275,6 +274,24 @@ namespace SQLGen
             ListKeyWords.Add("xp_genidentity", new KeyWord(new string[] { "xp_genidentity" }, null, false));
             ListKeyWords.Add("sp_rename", new KeyWord(new string[] { "sp_rename" }, null, false));
 
+            ListKeyWords.Add("LOOP", new KeyWord(null, new string[] { @"\A([\s|;]*)loop([\s|;]*)\Z",
+                                                                                @"\A([\s|;]*)loop([\s|;]+)",
+                                                                                @"([\s|;]+)loop([\s|;]*)\Z",
+                                                                                @"([\s|;]+)loop([\s|;]+)" }, false));
+            ListKeyWords.Add("WHILE", new KeyWord(null, new string[] { @"\A([\s|;]*)while([\s|;]*)\Z",
+                                                                                @"\A([\s|;]*)while([\s|;]+)",
+                                                                                @"([\s|;]+)while([\s|;]*)\Z",
+                                                                                @"([\s|;]+)while([\s|;]+)" }, false));
+            ListKeyWords.Add("COMMIT", new KeyWord(null, new string[] { @"\A([\s|;]*)commit([\s|;]*)\Z",
+                                                                                @"\A([\s|;]*)commit([\s|;]+)",
+                                                                                @"([\s|;]+)commit([\s|;]*)\Z",
+                                                                                @"([\s|;]+)commit([\s|;]+)" }, false));
+            ListKeyWords.Add("ON_COMMIT", new KeyWord(null, new string[] { @"on(\s+)commit(\s+)drop",
+                                                                                @"on(\s+)commit(\s+)update" }, false));
+            ListKeyWords.Add("ROLLBACK", new KeyWord(null, new string[] { @"\A([\s|;]*)rollback([\s|;]*)\Z",
+                                                                                @"\A([\s|;]*)rollback([\s|;]+)",
+                                                                                @"([\s|;]+)rollback([\s|;]*)\Z",
+                                                                                @"([\s|;]+)rollback([\s|;]+)" }, false));
 
             // ключевые слова, которые могут быть в комментариях
             ListKeyWords.Add("--liquibase formatted sql", new KeyWord(new string[] { "--liquibase formatted sql" }, null, true));
@@ -285,6 +302,7 @@ namespace SQLGen
             ListKeyWords.Add("enddelimiter:go", new KeyWord(new string[] { "enddelimiter:go" }, null, true));
             ListKeyWords.Add("enddelimiter:;;", new KeyWord(new string[] { "enddelimiter:;;" }, null, true));
             ListKeyWords.Add("autogen", new KeyWord(new string[] { "autogen" }, null, true));
+            ListKeyWords.Add("runintransaction:false", new KeyWord(new string[] { "runintransaction:false" }, null, true));
 
             // проверяем метки
             if (MainWindow.APPinfo.isImproveSQLinVersion)
@@ -317,7 +335,10 @@ namespace SQLGen
 
             foreach (var item in ListKeyWords)
             {
-                if ((item.Key != null) && (item.Key == key) && (item.Value != null)) return item.Value;
+                if ((item.Key != null) && (item.Key == key) && (item.Value != null))
+                {
+                    return item.Value;
+                }
             }
 
             // сюда не должен дойти!

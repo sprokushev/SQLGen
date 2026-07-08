@@ -1,6 +1,8 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,9 +15,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using SQLGen.Controls;
-using SQLGen.Utilities;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace SQLGen
 {
@@ -61,6 +60,11 @@ namespace SQLGen
         /// лог-файл
         /// </summary>
         public string logFile;
+
+        /// <summary>
+        /// предыдущая версия с префиксом
+        /// </summary>
+        public string prevversion = "";
 
         /// <summary>
         /// какой DataGrid сейчас выбран
@@ -620,10 +624,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
             }
         }
 
@@ -823,7 +824,7 @@ namespace SQLGen
         private void btGenJSON_MS_Click(object sender, RoutedEventArgs e)
         {
             // сгенерировать файл для MS
-            tbMSJson.Text = Deployment.GenerateJSON(MainWindow.Task.ListDeploymentMS, MainWindow.Task.ReleaseVersion, logFile, MainWindow.Task.ReleaseVersion);
+            tbMSJson.Text = Deployment.GenerateJSON(MainWindow.Task.ListDeploymentMS, MainWindow.Task.ReleaseVersion, logFile, MainWindow.Task.ReleaseVersion, this.prevversion);
             tbMSJson.Filename = "";
 
             if (!string.IsNullOrEmpty(tbMSJson.Text) && isVisibleMSJson)
@@ -836,7 +837,7 @@ namespace SQLGen
         private void btGenJSON_PG_Click(object sender, RoutedEventArgs e)
         {
             // сгенерировать файл для PG
-            tbPGJson.Text = Deployment.GenerateJSON(MainWindow.Task.ListDeploymentPG, MainWindow.Task.ReleaseVersion, logFile, MainWindow.Task.ReleaseVersion);
+            tbPGJson.Text = Deployment.GenerateJSON(MainWindow.Task.ListDeploymentPG, MainWindow.Task.ReleaseVersion, logFile, MainWindow.Task.ReleaseVersion, this.prevversion);
             tbPGJson.Filename = "";
 
             if (!string.IsNullOrEmpty(tbPGJson.Text) && isVisiblePGJson)
@@ -867,9 +868,10 @@ namespace SQLGen
         /// <param name="jsonFilepath">итоговый путь к файлу</param>
         /// <param name="jsonUrl">url к файлу в web-репозитории</param>
         /// <param name="logFile">лог-файл</param>
-        /// <param name="version">версия</param>
+        /// <param name="version">версия с префиксом</param>
+        /// <param name="prevversion">предыдущая версия с префиксом</param>
         /// <returns></returns>
-        public static bool SaveJSON(string project, string BranchDefault, string PathDefault, string FilenameDefault, bool isBranchCanChanged, bool isFileCanChanged, ObservableCollection<Deployment> ListDeployment, ref string jsonText, bool isForce, out string jsonFilepath, out string jsonUrl, string logFile, string version)
+        public static bool SaveJSON(string project, string BranchDefault, string PathDefault, string FilenameDefault, bool isBranchCanChanged, bool isFileCanChanged, ObservableCollection<Deployment> ListDeployment, ref string jsonText, bool isForce, out string jsonFilepath, out string jsonUrl, string logFile, string version, string prevversion)
         {
             jsonFilepath = "";
             jsonUrl = "";
@@ -903,7 +905,7 @@ namespace SQLGen
             // сгенерим текст, если необходимо
             if (string.IsNullOrWhiteSpace(jsonText)) 
             {
-                jsonText = Deployment.GenerateJSON(ListDeployment, BranchDefault, logFile, version);
+                jsonText = Deployment.GenerateJSON(ListDeployment, BranchDefault, logFile, version, prevversion);
             }
 
             jsonText = jsonText
@@ -964,13 +966,38 @@ namespace SQLGen
                     {
                         MainWindow.Task.JSONFilenameDeploymentPG = jsonUrl;
                     }
+
+                    // обновим справочник регионов
+                    SaveRegions(project, logFile);
                 }
             }
 
             return isSaved;
         }
 
-         /// <summary>
+        /// <summary>
+        /// сохранить справочник регионов
+        /// </summary>
+        /// <param name="project">проект</param>
+        /// <param name="logFile">лог-файл</param>
+        public static void SaveRegions(string project, string logFile)
+        {
+            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
+            string _regfilename = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version", "regions.json");
+
+            string jsonText = JsonSerializer.Serialize<Dictionary<string, string>>(MainWindow.APPinfo.Regions, Other.TaskJSON);
+
+            try
+            {
+                Utilities.Files.WriteScript(_regfilename, null, jsonText, false, out string err, FileMode.Create);
+            }
+            catch (Exception ex)
+            {
+                App.AddLog(null, ex, App.ShowMessageMode.SHOW, true, logFile);
+            }
+        }
+
+        /// <summary>
         /// Сохранить скрипт действия при обновлении
         /// </summary>
         /// <param name="_dbregion">с какой вкладки сохраняем</param>
@@ -1018,7 +1045,7 @@ namespace SQLGen
                 isFileCanChanged = true;
             }
 
-            bool isSaved = WinDeployment.SaveJSON(_project, _branch, _path, _file, isBranchCanChanged, isFileCanChanged, _list, ref _script, isForce, out jsonfile, out jsonurl, logFile, MainWindow.Task.ReleaseVersion);
+            bool isSaved = WinDeployment.SaveJSON(_project, _branch, _path, _file, isBranchCanChanged, isFileCanChanged, _list, ref _script, isForce, out jsonfile, out jsonurl, logFile, MainWindow.Task.ReleaseVersion, this.prevversion);
 
             if (isSaved)
             {
@@ -1036,10 +1063,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
             }
         }
 
@@ -1147,10 +1171,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgDeploymentMSRefresh();
             }
@@ -1189,10 +1210,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgDeploymentPGRefresh();
             }
@@ -1224,10 +1242,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgDeploymentMSRefresh();
             }
@@ -1259,10 +1274,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgDeploymentPGRefresh();
             }

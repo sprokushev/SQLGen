@@ -111,7 +111,10 @@ namespace SQLGen
             {
                 if (
                     string.IsNullOrWhiteSpace(deployment.script) || 
-                    (!deployment.script.ToLower().EndsWith(".yml") && !deployment.script.ToLower().EndsWith(".sql"))
+                    (
+                        !deployment.script.TrimAllSpace().ToLower().EndsWith(".yml") && //-V3080
+                        !deployment.script.TrimAllSpace().ToLower().EndsWith(".sql") 
+                    )
                 )
                 {
                     App.AddLog("Заполните поле \"Скрипт\" - в нем должна быть ссылка на yml или sql-файл из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
@@ -168,7 +171,7 @@ namespace SQLGen
             {
                 if (
                     string.IsNullOrWhiteSpace(deployment.file) || 
-                    !deployment.file.ToLower().EndsWith(".zip")
+                    !deployment.file.TrimAllSpace().ToLower().EndsWith(".zip") //-V3080
                 )
                 {
                     App.AddLog("Заполните поле \"Файл\" - в нем должна быть ссылка на zip-архив из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
@@ -394,6 +397,11 @@ namespace SQLGen
                     }
                 }
             }
+
+            if (tbScript.Text.Contains("/version/"))
+            {
+                deployment.Position = "primary";
+            }
         }
 
         private void tbFile_TextChanged(object sender, TextChangedEventArgs e)
@@ -465,10 +473,10 @@ namespace SQLGen
                 {
                     tbScript.Text = url;
 
-                    if (url.Contains("/version/"))
+                    /*if (url.Contains("/version/"))
                     {
                         deployment.Position = "primary";
-                    }
+                    }*/
                 }
                 if (deployment.isFileEnabled)
                 {

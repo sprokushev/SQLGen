@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SQLGen")]
-[assembly: AssemblyCopyright("Copyright © 2021-2025 Sergey Prokushev")]
+[assembly: AssemblyCopyright("Copyright © 2021-2026 Sergey Prokushev")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -51,5 +51,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2025.10.28.5")]
-[assembly: AssemblyFileVersion("2025.10.28.5")]
+[assembly: AssemblyVersion("2026.6.19.3")]
+[assembly: AssemblyFileVersion("2026.6.19.3")]

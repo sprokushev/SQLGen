@@ -1,8 +1,12 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using ICSharpCode.AvalonEdit.Highlighting;
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -12,10 +16,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Path = System.IO.Path;
-using SQLGen.Controls;
-using SQLGen.Utilities;
-using System.Collections.ObjectModel;
-using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace SQLGen
 {
@@ -61,10 +61,10 @@ namespace SQLGen
             }
         }
 
-        /// <summary>Полный список версий</summary>
+        /// <summary>Список ВСЕХ версий (с учетом кумулятивности)</summary>
         public SortedDictionary<double, Version> Versions = new SortedDictionary<double, Version>();
 
-        /// <summary>Список СЛЕДУЮЩИХ версий</summary>
+        /// <summary>Список СЛЕДУЮЩИХ версий (с учетом кумулятивности)</summary>
         public SortedDictionary<double, Version> NextVersions = new SortedDictionary<double, Version>();
 
         /// <summary>Конструктор WinReleaseCron</summary>
@@ -108,22 +108,7 @@ namespace SQLGen
             tbReleaseTaskNumber.Text = MainWindow.Task.TaskNumber;
 
             // url на Deployment Plan в Confluence
-            if (tbNumVersion.Text.StartsWith("smp"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=SMP-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else if (tbNumVersion.Text.StartsWith("bi"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=BI-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else if (tbNumVersion.Text.StartsWith("rpms"))
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=UserPortal-DeploymentPlan-" + tbNumVersion.Text;
-            }
-            else
-            {
-                tbDeploymentConfVersion.Text = "https://confluence.rtmis.ru/pages/viewpage.action?spaceKey=RMISRELEASES&title=PROMED-DeploymentPlan-" + tbNumVersion.Text;
-            }
+            tbDeploymentConfVersion.Text = GITProjects.GetURLDeploymentPlan(tbNumVersion.Text);
         }
 
         /// <summary>При закрытии окна WinReleaseCron</summary>
@@ -131,6 +116,9 @@ namespace SQLGen
         {
             // пользовательские настройки GUI
             Default.SaveGUI("WinReleaseCron", this, null);
+
+            // сохранить текущую задачу
+            MainWindow.SaveTask(MainWindow.Task, true);
         }
 
         /// <summary>
@@ -281,10 +269,7 @@ namespace SQLGen
             if (cbGITProject.SelectedIndex != -1)
             {
                 string project = cbGITProject.SelectedItem.ToString().Trim();
-                if (Utilities.GITProjects.IsDEVProject(project))
-                {
-                    BranchName.Visibility = System.Windows.Visibility.Visible;
-                }
+                BranchName.Visibility = System.Windows.Visibility.Visible;
             }
 
             foreach (var item in MainWindow.Task.ReleaseYMLFiles.Where(x => x.PathInGIT.ToLower().StartsWith("cron")))
@@ -601,11 +586,7 @@ namespace SQLGen
                 dgJSONFilesRefresh();
 
                 // сохраняем задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                    btSaveTask.Focus();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
             }
         }
 
@@ -632,6 +613,9 @@ namespace SQLGen
 
             // Отправляем в GIT
             GIT.GitAdd(new string[] { GITProject }, tbBranch.Text.Trim(), true, false, MainWindow.Task.LogFileRelease);
+
+            // сохранить текущую задачу
+            MainWindow.SaveTask(MainWindow.Task, true);
         }
 
         /// <summary>
@@ -899,6 +883,9 @@ namespace SQLGen
             {
                 // git push
                 GIT.GitPush(new string[] { project }, branch, true, MainWindow.Task.LogFileRelease);
+
+                // сохранить текущую задачу
+                MainWindow.SaveTask(MainWindow.Task, true);
             }
         }
 
@@ -1009,10 +996,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgJSONFilesRefresh();
             }
@@ -1049,10 +1033,7 @@ namespace SQLGen
                 }
 
                 // сохранить текущую задачу
-                if (mainWindow != null)
-                {
-                    mainWindow.SaveTaskNoShow();
-                }
+                MainWindow.SaveTask(MainWindow.Task, false);
 
                 dgJSONFilesRefresh();
             }
@@ -1066,6 +1047,9 @@ namespace SQLGen
         private void btCronEdit_Click(object sender, RoutedEventArgs e)
         {
             if (!CheckBranch(out string branch)) return;
+
+            // загрузим add-файл, если он есть
+            LoadAddCron();
 
             string project = cbGITProject.SelectedItem.ToString().Trim();
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
@@ -1098,6 +1082,51 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Загружаем add-файл
+        /// </summary>
+        public void LoadAddCron()
+        {
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+
+            string dbregion_ver = "";
+            if (project == this.ProjectCronMS)
+            {
+                dbregion_ver = "MS SQL";
+            }
+            else if (project == this.ProjectCronPG)
+            {
+                dbregion_ver = "PG SQL";
+            }
+            else
+            {
+                return;
+            }
+
+            // список заданий для версии
+            ObservableCollection<Cron> ListAddCron = new ObservableCollection<Cron>();
+
+            // Ищем существующий файл версии с расширением add
+            if (Cron.FindVersion(project, tbNumVersion.Text, "add", out string filename, MainWindow.Task.LogFileRelease))
+            {
+                // Загружаем его
+                if (
+                    Cron.LoadJSON(project, dbregion_ver, ListAddCron, filename, MainWindow.Task.LogFileRelease, false, true)
+                )
+                {
+                    // Добавляем задания из загруженного файла
+                    if (project == this.ProjectCronMS)
+                    {
+                        MainWindow.Task.ListCronMS = ListAddCron;
+                    }
+                    else if (project == this.ProjectCronPG)
+                    {
+                        MainWindow.Task.ListCronPG = ListAddCron;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// генерация json-файла заданий
         /// </summary>
         private void GenerateCron()
@@ -1121,14 +1150,17 @@ namespace SQLGen
                 return;
             }
 
-            // Ищем существующий файл версии
-            if (Cron.FindVersion(project, tbNumVersion.Text, out string filename, MainWindow.Task.LogFileRelease))
+            // загрузим add-файл, если он есть
+            LoadAddCron();
+
+            // Ищем существующий json-файл версии
+            if (Cron.FindVersion(project, tbNumVersion.Text, "json", out string filename, MainWindow.Task.LogFileRelease))
             {
                 tbCronFileVersion.Text = Path.GetFileName(filename);
             }
 
             // список заданий для версии
-            ObservableCollection<Cron> ListEditCron = new ObservableCollection<Cron>();
+            ObservableCollection<Cron> ListAddCron = new ObservableCollection<Cron>();
 
             // добавляем задания из задач, включенных в релиз
             string jsonfield = Utilities.GITProjects.GetYMLFieldByProject(project);
@@ -1148,7 +1180,7 @@ namespace SQLGen
                     taskfile = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, json.PathInGIT, taskfile);
 
                     // добавляем json-файл задачи
-                    Cron.LoadJSON(project, dbregion_ver, ListEditCron, taskfile, MainWindow.Task.LogFileRelease, false, true);
+                    Cron.LoadJSON(project, dbregion_ver, ListAddCron, taskfile, MainWindow.Task.LogFileRelease, false, true);
                 }
             }
 
@@ -1158,13 +1190,13 @@ namespace SQLGen
                 foreach (var item in MainWindow.Task.ListCronMS)
                 {
                     // проверяем, может задание уже добавлено
-                    var found = ListEditCron
+                    var found = ListAddCron
                         .Where(x => x.IsKeyEqual(item))
                         .FirstOrDefault();
 
                     if (found == null)
                     {
-                        Cron.LoadJSON(project, dbregion_ver, ListEditCron, item.Filepath, MainWindow.Task.LogFileRelease, false, true);
+                        Cron.LoadJSON(project, dbregion_ver, ListAddCron, item.Filepath, MainWindow.Task.LogFileRelease, false, true);
                     }
                 }
             }
@@ -1173,13 +1205,13 @@ namespace SQLGen
                 foreach (var item in MainWindow.Task.ListCronPG)
                 {
                     // проверяем, может задание уже добавлено
-                    var found = ListEditCron
+                    var found = ListAddCron
                         .Where(x => x.IsKeyEqual(item))
                         .FirstOrDefault();
 
                     if (found == null)
                     {
-                        Cron.LoadJSON(project, dbregion_ver, ListEditCron, item.Filepath, MainWindow.Task.LogFileRelease, false, true);
+                        Cron.LoadJSON(project, dbregion_ver, ListAddCron, item.Filepath, MainWindow.Task.LogFileRelease, false, true);
                     }
                 }
             }
@@ -1188,28 +1220,28 @@ namespace SQLGen
             foreach (var item in MainWindow.Task.ListCronTemp.Where(x => x.dbregion == dbregion_ver))
             {
                 // проверяем, может задание уже добавлено
-                var found = ListEditCron
+                var found = ListAddCron
                     .Where(x => x.IsKeyEqual(item))
                     .FirstOrDefault();
 
                 if (found == null)
                 {
-                    ListEditCron.Add(item);
+                    ListAddCron.Add(item);
                 }
             }
 
             // сохраним списки
             if (project == this.ProjectCronMS)
             {
-                MainWindow.Task.ListCronMS = ListEditCron;
+                MainWindow.Task.ListCronMS = ListAddCron;
             }
             else if (project == this.ProjectCronPG)
             {
-                MainWindow.Task.ListCronPG = ListEditCron;
+                MainWindow.Task.ListCronPG = ListAddCron;
             }
 
             // сгенерировать и сохранить json-файл
-            bool isSaved = WinCron.SaveJSON(project, dbregion_ver, tbBranch.Text, "version", tbCronFileVersion.Text, false, ListEditCron, true, out string jsonfile, out string jsonurl, MainWindow.Task.LogFileRelease, tbNumVersion.Text);
+            bool isSaved = WinCron.SaveJSON(project, dbregion_ver, tbBranch.Text, "version", tbCronFileVersion.Text, false, ListAddCron, true, out string jsonfile, out string jsonurl, MainWindow.Task.LogFileRelease, tbNumVersion.Text);
 
             if (isSaved)
             {
@@ -1225,16 +1257,16 @@ namespace SQLGen
                 }
 
                 // завершение            
-                if (System.Windows.Forms.MessageBox.Show($"Открыть файл {tbCronFileVersion.Text} ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                if (System.Windows.Forms.MessageBox.Show($"Редактировать файл {tbCronFileVersion.Text} ?", "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                 {
-                    App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbCronFileVersion.Text}, открытие внешнего файла", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
+                    /*App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbCronFileVersion.Text}, открытие внешнего файла", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
 
-                    Utilities.External.OpenExternalFile(jsonfile);
+                    Utilities.External.OpenExternalFile(jsonfile);*/
+
+                    btCronEdit_Click(null, null);
                 }
-                else
-                {
-                    App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbCronFileVersion.Text}", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
-                }
+
+                App.AddLog($"Для версии {tbNumVersion.Text} в проекте {project} собран файл {tbCronFileVersion.Text}", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
             }
         }
 
@@ -1255,30 +1287,29 @@ namespace SQLGen
         /// Заполнить Versions 
         /// </summary>
         /// <param name="isForcedGitRefresh">=true - выполнять принудительно git-refresh.sh, =false - выполнять git-refresh.sh только если после предыдущего вызова прошло MainWindow.APPinfo.GitRefreshDelay минут</param>
-        public void FillVersions(bool isForcedGitRefresh)
+        /// <param name="isLoadNextVersions">=true - заполнить NextVersions</param>
+        public void FillVersions(bool isForcedGitRefresh, bool isLoadNextVersions)
         {
             string project = cbGITProject.SelectedItem.ToString().Trim();
-            if (Utilities.GITProjects.IsDEVProject(project))
+
+            // Очистить Versions
+            Versions.Clear();
+
+            // Очистить NextVersions
+            NextVersions.Clear();
+
+            // текущая версия
+            string currentbranch = tbBranch.Text;
+
+            // обновить проект GIT
+            GitPull_Sync(currentbranch, isForcedGitRefresh);
+
+            // заполнить Versions и NextVersions
+            WinRelease.FillVersionsInDev(project, ref currentbranch, tbNumVersion.Text, "", null, Versions, NextVersions, MainWindow.Task.LogFileRelease, false, isLoadNextVersions);
+
+            if (!string.IsNullOrWhiteSpace(currentbranch))
             {
-                // Очистить Versions
-                Versions.Clear();
-
-                // Очистить NextVersions
-                NextVersions.Clear();
-
-                // текущая версия
-                string currentbranch = tbBranch.Text;
-
-                // обновить проект GIT
-                GitPull_Sync(currentbranch, isForcedGitRefresh);
-
-                // заполнить Versions и NextVersions
-                WinRelease.FillVersionsInDev(project, ref currentbranch, tbNumVersion.Text, "", Versions, NextVersions, MainWindow.Task.LogFileRelease, false);
-
-                if (!string.IsNullOrWhiteSpace(currentbranch))
-                {
-                    tbBranch.Text = currentbranch;
-                }
+                tbBranch.Text = currentbranch;
             }
         }
 
@@ -1292,14 +1323,12 @@ namespace SQLGen
             if (!CheckBranch(out string cur_branch)) return;
 
             string project = cbGITProject.SelectedItem.ToString().Trim();
-            if (!Utilities.GITProjects.IsDEVProject(project)) return;
-
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
             string branch = tbBranch.Text;
             double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, branch));
 
             // Заполним Versions
-            FillVersions(false);
+            FillVersions(false, true);
 
             if (
                 Versions == null ||
@@ -1335,11 +1364,110 @@ namespace SQLGen
                 return;
             }
 
-            // нашли минимум одну версию после СЛЕДУЮЩЕЙ
+            // нашли минимум одну версию после ТЕКУЩЕЙ
             if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во все последующие ветки ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                // вливаем по все последующие после СЛЕДУЮЩЕЙ
+                // вливаем во все последующие после ТЕКУЩЕЙ
                 GIT.GitMergeNextVersion(project, branch, isNoCumulative, Versions, MainWindow.Task.LogFileRelease);
+
+                // ----------------------------------------------------------------------------
+                // показываем лог
+                if (System.Windows.Forms.MessageBox.Show("Посмотреть итоговый лог ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    WinInfo WinInfo = new WinInfo(MainWindow.Task.LogFileRelease);
+                    WinInfo.tbInfo.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("LOG");
+                    WinInfo.tbInfo.Text = File.ReadAllText(MainWindow.Task.LogFileRelease);
+                    WinInfo.Title = "Лог в файле " + MainWindow.Task.LogFileRelease;
+                    WinInfo.Show();
+                }
+
+                // проверка текущей ветки и видимость кнопок и полей
+                CheckBranch(out branch);
+            }
+        }
+
+        /// <summary>
+        /// Нажата кнопка "Влить в dev"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btToDEV_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CheckBranch(out string cur_branch)) return;
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            string branch = tbBranch.Text;
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, branch));
+
+            // Заполним Versions
+            FillVersions(false, false);
+
+            if (
+                Versions == null ||
+                Versions.Count == 0 ||
+                Versions[numversion] == null ||
+                Versions[numversion].YMLFile == null
+            )
+            {
+                MessageBox.Show("Список версий пуст или не полный");
+                return;
+            }
+
+            bool isNoCumulative = Versions[numversion].YMLFile.IsNoCumulative;
+
+            if (isNoCumulative) return;
+
+            if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во ветку dev ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                // проверим, нужен ли commit в текущую ветку
+                if (!GIT.CheckCommit(project, MainWindow.Task.LogFileRelease, $"Merge ветки {branch} в ветку dev прерван"))
+                {
+                    return;
+                }
+
+                // переключение на ветку dev
+                if (!GIT.GitSwitch(project, "dev", MainWindow.Task.LogFileRelease, out string currentbranch, out string err))
+                {
+                    App.AddLog($"Не получилось переключиться на ветку dev в проекте {project} или при переключении на ветку dev возникла ошибка: {err}\n\nMerge ветки {branch} в ветку dev прерван\n\nТекущая ветка - {currentbranch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                    return;
+                }
+
+                // merge
+                if (GIT.GitMerge(project, branch, "dev", true, false, MainWindow.Task.LogFileRelease, false))
+                {
+                    // merge успешный, делаем push
+                    App.AddLog($"Успешный merge ветки {branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.NONE, true, MainWindow.Task.LogFileRelease);
+
+                    if (System.Windows.Forms.MessageBox.Show($"Успешный merge ветки {branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev\n\nВыполнить push ветки dev ?",
+                            "ВНИМАНИЕ",
+                            System.Windows.Forms.MessageBoxButtons.YesNo
+                        ) == System.Windows.Forms.DialogResult.Yes
+                    )
+                    {
+                        // git pull
+                        GIT.GitPull(new string[] { project }, "dev", false, false, true, MainWindow.Task.LogFileRelease, false);
+
+                        // пересобрать cron.json в ветке dev
+                        GIT.MakeCronJson(project);
+
+                        // git push
+                        GIT.GitPush(new string[] { project }, "dev", true, MainWindow.Task.LogFileRelease);
+
+                        // возврат на ветку версии
+                        if (!GIT.GitSwitch(project, branch, MainWindow.Task.LogFileRelease, out branch, out err))
+                        {
+                            App.AddLog($"Ветка {branch} в проекте {project} не существует или при переключении на ветку {branch} возникла ошибка: {err}\n\nТекущая ветка - {branch}", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    App.AddLog($"Merge ветки {branch} в проекте {project} в ветку dev НЕ был выполнен\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFileRelease);
+                }
 
                 // ----------------------------------------------------------------------------
                 // показываем лог
@@ -1357,6 +1485,19 @@ namespace SQLGen
                 // проверка текущей ветки и видимость кнопок и полей
                 CheckBranch(out branch);
             }
+        }
+
+        /// <summary>
+        /// Нажата кнопка "Пересобрать cron.json"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btCronJSON_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CheckBranch(out string cur_branch)) return;
+
+            string project = cbGITProject.SelectedItem.ToString().Trim();
+            GIT.MakeCronJson(project);
         }
     }
 }

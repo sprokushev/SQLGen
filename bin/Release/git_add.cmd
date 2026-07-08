@@ -5,9 +5,10 @@ rem Добавить файлы в ветку задачи
 rem Ветка задачи должны быть текущей. Для смены ветки используем git_newbranch.cmd или git_switch.cmd
 rem %1 папка проекта GIT
 rem %2 ветка задачи
-rem %3, %4, %5 NOUPPERCASE (не обязательный) - НЕ переводить принудительно в верхний регистр имя ветки задачи
-rem %3, %4, %5 DEBUG (не обязательный) - режим отладки (пауза после каждой команды git)
-rem %3, %4, %5 NOMERGEREQUEST (не обязательный) - без Merge Request
+rem %3, %4, %5, %6 NOUPPERCASE (не обязательный) - НЕ переводить принудительно в верхний регистр имя ветки задачи
+rem %3, %4, %5, %6 DEBUG (не обязательный) - режим отладки (пауза после каждой команды git)
+rem %3, %4, %5, %6 NOMERGEREQUEST (не обязательный) - без Merge Request
+rem %3, %4, %5, %6 NOPUSH (не обязательный) - без Push
 rem в %ERROR% возвращается результат: 
 rem = 0 (ok)
 rem = 10001 (неверные параметры запуска)
@@ -40,7 +41,7 @@ echo GIT project = %GIT%
 echo current dir = %cd%
 echo git = %GITEXE%
 echo command line parameters:
-echo %0 %1 %2 %3 %4 %5
+echo %0 %1 %2 %3 %4 %5 %6
 echo -------------------------------------
 
 rem if .%TASK%.==.. CALL git_askbranch.cmd
@@ -50,6 +51,7 @@ set UPPERCASE=YES
 if .%3.==.NOUPPERCASE. set UPPERCASE=NO
 if .%4.==.NOUPPERCASE. set UPPERCASE=NO
 if .%5.==.NOUPPERCASE. set UPPERCASE=NO
+if .%6.==.NOUPPERCASE. set UPPERCASE=NO
 if .%TASK%.==.master. set UPPERCASE=NO
 if .%TASK%.==.test. set UPPERCASE=NO
 if .%TASK%.==.release. set UPPERCASE=NO
@@ -61,11 +63,19 @@ set DEBUG=NO
 if .%3.==.DEBUG. set DEBUG=YES
 if .%4.==.DEBUG. set DEBUG=YES
 if .%5.==.DEBUG. set DEBUG=YES
+if .%6.==.DEBUG. set DEBUG=YES
 
 set NOMERGEREQUEST=NO
 if .%3.==.NOMERGEREQUEST. set NOMERGEREQUEST=YES
 if .%4.==.NOMERGEREQUEST. set NOMERGEREQUEST=YES
 if .%5.==.NOMERGEREQUEST. set NOMERGEREQUEST=YES
+if .%6.==.NOMERGEREQUEST. set NOMERGEREQUEST=YES
+
+set NOPUSH=NO
+if .%3.==.NOPUSH. set NOPUSH=YES
+if .%4.==.NOPUSH. set NOPUSH=YES
+if .%5.==.NOPUSH. set NOPUSH=YES
+if .%6.==.NOPUSH. set NOPUSH=YES
 
 set NOEXIT=NO
 
@@ -110,6 +120,7 @@ echo.
 echo Y | start /wait TortoiseGitProc.exe /command:commit /path:%GIT% /closeonend 2
 IF .%DEBUG%. EQU .YES. pause
 
+IF .%NOPUSH%. EQU .YES. goto :finish
 IF .%NOMERGEREQUEST%. EQU .YES. goto :push
 IF .%TASK%. EQU .test. goto :push
 goto :mr

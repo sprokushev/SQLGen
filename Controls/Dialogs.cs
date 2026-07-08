@@ -22,15 +22,16 @@ namespace SQLGen.Controls
         /// <param name="filter">Список возможных расширений, например: (*.sql)|*.sql|Все файлы (*.*)|*.*</param>
         /// <param name="path">Начальный каталог</param>
         /// <param name="filename">Начальное имя файла</param>
-        /// <param name="fs">возвращаемый параметр с экземпляром FileStream для последующей записи в файл</param>
+        /// <param name="isCreateFS">=true - создавать экземпляр FileStream для последующей записи в файл</param>
+        /// <param name="FS">возвращаемый параметр с экземпляром FileStream для последующей записи в файл</param>
         /// <param name="fileMode">как был открыт файл (новый или добавление)</param>
         /// <param name="isPathCanChanged">=true - путь и имя файла можно изменить</param>
         /// <param name="isForceSave">=true - перезаписывать файл без вопросов</param>
         /// <returns>Итоговое имя файла</returns>
-        public static string SaveDialog(string defaultext, string filter, string path, string filename, out FileStream fs, out FileMode fileMode, bool isPathCanChanged, bool isForceSave)
+        public static string SaveDialog(string defaultext, string filter, string path, string filename, bool isCreateFS, out FileStream FS, out FileMode fileMode, bool isPathCanChanged, bool isForceSave)
         {
             bool result = true;
-            fs = null;
+            FS = null;
             fileMode = FileMode.Create;
 
             if (isPathCanChanged)
@@ -90,7 +91,11 @@ namespace SQLGen.Controls
                     }
                 }
 
-                fs = new FileStream(filename, fileMode);
+                if (isCreateFS)
+                {
+                    FS = new FileStream(filename, fileMode);
+                }
+
                 return filename;
             }
 
@@ -106,7 +111,17 @@ namespace SQLGen.Controls
         /// <returns>Итоговое имя файла</returns>
         public static string SaveSQLDialog(string path, string filename, out FileStream fs, out FileMode fileMode)
         {
-            return SaveDialog(".sql", "(*.sql)|*.sql|Все файлы (*.*)|*.*", path, filename, out fs, out fileMode, true, false);
+            return SaveDialog(".sql", "(*.sql)|*.sql|Все файлы (*.*)|*.*", path, filename, true, out fs, out fileMode, true, false);
+        }
+
+        // -------------------------------------------------------------------------------------------------------
+        /// <summary>Диалоговое окно для сохранения ZIP-файла</summary>
+        /// <param name="path">Начальный каталог</param>
+        /// <param name="filename">Начальное имя файла</param>
+        /// <returns>Итоговое имя файла</returns>
+        public static string SaveZIPDialog(string path, string filename)
+        {
+            return SaveDialog(".zip", "(*.zip)|*.zip|Все файлы (*.*)|*.*", path, filename, false, out FileStream fs, out FileMode fileMode, true, true);
         }
 
         // -------------------------------------------------------------------------------------------------------
@@ -118,7 +133,7 @@ namespace SQLGen.Controls
         /// <returns>Итоговое имя файла</returns>
         public static string SaveCSVDialog(string path, string filename, out FileStream fs, out FileMode fileMode)
         {
-            return SaveDialog(".csv", "(*.csv)|*.csv|Все файлы (*.*)|*.*", path, filename, out fs, out fileMode, true, false);
+            return SaveDialog(".csv", "(*.csv)|*.csv|Все файлы (*.*)|*.*", path, filename, true, out fs, out fileMode, true, false);
         }
 
         // -------------------------------------------------------------------------------------------------------

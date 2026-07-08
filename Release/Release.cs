@@ -1,14 +1,15 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
-using SQLGen.Utilities;
 using Path = System.IO.Path;
 
 namespace SQLGen
@@ -50,10 +51,15 @@ namespace SQLGen
             int cnt = 0;
 
             // перебираем yml-файлы
-            foreach (YMLLine yml in ListYML.Where(x => x.type == YMLLineType.TASK).OrderBy(x => x.order))
+            foreach (YMLLine yml in ListYML
+                .Where(x => x.type == YMLLineType.TASK)
+                .OrderBy(x => x.order)
+            )
             {
                 // перебираем скрипты по структуре
-                foreach (var item in yml.loadYMLStruct.Lines.Where(x => x.type == YMLLineType.SQLSTRUCT))
+                foreach (var item in yml.loadYMLStruct.Lines
+                    .Where(x => x.type == YMLLineType.SQLSTRUCT)
+                )
                 {
                     // определяем тег объекта 
                     string _tag = item.ObjectName;
@@ -88,7 +94,9 @@ namespace SQLGen
                 }
 
                 // перебираем скрипты по данным
-                foreach (var item in yml.loadYMLStruct.Lines.Where(x => x.type == YMLLineType.SQLDATA))
+                foreach (var item in yml.loadYMLStruct.Lines
+                    .Where(x => x.type == YMLLineType.SQLDATA)
+                )
                 {
                     // определяем тег объекта 
                     string _tag = item.ObjectName;
@@ -149,7 +157,7 @@ namespace SQLGen
                                 all_info += obj + ", ";
                             }
                             all_info = all_info.TrimEnd(new char[] { ' ', ',' });
-                            all_info += Environment.NewLine + Environment.NewLine;
+                            all_info += Environment.NewLine;
                             all_info += tag_info;
                         }
 
@@ -171,14 +179,12 @@ namespace SQLGen
 
             if (!string.IsNullOrWhiteSpace(all_info))
             {
-                if (!string.IsNullOrWhiteSpace(result)) result += Environment.NewLine; //-V3022
+                if (!string.IsNullOrWhiteSpace(result)) result += Environment.NewLine + Environment.NewLine; //-V3022
 
-                result +=
-                "--------------------------------------------------------------------" + Environment.NewLine +
-                $"Дубли по структуре" + Environment.NewLine +
-                "--------------------------------------------------------------------" + Environment.NewLine +
-                Environment.NewLine +
-                all_info;
+                result += "--------------------------------------------------------------------" + 
+                Environment.NewLine + $"Дубли в текущей версии по структуре" + 
+                Environment.NewLine + "--------------------------------------------------------------------" +
+                Environment.NewLine + all_info;
             }
 
             all_info = "";
@@ -205,7 +211,7 @@ namespace SQLGen
                                 all_info += obj + ", ";
                             }
                             all_info = all_info.TrimEnd(new char[] { ' ', ',' });
-                            all_info += Environment.NewLine + Environment.NewLine;
+                            all_info += Environment.NewLine;
                             all_info += tag_info;
                         }
                     }
@@ -226,14 +232,12 @@ namespace SQLGen
 
             if (!string.IsNullOrWhiteSpace(all_info))
             {
-                if (!string.IsNullOrWhiteSpace(result)) result += Environment.NewLine;
+                if (!string.IsNullOrWhiteSpace(result)) result += Environment.NewLine + Environment.NewLine;
 
-                result +=
-                "--------------------------------------------------------------------" + Environment.NewLine +
-                $"Дубли по данным" + Environment.NewLine +
-                "--------------------------------------------------------------------" + Environment.NewLine +
-                Environment.NewLine +
-                all_info;
+                result += "--------------------------------------------------------------------" + 
+                    Environment.NewLine + $"Дубли в текущей версии по данным" + 
+                    Environment.NewLine + "--------------------------------------------------------------------" + 
+                    Environment.NewLine + all_info;
             }
 
             return result;
@@ -259,7 +263,7 @@ namespace SQLGen
                 // создаем резервную копию
                 try
                 {
-                    string jsonString = JsonSerializer.Serialize<List<YMLFileInfo>>(MainWindow.Task.ReleaseYMLFiles, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
+                    string jsonString = JsonSerializer.Serialize<List<YMLFileInfo>>(MainWindow.Task.ReleaseYMLFiles, Other.OptionsJSON);
 
                     File.WriteAllText(filename, jsonString);
 
@@ -400,7 +404,6 @@ namespace SQLGen
                 }
 
                 // перебираем loadyml.Lines
-                bool isAdded = false;
                 foreach (var item in loadyml.Lines
                     .Where(x =>
                         (x.type == YMLLineType.TASK) ||
@@ -418,24 +421,6 @@ namespace SQLGen
 
                     if (found == null)
                     {
-                        if (
-                            Utilities.GITProjects.IsGITProject(project) &&
-                            (!isAdded)
-                        )
-                        {
-                            cnt++;
-
-                            // добавляем комментарий, чтобы выделить добавленное
-                            newyml.Lines.Add(new YMLLine(newyml, logFile)
-                            {
-                                order = cnt,
-                                type = YMLLineType.COMMENT,
-                                text = $"#added from {project_dev} and probably not exist in {project}",
-                                isLoaded = false,
-                            });
-                            isAdded = true;
-                        }
-
                         item.isLoaded = true;
                         cnt++;
                         item.order = cnt;
@@ -562,12 +547,6 @@ namespace SQLGen
                 }
             }
 
-            if (Utilities.GITProjects.IsGITProject(project))
-            {
-                // для всех yml в старых проектах сбрасываем флан автогенности (все последующие добавления пойдут в конец файла)
-                newyml.IsAutogen = false;
-            }
-
             return newyml;
         }
 
@@ -678,7 +657,8 @@ namespace SQLGen
                 {
                     num = num.Substring(0, num.Length - 5);
                 }
-                prefix = prefix.ToLower().Trim();
+
+                prefix = (prefix??"").ToLower().Trim();
 
                 // убираем ключевые слова в changeset или в имени файла
                 num = num
@@ -738,10 +718,10 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// Найти json-файл с Действиями при обновлении версии
+        /// Найти json-файл версии. Если не найден - собрать имя файла
         /// </summary>
         /// <param name="project">проект GIT</param>
-        /// <param name="version">версия</param>
+        /// <param name="version">номер версии с префиксом</param>
         /// <param name="type">тип файла: deployment, cron</param>
         /// <param name="isExist">=true - файл существует</param>
         /// <returns></returns>
@@ -765,8 +745,8 @@ namespace SQLGen
                 if (item.ToLower().EndsWith("_" + type + ".json"))
                 {
                     // определяем номер версии из имени файла
-                    string ver = Release.GetNumVersion(prefix, item);
-                    double nn = Release.VerAsNum(ver);
+                    string version_no_prefix = Release.GetNumVersion(prefix, item);
+                    double nn = Release.VerAsNum(version_no_prefix);
                     if (nn == numversion) //-V3024
                     {
                         isExist = true;

@@ -4,7 +4,7 @@ SET DEST_DIR=%1
 :defaultDest
 mkdir %DEST_DIR%
 
-SET SOURCE_DIR=D:\OneDrive\Source\SQLGen\bin\Release
+SET SOURCE_DIR=E:\Source\SQLGen\bin\Release
 IF "%2"=="" goto defaultSource
 SET SOURCE_DIR=%2
 :defaultSource

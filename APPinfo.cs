@@ -1,18 +1,19 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
-using SQLGen.Utilities;
 
 namespace SQLGen
 {
@@ -37,6 +38,7 @@ namespace SQLGen
             this.ImproveSQLinVersion = "true";
             this.UseNewFunc = "false";
             this.CheckLastCommit = "true";
+            this.TaskReleaseCooperative = "false";
         }
 
         // -------------------------------------------------------------------------------------------------------
@@ -46,99 +48,99 @@ namespace SQLGen
         /// <summary>
         /// Проекты ТОЛЬКО для регионов MS
         /// </summary>
-	[JsonIgnore]
+        [JsonIgnore]
         public List<string> ListProjects_ONLY_MS => GITProjects
-                    .Where(x =>
-                        x.DBRegion == "MS SQL" &&
-                        !string.IsNullOrWhiteSpace(x.DEVProject)
-                    )
-                    .Select(x => x.DEVProject)
-                    .Union(
-                        GITProjects
                         .Where(x =>
                             x.DBRegion == "MS SQL" &&
-                            !string.IsNullOrWhiteSpace(x.GITProject)
+                            !string.IsNullOrWhiteSpace(x.DEVProject)
                         )
-                        .Select(x => x.GITProject)
-                    )
-                    .Distinct()
-                    .ToList();
+                        .Select(x => x.DEVProject)
+                        .Union(
+                            GITProjects
+                            .Where(x =>
+                                x.DBRegion == "MS SQL" &&
+                                !string.IsNullOrWhiteSpace(x.GITProject)
+                            )
+                            .Select(x => x.GITProject)
+                        )
+                        .Distinct()
+                        .ToList();
 
         /// <summary>
         /// Проекты для регионов MS
         /// </summary>
-	[JsonIgnore]
+        [JsonIgnore]
         public List<string> ListProjectsMS => GITProjects
-                    .Where(x =>
-                        (x.DBRegion == "MS SQL" || x.DBRegion == "ALL") &&
-                        !string.IsNullOrWhiteSpace(x.DEVProject)
-                    )
-                    .Select(x => x.DEVProject)
-                    .Union(
-                        GITProjects
                         .Where(x =>
                             (x.DBRegion == "MS SQL" || x.DBRegion == "ALL") &&
-                            !string.IsNullOrWhiteSpace(x.GITProject)
+                            !string.IsNullOrWhiteSpace(x.DEVProject)
                         )
-                        .Select(x => x.GITProject)
-                    )
-                    .Distinct()
-                    .ToList();
+                        .Select(x => x.DEVProject)
+                        .Union(
+                            GITProjects
+                            .Where(x =>
+                                (x.DBRegion == "MS SQL" || x.DBRegion == "ALL") &&
+                                !string.IsNullOrWhiteSpace(x.GITProject)
+                            )
+                            .Select(x => x.GITProject)
+                        )
+                        .Distinct()
+                        .ToList();
 
         /// <summary>
         /// Проекты ТОЛЬКО для регионов PG
         /// </summary>
-	[JsonIgnore]
+        [JsonIgnore]
         public List<string> ListProjects_ONLY_PG => GITProjects
-                    .Where(x =>
-                        (x.DBRegion == "PG SQL") &&
-                        !string.IsNullOrWhiteSpace(x.DEVProject)
-                    )
-                    .Select(x => x.DEVProject)
-                    .Union(
-                        GITProjects
                         .Where(x =>
                             (x.DBRegion == "PG SQL") &&
-                            !string.IsNullOrWhiteSpace(x.GITProject)
+                            !string.IsNullOrWhiteSpace(x.DEVProject)
                         )
-                        .Select(x => x.GITProject)
-                    )
-                    .Distinct()
-                    .ToList();
+                        .Select(x => x.DEVProject)
+                        .Union(
+                            GITProjects
+                            .Where(x =>
+                                (x.DBRegion == "PG SQL") &&
+                                !string.IsNullOrWhiteSpace(x.GITProject)
+                            )
+                            .Select(x => x.GITProject)
+                        )
+                        .Distinct()
+                        .ToList();
 
         /// <summary>
         /// Проекты для регионов PG
         /// </summary>
-	[JsonIgnore]
+        [JsonIgnore]
         public List<string> ListProjectsPG => GITProjects
-                    .Where(x =>
-                        (x.DBRegion == "PG SQL" || x.DBRegion == "ALL") &&
-                        !string.IsNullOrWhiteSpace(x.DEVProject)
-                    )
-                    .Select(x => x.DEVProject)
-                    .Union(
-                        GITProjects
                         .Where(x =>
                             (x.DBRegion == "PG SQL" || x.DBRegion == "ALL") &&
-                            !string.IsNullOrWhiteSpace(x.GITProject)
+                            !string.IsNullOrWhiteSpace(x.DEVProject)
                         )
-                        .Select(x => x.GITProject)
-                    )
-                    .Distinct()
-                    .ToList();
+                        .Select(x => x.DEVProject)
+                        .Union(
+                            GITProjects
+                            .Where(x =>
+                                (x.DBRegion == "PG SQL" || x.DBRegion == "ALL") &&
+                                !string.IsNullOrWhiteSpace(x.GITProject)
+                            )
+                            .Select(x => x.GITProject)
+                        )
+                        .Distinct()
+                        .ToList();
 
         /// <summary>
         /// DBAlias проектов, общих для регионов MS и PG
         /// </summary>
-	[JsonIgnore]
+        [JsonIgnore]
         public List<string> ListDBAlias_ForALL => GITProjects
-                    .Where(x =>
-                        x.DBRegion == "ALL" &&
-                        !string.IsNullOrWhiteSpace(x.DBAlias)
-                    )
-                    .Select(x => x.DBAlias)
-                    .Distinct()
-                    .ToList();
+                        .Where(x =>
+                            x.DBRegion == "ALL" &&
+                            !string.IsNullOrWhiteSpace(x.DBAlias)
+                        )
+                        .Select(x => x.DBAlias)
+                        .Distinct()
+                        .ToList();
 
         /// <summary>
         /// Найти проект GIT
@@ -197,13 +199,16 @@ namespace SQLGen
         /// <param name="git_LuquibotAliasEHFUnActUfa">Алиас для EHF не актуального Уфа</param>
         /// <param name="git_LuquibotAliasLTS">Алиас для LTS</param>
         /// <param name="git_LuquibotAliasLTSUfa">Алиас для LTS Уфа</param>
+        /// <param name="git_LuquibotAliasQARel">Алиас для QA-Rel</param>
+        /// <param name="git_LuquibotAliasQARelUfa">Алиас для QA-Rel Уфа</param>
+        /// <param name="git_LuquibotAliasQA">Алиас для QA</param>
+        /// <param name="git_LuquibotAliasQAUfa">Алиас для QA Уфа</param>
         /// <param name="git_ProjectDeploymentMS">Алиас для EHF2 N2 Уфы</param>
         /// <param name="git_ProjectDeploymentPG">Алиас для EHF2 N2 Уфы</param>
         /// <param name="git_ProjectCronMS">Алиас для EHF2 N2 Уфы</param>
         /// <param name="git_ProjectCronPG">Алиас для EHF2 N2 Уфы</param>
         /// <returns></returns>
-        public GITInfo AddGITProject(string git_project, string git_folder, string _prefixsql, string _prefixrelease, string _postfixrelease, string git_url, string git_urlalt, string git_ymlfield, string git_datafolder, string git_issinglescript, string _dbtype, string dev_project, string dev_folder, string dev_url, string dev_urlalt, string dev_ymlfield, string dev_datafolder, string dev_issinglescriptstruct, string dev_issinglescriptcode, string dev_issinglescriptdata, string dev_startver, List<string> cumulativegap, string git_isevninherit, string git_dbalias, string git_dbregion, string git_LuquibotAliasOld, string git_LuquibotAliasOldUfa, string git_LuquibotAliasSP, string git_LuquibotAliasSPUfa, string git_LuquibotAliasHF, string git_LuquibotAliasHFUfa, string git_LuquibotAliasEHFAct, string git_LuquibotAliasEHFActUfa, string git_LuquibotAliasEHFUnAct, string git_LuquibotAliasEHFUnActUfa, string git_LuquibotAliasLTS, string git_LuquibotAliasLTSUfa,
-          string git_ProjectDeploymentMS, string git_ProjectDeploymentPG, string git_ProjectCronMS, string git_ProjectCronPG
+        public GITInfo AddGITProject(string git_project, string git_folder, string _prefixsql, string _prefixrelease, string _postfixrelease, string git_url, string git_urlalt, string git_ymlfield, string git_datafolder, string git_issinglescript, string _dbtype, string dev_project, string dev_folder, string dev_url, string dev_urlalt, string dev_ymlfield, string dev_datafolder, string dev_issinglescriptstruct, string dev_issinglescriptcode, string dev_issinglescriptdata, string dev_startver, List<string> cumulativegap, string git_isevninherit, string git_dbalias, string git_dbregion, string git_LuquibotAliasOld, string git_LuquibotAliasOldUfa, string git_LuquibotAliasSP, string git_LuquibotAliasSPUfa, string git_LuquibotAliasHF, string git_LuquibotAliasHFUfa, string git_LuquibotAliasEHFAct, string git_LuquibotAliasEHFActUfa, string git_LuquibotAliasEHFUnAct, string git_LuquibotAliasEHFUnActUfa, string git_LuquibotAliasLTS, string git_LuquibotAliasLTSUfa, string git_LuquibotAliasQARel, string git_LuquibotAliasQARelUfa, string git_LuquibotAliasQA, string git_LuquibotAliasQAUfa, string git_ProjectDeploymentMS, string git_ProjectDeploymentPG, string git_ProjectCronMS, string git_ProjectCronPG
         )
         {
             if (string.IsNullOrWhiteSpace(git_project)) return null;
@@ -255,6 +260,10 @@ namespace SQLGen
             _git.LuquibotAliasEHFUnActUfa = git_LuquibotAliasEHFUnActUfa;
             _git.LuquibotAliasLTS = git_LuquibotAliasLTS;
             _git.LuquibotAliasLTSUfa = git_LuquibotAliasLTSUfa;
+            _git.LuquibotAliasQARel = git_LuquibotAliasQARel;
+            _git.LuquibotAliasQARelUfa = git_LuquibotAliasQARelUfa;
+            _git.LuquibotAliasQA = git_LuquibotAliasQA;
+            _git.LuquibotAliasQAUfa = git_LuquibotAliasQAUfa;
             _git.ProjectDeploymentMS = git_ProjectDeploymentMS;
             _git.ProjectDeploymentPG = git_ProjectDeploymentPG;
             _git.ProjectCronMS = git_ProjectCronMS;
@@ -288,7 +297,7 @@ namespace SQLGen
         /// <param name="_db">имя БД</param>
         /// <param name="_dbtype">тип БД</param>
         /// <returns></returns>
-        public DBInfo FindDatabase (string _server, string _db, string _dbtype)
+        public DBInfo FindDatabase(string _server, string _db, string _dbtype)
         {
             if (
                     string.IsNullOrWhiteSpace(_server) ||
@@ -388,7 +397,7 @@ namespace SQLGen
             }
 
             DBInfo _database = editDB;
-            if (_database == null) 
+            if (_database == null)
             {
                 _database = FindDatabase(_server, _db, _dbtype);
             }
@@ -466,14 +475,14 @@ namespace SQLGen
         {
             // копируем текущий список и меняем "старые" проекты на "новые"
             BindingList<DBInfo> old = new BindingList<DBInfo>();
-            foreach (var item in ListDatabases) 
-            { 
+            foreach (var item in ListDatabases)
+            {
                 var db = item.Copy();
                 if (Utilities.GITProjects.IsGITProject(db.GITProject))
                 {
                     db.GITProject = Utilities.GITProjects.GetDEVProject(db.GITProject);
                 }
-                old.Add(db); 
+                old.Add(db);
             }
 
             // очищаем текущий список
@@ -499,7 +508,7 @@ namespace SQLGen
         public void ChangeServerInAllConnects(string from_server, string to_server, string dbtype)
         {
             // изменяем адрес сервера БД в списке подключений
-            foreach (var item in MainWindow.ListConnects.Where(x => 
+            foreach (var item in MainWindow.ListConnects.Where(x =>
                 Utilities.Databases.ServerAddrEqual(x.ServerAddr, from_server) &&
                 Utilities.Databases.ServerPortEqual(x.ServerPort, x.DBType, from_server, dbtype) &&
                  Utilities.Databases.DBTypeEqual(x.DBType, dbtype)
@@ -524,7 +533,7 @@ namespace SQLGen
                     while (true)
                     {
                         _found = FindDatabase(from_server, _db, dbtype);
-                        if ( _found == null)
+                        if (_found == null)
                         {
                             break;
                         }
@@ -782,11 +791,33 @@ namespace SQLGen
         {
             get
             {
-                return CryptoClass.decrypt_from_string(CryptedPasswordJira);
+                string decrypt = "";
+
+                try
+                {
+                    decrypt = CryptoClass.decrypt_from_string(CryptedPasswordJira);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка дешифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    decrypt = "";
+                }
+
+                return decrypt;
             }
             set
             {
-                CryptedPasswordJira = CryptoClass.encrypt_to_string(value);
+                CryptedPasswordJira = "";
+
+                try
+                {
+                    CryptedPasswordJira = CryptoClass.encrypt_to_string(value);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка шифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    CryptedPasswordJira = "";
+                }
             }
         }
 
@@ -1119,10 +1150,62 @@ namespace SQLGen
         /// </summary>
         public bool isCheckLastCommit => this.CheckLastCommit == "true";
 
+        // -------------------------------------------------------------------------------------------------------
         /// <summary>
         /// через сколько минут повторно выполнять git-refresh.sh
         /// </summary>
         public int GitRefreshDelay { get; set; } = 3;
+
+        // -------------------------------------------------------------------------------------------------------
+        private string _taskreleasecooperative;
+        /// <summary>
+        /// true - использовать проект sqlgen-release для хранения файлов *.task релизных задач (кооперативный режим)
+        /// false - работать с релизными задачами индивидуально, без использования проекта sqlgen-release
+        /// </summary>
+        public string TaskReleaseCooperative
+        {
+            get
+            {
+                return _taskreleasecooperative ?? "true";
+            }
+            set
+            {
+                _taskreleasecooperative = value;
+                if (string.IsNullOrWhiteSpace(_taskreleasecooperative)) _taskreleasecooperative = "true";
+                _taskreleasecooperative = _taskreleasecooperative.Trim().ToLower();
+
+                if (
+                    (_taskreleasecooperative == "да") ||
+                    (_taskreleasecooperative == "yes") ||
+                    (_taskreleasecooperative == "true")
+                    )
+                {
+                    _taskreleasecooperative = "true";
+                }
+                else
+                {
+                    _taskreleasecooperative = "false";
+                }
+            }
+        }
+
+        /// <summary>
+        /// каталог проекта sqlgen-release
+        /// </summary>
+        public string SqlGenReleasePath => Path.Combine(MainWindow.APPinfo.GITFolder, "sqlgen-release");
+
+        /// <summary>
+        /// папка task в проекте sqlgen-release
+        /// </summary>
+        public string TaskReleasePath => Path.Combine(SqlGenReleasePath, "task");
+
+        /// <summary>
+        /// =true - использовать проект sqlgen-release для хранения файлов *.task релизных задач (кооперативный режим)
+        /// </summary>
+        public bool isTaskReleaseCooperative =>
+            this.TaskReleaseCooperative == "true" && // если включен кооперативный режим работы с релизными задачами
+            Directory.Exists(this.TaskReleasePath) // есть проект для кооперативного режима и папка для хранения файлов
+        ;
     }
 
     // -------------------------------------------------------------------------------------------------------
@@ -1152,23 +1235,20 @@ namespace SQLGen
 
             if (File.Exists(filename)) Utilities.Files.BackupFile(filename);
 
-            if (!string.IsNullOrWhiteSpace(filename)) //-V3022
+            try
             {
-                try
+                string jsonString = JsonSerializer.Serialize<APPinfo>(APPinfo, Other.OptionsJSON);
+                if (!APPinfo.isSavePasswordJira)
                 {
-                    string jsonString = JsonSerializer.Serialize<APPinfo>(APPinfo, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
-                    if (!APPinfo.isSavePasswordJira)
-                    {
-                        APPinfo info = JsonSerializer.Deserialize<APPinfo>(jsonString, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
-                        info.CryptedPasswordJira = "";
-                        jsonString = JsonSerializer.Serialize<APPinfo>(info, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
-                    }
-                    File.WriteAllText(filename, jsonString);
+                    APPinfo info = JsonSerializer.Deserialize<APPinfo>(jsonString, Other.oldOptionsJSON);
+                    info.CryptedPasswordJira = "";
+                    jsonString = JsonSerializer.Serialize<APPinfo>(info, Other.OptionsJSON);
                 }
-                catch (Exception ex)
-                {
-                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, null);
-                }
+                File.WriteAllText(filename, jsonString);
+            }
+            catch (Exception ex)
+            {
+                App.AddLog("", ex, App.ShowMessageMode.SHOW, true, null);
             }
         }
 
@@ -1184,7 +1264,7 @@ namespace SQLGen
                 try
                 {
                     string jsonString = File.ReadAllText(filename);
-                    APPinfo = JsonSerializer.Deserialize<APPinfo>(jsonString, new JsonSerializerOptions { IgnoreReadOnlyProperties = true, WriteIndented = true });
+                    APPinfo = JsonSerializer.Deserialize<APPinfo>(jsonString, Other.oldOptionsJSON);
                     App.AddLog("загружен SQLGen.json", null, App.ShowMessageMode.NONE, true, null);
                 }
                 catch (Exception ex)
@@ -1224,7 +1304,7 @@ namespace SQLGen
                 "YES",
                 "NO",
                 "11.0.0",
-                new List<string> { "9.0.0", "10.0.0", "11.0.0" },
+                new List<string> { "9.0.0", "10.0.0", "11.0.0", "12.0.0" },
                 "NO",
                 "promed",
                 "MS SQL",
@@ -1240,6 +1320,10 @@ namespace SQLGen
                 "rel_promed_ms_ufa_ehf_unact",
                 "rel_promed_ms_lts",
                 "rel_promed_ms_ufa_lts",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
@@ -1268,7 +1352,7 @@ namespace SQLGen
                 "YES",
                 "NO",
                 "11.0.0",
-                new List<string> { "9.0.0", "10.0.0", "11.0.0" },
+                new List<string> { "9.0.0", "10.0.0", "11.0.0", "12.0.0" },
                 "NO",
                 "promed",
                 "PG SQL",
@@ -1283,6 +1367,10 @@ namespace SQLGen
                 "rel_promed_pg_ehf_unact",
                 "",
                 "rel_promed_pg_lts",
+                "",
+                "rel_qa_promed",
+                "",
+                "qa_promed",
                 "",
                 "",
                 "dev_promed_pg",
@@ -1312,7 +1400,7 @@ namespace SQLGen
                 "YES",
                 "NO",
                 "11.0.0",
-                new List<string> { "9.0.0", "10.0.0", "11.0.0" },
+                new List<string> { "9.0.0", "10.0.0", "11.0.0", "12.0.0" },
                 "NO",
                 "emd",
                 "ALL",
@@ -1327,6 +1415,10 @@ namespace SQLGen
                 "rel_emd_pg_ehf_unact",
                 "",
                 "rel_emd_pg_lts",
+                "",
+                "rel_qa_EMD",
+                "",
+                "qa_EMD",
                 "",
                 "dev_promed_ms",
                 "dev_promed_pg",
@@ -1356,7 +1448,7 @@ namespace SQLGen
                 "YES",
                 "NO",
                 "11.0.0",
-                new List<string> { "9.0.0", "10.0.0", "11.0.0" },
+                new List<string> { "9.0.0", "10.0.0", "11.0.0", "12.0.0" },
                 "YES",
                 "lis",
                 "MS SQL",
@@ -1372,6 +1464,10 @@ namespace SQLGen
                 "rel_lis_pg_ufa_ehf_unact",
                 "rel_lis_pg_lts",
                 "rel_lis_pg_ufa_lts",
+                "",
+                "",
+                "",
+                "",
                 "",
                 "dev_promed_pg",
                 "",
@@ -1415,6 +1511,10 @@ namespace SQLGen
                 "rel_logservice_pg_ehf_unact",
                 "",
                 "rel_logservice_pg_lts",
+                "",
+                "rel_qa_log_service",
+                "",
+                "qa_log_service",
                 "",
                 "",
                 "dev_promed_pg",
@@ -1460,6 +1560,10 @@ namespace SQLGen
                 "",
                 "rel_logservice_ms_lts",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
@@ -1503,6 +1607,10 @@ namespace SQLGen
                 "rel_phplog_pg_ehf_unact",
                 "",
                 "rel_phplog_pg_lts",
+                "",
+                "qa_rel_php_log",
+                "",
+                "qa_php_log",
                 "",
                 "",
                 "dev_promed_pg",
@@ -1548,6 +1656,10 @@ namespace SQLGen
                 "",
                 "rel_phplog_ms_lts",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
@@ -1591,6 +1703,10 @@ namespace SQLGen
                 "rel_userportal_pg_ehf_unact",
                 "",
                 "rel_userportal_pg_lts",
+                "",
+                "rel_qa_userportal",
+                "",
+                "qa_userportal",
                 "",
                 "",
                 "dev_userportal_pg",
@@ -1636,6 +1752,10 @@ namespace SQLGen
                 "",
                 "rel_userportal_ms_lts",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_userportal_ms",
                 "",
                 "dev_userportal_ms",
@@ -1668,6 +1788,10 @@ namespace SQLGen
                 "NO",
                 "fer_log",
                 "PG SQL",
+                "",
+                "",
+                "",
+                "",
                 "",
                 "",
                 "",
@@ -1725,6 +1849,10 @@ namespace SQLGen
                 "rel_acmlo_pg_lts",
                 "",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_pg",
                 "",
                 "dev_promed_pg"
@@ -1767,6 +1895,10 @@ namespace SQLGen
                 "rel_smp2_pg_ehf_unact",
                 "",
                 "rel_smp2_pg_lts",
+                "",
+                "",
+                "",
+                "",
                 "",
                 "",
                 "dev_smp2_pg",
@@ -1812,6 +1944,10 @@ namespace SQLGen
                 "",
                 "rel_acmlo_ms_lts",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
@@ -1844,6 +1980,10 @@ namespace SQLGen
                 "NO",
                 "gar",
                 "ALL",
+                "",
+                "",
+                "",
+                "",
                 "",
                 "",
                 "",
@@ -1901,6 +2041,10 @@ namespace SQLGen
                 "rel_proxy_pg_lts",
                 "",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_promed_pg",
                 "",
                 "dev_promed_pg"
@@ -1945,6 +2089,10 @@ namespace SQLGen
                 "",
                 "",
                 "",
+                "",
+                "",
+                "",
+                "",
                 "dev_bi",
                 "",
                 "dev_bi"
@@ -1969,6 +2117,12 @@ namespace SQLGen
             if (!APPinfo.CheckNoIdTables.Contains("stg.localdblist", StringComparer.OrdinalIgnoreCase)) APPinfo.CheckNoIdTables.Add("stg.localdblist");
             if (!APPinfo.CheckNoIdTables.Contains("UslugaComplexAttribute", StringComparer.OrdinalIgnoreCase)) APPinfo.CheckNoIdTables.Add("UslugaComplexAttribute");
             if (!APPinfo.CheckNoIdTables.Contains("PortalAccessRightsDiag", StringComparer.OrdinalIgnoreCase)) APPinfo.CheckNoIdTables.Add("PortalAccessRightsDiag");
+            if (!APPinfo.CheckNoIdTables.Contains("FreeDocMarker", StringComparer.OrdinalIgnoreCase)) APPinfo.CheckNoIdTables.Add("FreeDocMarker");
+            if (!APPinfo.CheckNoIdTables.Contains("FreeDocRelationship", StringComparer.OrdinalIgnoreCase)) APPinfo.CheckNoIdTables.Add("FreeDocRelationship");
+
+            // уберем дубли
+            List<string> lst = APPinfo.CheckNoIdTables.Distinct().ToList();
+            APPinfo.CheckNoIdTables = lst;
 
             // пусть будут все в нижнем регистре
             for (int i = 0; i < APPinfo.NoUpperBranch.Count; i++)
@@ -2032,10 +2186,11 @@ namespace SQLGen
             APPinfo.AddDatabase("172.29.3.254:5433", "userportaltest", "dev_userportal_pg", "TEST", true, false);
             APPinfo.AddDatabase("172.29.3.254:5433", "ac_mlo", "dev_acmlo_pg", "TEST", true, false);
             APPinfo.AddDatabase("172.29.3.254", "smptest3_integrms", "dev_smp2_pg", "TEST", false, false);
-            APPinfo.AddDatabase("172.29.3.254", "smptest3", "dev_smp2_pg", "TEST", true, true);
+            APPinfo.AddDatabase("172.29.3.254", "smptest3", "dev_smp2_pg", "TEST", true, false);
             APPinfo.AddDatabase("172.29.3.254:5433", "gar", "dev_gar_pg", "TEST", true, true);
             APPinfo.AddDatabase("172.29.3.254:5433", "proxy", "dev_proxy_pg", "TEST", true, true);
 
+            // релизные MS "старые"
             APPinfo.AddDatabase("172.29.3.254,1432", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254,1432", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254,1432", "log_service", "dev_logservice_ms", "RELEASE", false, true);
@@ -2043,6 +2198,47 @@ namespace SQLGen
             APPinfo.AddDatabase("172.29.3.254,1432", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254,1432", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
 
+            // релизные MS SP
+            APPinfo.AddDatabase("172.29.3.254,1461", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1461", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1461", "log_service", "dev_logservice_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1461", "php_log", "dev_phplog_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1461", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1461", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
+
+            // релизные MS HF
+            APPinfo.AddDatabase("172.29.3.254,1462", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1462", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1462", "log_service", "dev_logservice_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1462", "php_log", "dev_phplog_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1462", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1462", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
+
+            // релизные MS EHF_ACT
+            APPinfo.AddDatabase("172.29.3.254,1463", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1463", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1463", "log_service", "dev_logservice_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1463", "php_log", "dev_phplog_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1463", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1463", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
+
+            // релизные MS EHF_UNACT
+            APPinfo.AddDatabase("172.29.3.254,1464", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1464", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1464", "log_service", "dev_logservice_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1464", "php_log", "dev_phplog_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1464", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1464", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
+
+            // релизные MS LTS
+            APPinfo.AddDatabase("172.29.3.254,1465", "ProMedWebRelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1465", "promedwebufarelease", "dev_promed_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1465", "log_service", "dev_logservice_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1465", "php_log", "dev_phplog_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1465", "userportalrelease", "dev_userportal_ms", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254,1465", "ac_mlo", "dev_acmlo_ms", "RELEASE", false, true);
+
+            // релизные PG "старые"
             APPinfo.AddDatabase("172.29.3.254:5438", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254:5438", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254:5438", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
@@ -2053,6 +2249,81 @@ namespace SQLGen
             APPinfo.AddDatabase("172.29.3.254:5438", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254:5438", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
             APPinfo.AddDatabase("172.29.3.254:5438", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // релизные PG SP
+            APPinfo.AddDatabase("172.29.3.254:5461", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "php_log", "dev_phplog_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "promedrelease", "dev_promed_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "EMDrelease", "dev_emd_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "log_service", "dev_logservice_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5461", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // релизные PG HF
+            APPinfo.AddDatabase("172.29.3.254:5462", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "php_log", "dev_phplog_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "promedrelease", "dev_promed_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "EMDrelease", "dev_emd_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "log_service", "dev_logservice_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5462", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // релизные PG EHF_ACT
+            APPinfo.AddDatabase("172.29.3.254:5463", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "php_log", "dev_phplog_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "promedrelease", "dev_promed_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "EMDrelease", "dev_emd_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "log_service", "dev_logservice_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5463", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // релизные PG EHF_UNACT
+            APPinfo.AddDatabase("172.29.3.254:5464", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "php_log", "dev_phplog_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "promedrelease", "dev_promed_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "EMDrelease", "dev_emd_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "log_service", "dev_logservice_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5464", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // релизные PG LTS
+            APPinfo.AddDatabase("172.29.3.254:5465", "userportalrelease", "dev_userportal_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "lisrelease", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "lisrelease_ufa", "dev_lis_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "php_log", "dev_phplog_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "promedrelease", "dev_promed_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "EMDrelease", "dev_emd_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "log_service", "dev_logservice_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "ac_mlo", "dev_acmlo_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "smp2release", "dev_smp2_pg", "RELEASE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5465", "proxyrelease", "dev_proxy_pg", "RELEASE", false, true);
+
+            // прод MS Уфы
+            APPinfo.AddDatabase("10.62.17.10", "ProMedUfa", "dev_promed_ms", "PROD", false, false);
+            APPinfo.AddDatabase("10.62.17.11", "PromedUfaRegistry", "dev_promed_ms", "REESTR", false, false);
+            APPinfo.AddDatabase("10.62.17.41", "PromedUfaReport", "dev_promed_ms", "REPORT", false, false);
+            APPinfo.AddDatabase("10.62.17.23", "log_service", "dev_logservice_ms", "PROD", false, false);
+            APPinfo.AddDatabase("10.62.17.23", "php_log", "dev_phplog_ms", "PROD", false, false);
+            APPinfo.AddDatabase("10.62.17.23", "UserPortal", "dev_userportal_ms", "PROD", false, false);
+
+            // QA-Rel
+            APPinfo.AddDatabase("172.29.3.254:5532", "userportal", "dev_userportal_pg", "PRODLIKE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5532", "php_log", "dev_phplog_pg", "PRODLIKE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5532", "promed", "dev_promed_pg", "PRODLIKE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5532", "log_service", "dev_logservice_pg", "PRODLIKE", false, true);
+            APPinfo.AddDatabase("172.29.3.254:5533", "emd", "dev_emd_pg", "PRODLIKE", false, true);
 
             // удалим дубликаты
             APPinfo.DelDublicateDatabases();
@@ -2176,6 +2447,9 @@ namespace SQLGen
 
             // принудительно определяем url в Jira
             APPinfo.TaskUrlDefault = "https://jira.rtmis.ru/browse/";
+
+            // принудительно включаем кооперативный режим сборки версий
+            // APPinfo.TaskReleaseCooperative = "true";
         }
 
 
@@ -2217,6 +2491,12 @@ namespace SQLGen
                 {
                     App.AddLog("Приложение " + APPinfo.DirectoryEditor + " НЕ существует", null, App.ShowMessageMode.NONE, true, null);
                 }
+            }
+
+            App.AddLog("APPinfo.SqlGenReleasePath=" + APPinfo.SqlGenReleasePath, null, App.ShowMessageMode.NONE, true, null);
+            if (!Directory.Exists(MainWindow.APPinfo.SqlGenReleasePath))
+            {
+                App.AddLog("Каталог " + APPinfo.SqlGenReleasePath + " НЕ существует", null, App.ShowMessageMode.NONE, true, null);
             }
 
             foreach (DataRow row in Utilities.GITProjects.ListGITProjects.Rows)

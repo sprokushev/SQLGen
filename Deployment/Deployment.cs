@@ -1,18 +1,17 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
-using System.Data;
-using SQLGen.Utilities;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.IO;
-using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace SQLGen
 {
@@ -251,8 +250,8 @@ namespace SQLGen
             this.DBRegion = (deployment_dbregion ?? "").Trim();
             this.Position = (deployment_position ?? "").Trim();
             this.Type = (deployment_type ?? "").Trim();
-            this.script = (deployment_script ?? "").Trim();
-            this.file = (deployment_file ?? "").Trim();
+            this.script = (deployment_script ?? "").TrimStartAllSpace().TrimEndAllSpace();
+            this.file = (deployment_file ?? "").TrimStartAllSpace().TrimEndAllSpace();
             this.Database = (deployment_database ?? "").Trim();
             this.Stage = (deployment_stage ?? "").Trim();
             this.timeout = deployment_timeout;
@@ -296,6 +295,12 @@ namespace SQLGen
         }
 
         //--------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Страница из confluence
+        /// </summary>
+        [JsonIgnore]
+        public string Html;
 
         string _task;
         /// <summary>
@@ -491,8 +496,8 @@ namespace SQLGen
                 return new List<string> {
                     "liquibase - выполнить yml или sql через liquibase",
                     "upload_file - распаковать файлы из zip-архива во временную папку",
-                    "sql - выполнить SQL-команду",
-                    "restart_replica - перезапустить альтернативную репликацию"
+                    "restart_replica - перезапустить альтернативную репликацию",
+                    "sql - выполнить SQL-команду или что-то нестандартное"
                 };
             }
         }
@@ -565,7 +570,7 @@ namespace SQLGen
                 {
                     _script = null;
                 }
-
+                    
                 OnPropertyChanged(nameof(script));
                 OnPropertyChanged(nameof(script_file));
                 OnPropertyChanged(nameof(isScriptEnabled));
@@ -2329,13 +2334,7 @@ namespace SQLGen
                         if (isVersion)
                         {
                             // загружаем версию
-                            var json_version = JsonSerializer.Deserialize<DeploymentVersionLoad>(jsonString, new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                            var json_version = JsonSerializer.Deserialize<DeploymentVersionLoad>(jsonString, Other.VersionJSON);
 
                             if (json_version != null)
                             {
@@ -2354,24 +2353,12 @@ namespace SQLGen
                             if (isMulti)
                             {
                                 // загружаем задачу
-                                jsonlist_task = JsonSerializer.Deserialize<List<DeploymentToJson>>(jsonString, new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                                jsonlist_task = JsonSerializer.Deserialize<List<DeploymentToJson>>(jsonString, Other.TaskJSON);
                             }
                             else
                             {
                                 jsonlist_task = new List<DeploymentToJson>();
-                                jsonlist_task.Add(JsonSerializer.Deserialize<DeploymentToJson>(jsonString, new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                }));
+                                jsonlist_task.Add(JsonSerializer.Deserialize<DeploymentToJson>(jsonString, Other.TaskJSON));
                             }
                         }
                     }
@@ -2510,9 +2497,10 @@ namespace SQLGen
         /// <param name="destination_list">Итоговый список</param>
         /// <param name="BranchDefault">Принудительно изменить ветку в скриптах</param>
         /// <param name="logFile">лог-файл</param>
-        /// <param name="version">номер версии</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="prevversion">номер предыдущей версии с префиксом</param>
         /// <returns></returns>
-        public static string GenerateJSON(ObservableCollection<Deployment> destination_list, string BranchDefault, string logFile, string version)
+        public static string GenerateJSON(ObservableCollection<Deployment> destination_list, string BranchDefault, string logFile, string version, string prevversion)
         {
             string result = "";
 
@@ -2526,14 +2514,14 @@ namespace SQLGen
                 foreach (var item in destination_list
                     .Where(x =>
                         x.type == "liquibase" &&
-                        x.script.ToLower().StartsWith("https:") 
+                        (x.script??"").TrimStartAllSpace().TrimEndAllSpace().ToLower().StartsWith("https:") 
                     )
                 )
                 {
                     string project = item.GITProjectFromText;
                     if (!string.IsNullOrWhiteSpace(project))
                     {
-                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.script);
+                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.script, out string _urlbranch);
 
                         if (File.Exists(_filepath))
                         {
@@ -2555,7 +2543,7 @@ namespace SQLGen
                     string project = GetGITProjectByScript(item.when_failed_script); 
                     if (!string.IsNullOrWhiteSpace(project))
                     {
-                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_failed_script);
+                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_failed_script, out string _urlbranch);
 
                         if (File.Exists(_filepath))
                         {
@@ -2577,7 +2565,7 @@ namespace SQLGen
                     string project = GetGITProjectByScript(item.when_failed_script_after);
                     if (!string.IsNullOrWhiteSpace(project))
                     {
-                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_failed_script_after);
+                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_failed_script_after, out string _urlbranch);
 
                         if (File.Exists(_filepath))
                         {
@@ -2599,7 +2587,7 @@ namespace SQLGen
                     string project = GetGITProjectByScript(item.when_timeout_script);
                     if (!string.IsNullOrWhiteSpace(project))
                     {
-                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_timeout_script);
+                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_timeout_script, out string _urlbranch);
 
                         if (File.Exists(_filepath))
                         {
@@ -2621,7 +2609,7 @@ namespace SQLGen
                     string project = GetGITProjectByScript(item.when_timeout_script_after);
                     if (!string.IsNullOrWhiteSpace(project))
                     {
-                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_timeout_script_after);
+                        string _filepath = Utilities.GITProjects.ConvertUrlToFilepath(project, item.when_timeout_script_after, out string _urlbranch);
 
                         if (File.Exists(_filepath))
                         {
@@ -2666,15 +2654,10 @@ namespace SQLGen
                     {
                         var v = new DeploymentVersionSave();
                         v.version = version;
+                        v.prevversion = prevversion;
                         v.listdeployment = ListToJsonVersionSave;
 
-                        result = JsonSerializer.Serialize<DeploymentVersionSave>(v,
-                            new JsonSerializerOptions
-                            {
-                                IgnoreReadOnlyProperties = true,
-                                WriteIndented = true,
-                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                            });
+                        result = JsonSerializer.Serialize<DeploymentVersionSave>(v, Other.VersionJSON);
                     }
 
                     // сохраняем в задачу
@@ -2686,25 +2669,11 @@ namespace SQLGen
                     {
                         if (ListToJson.Count() == 1)
                         {
-                            result = JsonSerializer.Serialize<DeploymentToJson>(ListToJson.First(),
-                                new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                            result = JsonSerializer.Serialize<DeploymentToJson>(ListToJson.First(), Other.TaskJSON);
                         }
                         else
                         {
-                            result = JsonSerializer.Serialize<List<DeploymentToJson>>(ListToJson,
-                                new JsonSerializerOptions
-                                {
-                                    IgnoreReadOnlyProperties = true,
-                                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                                    WriteIndented = true,
-                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                                });
+                            result = JsonSerializer.Serialize<List<DeploymentToJson>>(ListToJson, Other.TaskJSON);
                         }
                     }
 
@@ -2730,10 +2699,44 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Найти по номеру json-файл версии
+        /// </summary>
+        /// <param name="project">проект</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="json_filepath">полный путь к найденному файлу</param>
+        /// <param name="logFile">лог-файл</param>
+        /// <returns>=true - файл найден</returns>
+        public static bool FindVersion(string project, string version, out string json_filepath, string logFile)
+        {
+            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
+            string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            string version_no_prefix = Release.GetNumVersion(prefix, version);
+            double numversion = Release.VerAsNum(version_no_prefix);
+            json_filepath = "";
+
+            // Ищем существующий файл в папке version по номеру версии
+            var files = Directory.GetFiles(path_ver, version + "*_deployment.json").ToList();
+            if (files == null) files = new List<string>(); //-V3022
+            foreach (var filepath in files)
+            {
+                if (numversion == Release.VerAsNum(Release.GetNumVersion(prefix, Path.GetFileName(filepath))))  //-V3024
+                {
+                    // нашли
+                    json_filepath = filepath;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Найти по номеру и загрузить json-файл версии
         /// </summary>
         /// <param name="project">проект</param>
-        /// <param name="version">номер версии</param>
+        /// <param name="version">номер версии с префиксом</param>
         /// <param name="destination_list">список действий</param>
         /// <param name="json_filepath">полный путь к найденному файлу</param>
         /// <param name="logFile">лог-файл</param>
@@ -2745,7 +2748,8 @@ namespace SQLGen
             string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
             string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
-            double numversion = Release.VerAsNum(version);
+            string version_no_prefix = Release.GetNumVersion(prefix, version);
+            double numversion = Release.VerAsNum(version_no_prefix);
             json_filepath = "";
             isFound = false;
             isError = false;
@@ -2765,27 +2769,113 @@ namespace SQLGen
                 return;
             }
 
-            // Ищем существующий файл в папке version по номеру версии
-            var files = Directory.GetFiles(path_ver, version + "*_deployment.json").ToList();
-            if (files == null) files = new List<string>(); //-V3022
-            foreach (var filepath in files)
-            {
-                if (numversion == Release.VerAsNum(Release.GetNumVersion(prefix, Path.GetFileName(filepath))))  //-V3024
-                {
-                    // нашли
-                    json_filepath = filepath;
-                    string file = Path.GetFileName(json_filepath);
-                    isFound = true;
+            // Ищем существующий файл в папке version по номеру версии с префиксом
+            isFound = FindVersion(project, version, out json_filepath, logFile);
 
-                    // загружаем json-файл версии
-                    isError = !Deployment.LoadJSON(dbregion_ver, destination_list, json_filepath, logFile, true, true);
+            if (isFound) 
+            {
+                // загружаем json-файл версии
+                isError = !Deployment.LoadJSON(dbregion_ver, destination_list, json_filepath, logFile, true, true);
+            }
+        }
+
+        /// <summary>
+        /// Обновить в json-файл номер предыдущей версии
+        /// </summary>
+        /// <param name="project">проект</param>
+        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="prevversion">номер предыдущей версии с префиксом</param>
+        /// <param name="json_filepath">полный путь к найденному файлу</param>
+        /// <param name="logFile">лог-файл</param>
+        /// <param name="isError">=true - файл не загружен, т.к. при загрузке была ошибка</param>
+        /// <returns></returns>
+        public static void SetPrevVersion(string project, string version, string prevversion, string json_filepath, string logFile, out bool isError)
+        {
+            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
+            string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, version));
+            isError = false;
+
+            if (
+                string.IsNullOrWhiteSpace(json_filepath) ||
+                !File.Exists(json_filepath)
+            )
+            {
+                App.AddLog($"Файл {json_filepath} не существует", null, App.ShowMessageMode.SHOW, true, logFile);
+
+                isError = true;
+                return;
+            }
+
+            string dbregion_ver = "";
+            if (!string.IsNullOrWhiteSpace(GITProjects.GetProjectDeployment("MS SQL", project)))
+            {
+                dbregion_ver = "MS SQL";
+            }
+            else if (!string.IsNullOrWhiteSpace(GITProjects.GetProjectDeployment("PG SQL", project)))
+            {
+                dbregion_ver = "PG SQL";
+            }
+            else
+            {
+                isError = true;
+                return;
+            }
+
+            // загружаем json-файл
+            DeploymentVersionLoad json_version = null;
+            try
+            {
+                string jsonString = File.ReadAllText(json_filepath);
+
+                if (!string.IsNullOrWhiteSpace(jsonString))
+                {
+                    // загружаем версию
+                    json_version = JsonSerializer.Deserialize<DeploymentVersionLoad>(jsonString, Other.VersionJSON);
+                }
+            }
+            catch (Exception ex)
+            {
+                App.AddLog($"Ошибка загрузки файла {json_filepath} :", ex, App.ShowMessageMode.SHOW, true, logFile);
+                isError = true;
+
+                return;
+            }
+
+            if (
+                json_version.listdeployment != null &&
+                json_version.listdeployment.Count > 0
+             )
+            {
+                var new_list = new ObservableCollection<Deployment>();
+
+                // перебираем загруженный список
+                foreach (var old_item in json_version.listdeployment)
+                {
+                    var new_item = old_item.ToDeployment(dbregion_ver);
+                    new_list.Add(new_item);
+                }
+
+                // сгенерировать текст json-файла
+                string jsonString = Deployment.GenerateJSON(new_list, version, logFile, version, prevversion);
+
+                // сохранить json-файл
+                try
+                {
+                    Utilities.Files.WriteScript(json_filepath, null, jsonString, false, out string err, FileMode.Create);
+                }
+
+                catch (Exception ex)
+                {
+                    App.AddLog(null, ex, App.ShowMessageMode.SHOW, true, logFile);
+                    isError = true;
 
                     return;
                 }
             }
-
-            return;
         }
+
     }
     
     /// <summary>
@@ -3158,9 +3248,14 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// номер версии
+        /// номер версии с префиксом
         /// </summary>
-        public string version { get; set; } 
+        public string version { get; set; }
+
+        /// <summary>
+        /// номер предыдущей версии с префиксом
+        /// </summary>
+        public string prevversion { get; set; }
 
         /// <summary>
         /// список действий при обновлении версии
@@ -3182,9 +3277,14 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// номер версии
+        /// номер версии с префиксом
         /// </summary>
         public string version { get; set; }
+
+        /// <summary>
+        /// номер предыдущей версии с префиксом
+        /// </summary>
+        public string prevversion { get; set; }
 
         /// <summary>
         /// список действий при обновлении версии

@@ -1467,12 +1467,7 @@ namespace SQLGen
             {
                 if (txtRegion == "0")
                 {
-                    if (this.isPromed)
-                    {
-                        result +=
-                            Environment.NewLine + $"IF (dbo.getregion() = {region_id} OR dbo.GetDBType() = 'db_test')";
-                    }
-                    else if (this.isLIS)
+                    if (this.isPromed || this.isLIS)
                     {
                         result +=
                             Environment.NewLine + $"IF (dbo.getregion() = {region_id} OR db_name() IN ({this.ListTestReleaseDB_forRegionalCheck}))";
@@ -1550,12 +1545,7 @@ namespace SQLGen
                 }
                 else
                 {
-                    if (this.isPromed)
-                    {
-                        result +=
-                            Environment.NewLine + $"IF (dbo.getregion() = {txtRegion} OR dbo.GetDBType() = 'db_test')";
-                    }
-                    else if (this.isLIS)
+                    if (this.isPromed || this.isLIS)
                     {
                         result +=
                             Environment.NewLine + $"IF (dbo.getregion() = {txtRegion} OR db_name() IN ({this.ListTestReleaseDB_forRegionalCheck}))";
@@ -1579,12 +1569,7 @@ namespace SQLGen
             {
                 if (txtRegion == "0")
                 {
-                    if (this.isPromed)
-                    {
-                        result +=
-                            Environment.NewLine + $"IF (dbo.getregion() = {region_id} OR dbo.GetDBType() = 'db_test')";
-                    }
-                    else if (this.isLIS)
+                    if (this.isPromed || this.isLIS)
                     {
                         result +=
                             Environment.NewLine + $"IF (dbo.getregion() = {region_id} OR current_database() IN ({this.ListTestReleaseDB_forRegionalCheck}))";
@@ -1662,12 +1647,7 @@ namespace SQLGen
                 }
                 else
                 {
-                    if (this.isPromed)
-                    {
-                        result +=
-                            Environment.NewLine + $"IF (dbo.getregion() = {txtRegion} OR dbo.GetDBType() = 'db_test')";
-                    }
-                    else if (this.isLIS)
+                    if (this.isPromed || this.isLIS)
                     {
                         result +=
                             Environment.NewLine + $"IF (dbo.getregion() = {txtRegion} OR current_database() IN ({this.ListTestReleaseDB_forRegionalCheck}))";
@@ -2826,7 +2806,7 @@ namespace SQLGen
                     {
                         sb.Append(Environment.NewLine + "UPDATE stg.LocalDBList WITH (rowlock)");
                         sb.Append(Environment.NewLine + "SET LocalDbList_updDT = CURRENT_TIMESTAMP");
-                        sb.Append(Environment.NewLine + "-- SELECT* FROM stg.LocalDbList");
+                        sb.Append(Environment.NewLine + "-- SELECT * FROM stg.LocalDbList");
                         sb.Append(Environment.NewLine + $"WHERE LocalDbList_name = '{localdblist_name}'");
                         sb.Append(Environment.NewLine + $"AND LocalDbList_schema = '{sch}'");
                         sb.Append(Environment.NewLine + $"AND LocalDbList_module = 'promed'");
@@ -2837,7 +2817,7 @@ namespace SQLGen
                     {
                         sb.Append(Environment.NewLine + "UPDATE stg.LocalDBList");
                         sb.Append(Environment.NewLine + "SET LocalDbList_updDT = localtimestamp");
-                        sb.Append(Environment.NewLine + "-- SELECT* FROM stg.LocalDbList");
+                        sb.Append(Environment.NewLine + "-- SELECT * FROM stg.LocalDbList");
                         sb.Append(Environment.NewLine + $"WHERE LocalDbList_name ilike '{localdblist_name}'");
                         sb.Append(Environment.NewLine + $"AND LocalDbList_schema ilike '{sch}'");
                         sb.Append(Environment.NewLine + $"AND LocalDbList_module = 'promed';");

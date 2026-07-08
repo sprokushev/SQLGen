@@ -305,8 +305,8 @@ rem ---------------------------------------------------------------------
 
 :finish
 rem в переменной %BRANCH% возвращаем текущую ветку
-echo timeout /t 3 /nobreak
-timeout /t 3 /nobreak >nul
+rem echo timeout /t 3 /nobreak
+rem timeout /t 3 /nobreak >nul
 if NOT .%GIT%. EQU .. for /f "delims=" %%a in ('%GITEXE% -C %GIT% rev-parse --abbrev-ref HEAD') do set "BRANCH=%%a"
 
 rem Если текущая ветка отличается - выдаем ошибку

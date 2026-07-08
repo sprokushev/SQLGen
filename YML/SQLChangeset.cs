@@ -608,7 +608,7 @@ namespace SQLGen
 
             if (
                 (lines != null) &&
-                (lines.Length > 0)
+                (lines.LongLength > 0)
             )
             {
                 for (long i = 0; i < lines.LongLength; i++)
@@ -752,9 +752,9 @@ namespace SQLGen
         /// <param name="Filename">Файл</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
         /// <param name="isAddVersion">=true - добавить номер версии к имени changeset</param>
-        /// <param name="Version">номер версии</param>
+        /// <param name="version_no_prefix">номер версии БЕЗ префикса</param>
         /// <returns></returns>
-        public static void ImproveSQLinVersion(string ScriptType, string DBType, string Filename, string logFile, bool isAddVersion, string Version)
+        public static void ImproveSQLinVersion(string ScriptType, string DBType, string Filename, string logFile, bool isAddVersion, string version_no_prefix)
         {
             if (!MainWindow.APPinfo.isImproveSQLinVersion) return;
 
@@ -821,7 +821,7 @@ namespace SQLGen
                             if (!Tags.ContainsKey("labels") || isAddVersion)
                             {
                                 // пересоберем строку changeset, в т.ч. добавится labels
-                                changeset = YML.MakeChangeset(changeset, false, false, ScriptType, DBType, isAddVersion, Version);
+                                changeset = YML.MakeChangeset(changeset, false, false, ScriptType, DBType, isAddVersion, version_no_prefix);
 
                                 // заменим строку changeset
                                 Text =

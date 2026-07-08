@@ -1,11 +1,12 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
-using SQLGen.Utilities;
 
 namespace SQLGen
 {
@@ -118,7 +119,8 @@ ORDER BY schemaname, procname
 DROP TABLE IF EXISTS tmp_sqlgen_proc;
 
 CREATE TEMP TABLE IF NOT EXISTS tmp_sqlgen_proc ON COMMIT DROP AS
-SELECT
+WITH cte AS (
+select
 	case 
 		when p.prokind='f' then 'FUNCTION'
 		when p.prokind='p' then 'PROCEDURE'
@@ -126,17 +128,26 @@ SELECT
 	end as proctype,
 	n.nspname as schemaname, 
 	p.proname as procname, 
-	case 
-		when p.prosrc iLIKE '%autogen%' then 'AUTOGEN'
-		else ''
-	end as autogen,
-	pg_get_functiondef(p.oid) as proctext
+	pg_get_functiondef(p.oid) as proctext,
+	obj_description(p.oid, 'pg_proc') as description
 from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 WHERE n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
 AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
-AND exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'));
+AND exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
+)
+SELECT
+	proctype,
+	schemaname, 
+	procname, 
+	case 
+		when proctext iLIKE '%autoge%' then 'AUTOGEN'
+		when description iLIKE '%autoge%' then 'AUTOGEN'
+		else ''
+	end as autogen,
+	proctext
+from cte;
 
 SELECT * 
 FROM tmp_sqlgen_proc 
@@ -197,49 +208,42 @@ ORDER BY s.name, sv.name
 DROP TABLE IF EXISTS tmp_sqlgen_view;
 
 CREATE TEMP TABLE IF NOT EXISTS tmp_sqlgen_view ON COMMIT DROP AS
-SELECT distinct
+WITH cte AS (
+select 
 	'VIEW' as viewtype,
 	schemaname, 
 	viewname, 
-	case 
-        when strpos(lower(comments.description), 'autogen') > 0 OR strpos(lower(comments.description), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as autogen,
-	definition as viewtext
+	definition as viewtext,
+	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname)), 'pg_class') as description
 from pg_views
-left join lateral (
-    SELECT
-        obj_description as description
-    FROM obj_description(
-        to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname))
-    )
-) comments on true
 WHERE schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
 AND schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 
 union
 
-select distinct
-    'MATERIALIZED VIEW' as viewtype,
-    schemaname,
-    matviewname as viewname,
-    case 
-        when strpos(lower(comments.description), 'autogen') > 0 OR strpos(lower(comments.description), 'autoge') > 0 then 'AUTOGEN'
-        else ''
-    end as autogen,
-    definition as viewtext
+select
+	'MATERIALIZED VIEW' as viewtype,
+	schemaname,
+	matviewname as viewname,
+	definition as viewtext,
+	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname)), 'pg_class') as description
 from pg_matviews 
-left join lateral (
-    SELECT
-        obj_description as description
-    FROM obj_description(
-        to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname))
-    )
-) comments on true
 where schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
+)
+
+SELECT
+	viewtype,
+	schemaname, 
+	viewname, 
+	case 
+		when description iLIKE '%autoge%' then 'AUTOGEN'
+		else ''
+	end as autogen,
+	viewtext
+from cte
 ;
 
 SELECT * 
@@ -548,35 +552,26 @@ limit 1000
         /// <summary>Сохранить список поисковых запросов</summary>
         public static void SaveSearches()
         {
-            var options = new JsonSerializerOptions
-            {
-                IgnoreReadOnlyProperties = true,
-                WriteIndented = true
-            };
-
             string filename = Path.Combine(App.AppPath, "ListSearches.json");
             string jsonString = "";
 
             Utilities.Files.BackupFile(filename);
 
-            if (!string.IsNullOrWhiteSpace(filename)) //-V3022
+            try
             {
-                try
+                var list = new List<SearchInfo>();
+                foreach (var conn in ListSearches)
                 {
-                    var list = new List<SearchInfo>();
-                    foreach (var conn in ListSearches)
-                    {
-                        var item = conn.Copy();
-                        list.Add(item);
-                    }
+                    var item = conn.Copy();
+                    list.Add(item);
+                }
 
-                    jsonString = JsonSerializer.Serialize<List<SearchInfo>>(list, options);
-                    File.WriteAllText(filename, jsonString);
-                }
-                catch (Exception ex)
-                {
-                    App.AddLog("", ex, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
-                }
+                jsonString = JsonSerializer.Serialize<List<SearchInfo>>(list, Other.OptionsJSON);
+                File.WriteAllText(filename, jsonString);
+            }
+            catch (Exception ex)
+            {
+                App.AddLog("", ex, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
             }
         }
 

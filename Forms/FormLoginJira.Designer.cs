@@ -42,9 +42,10 @@ namespace SQLGen
             // 
             // btConnect
             // 
-            this.btConnect.Location = new System.Drawing.Point(57, 109);
+            this.btConnect.Location = new System.Drawing.Point(76, 134);
+            this.btConnect.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btConnect.Name = "btConnect";
-            this.btConnect.Size = new System.Drawing.Size(142, 30);
+            this.btConnect.Size = new System.Drawing.Size(189, 37);
             this.btConnect.TabIndex = 21;
             this.btConnect.Text = "Подключиться";
             this.btConnect.UseVisualStyleBackColor = true;
@@ -52,43 +53,48 @@ namespace SQLGen
             // 
             // tbPassword
             // 
-            this.tbPassword.Location = new System.Drawing.Point(144, 43);
+            this.tbPassword.Location = new System.Drawing.Point(192, 53);
+            this.tbPassword.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tbPassword.Name = "tbPassword";
             this.tbPassword.PasswordChar = '*';
-            this.tbPassword.Size = new System.Drawing.Size(294, 20);
+            this.tbPassword.Size = new System.Drawing.Size(391, 22);
             this.tbPassword.TabIndex = 20;
             // 
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(24, 47);
+            this.label8.Location = new System.Drawing.Point(32, 58);
+            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(48, 13);
+            this.label8.Size = new System.Drawing.Size(59, 16);
             this.label8.TabIndex = 19;
             this.label8.Text = "Пароль:";
             // 
             // tbUsername
             // 
-            this.tbUsername.Location = new System.Drawing.Point(144, 12);
+            this.tbUsername.Location = new System.Drawing.Point(192, 15);
+            this.tbUsername.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tbUsername.Name = "tbUsername";
-            this.tbUsername.Size = new System.Drawing.Size(294, 20);
+            this.tbUsername.Size = new System.Drawing.Size(391, 22);
             this.tbUsername.TabIndex = 18;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(24, 14);
+            this.label7.Location = new System.Drawing.Point(32, 17);
+            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(83, 13);
+            this.label7.Size = new System.Drawing.Size(105, 16);
             this.label7.TabIndex = 17;
             this.label7.Text = "Пользователь:";
             // 
             // cbSavePassword
             // 
             this.cbSavePassword.AutoSize = true;
-            this.cbSavePassword.Location = new System.Drawing.Point(144, 69);
+            this.cbSavePassword.Location = new System.Drawing.Point(192, 85);
+            this.cbSavePassword.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.cbSavePassword.Name = "cbSavePassword";
-            this.cbSavePassword.Size = new System.Drawing.Size(118, 17);
+            this.cbSavePassword.Size = new System.Drawing.Size(148, 20);
             this.cbSavePassword.TabIndex = 22;
             this.cbSavePassword.Text = "Сохранить пароль";
             this.cbSavePassword.UseVisualStyleBackColor = true;
@@ -96,9 +102,10 @@ namespace SQLGen
             // btCancel
             // 
             this.btCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btCancel.Location = new System.Drawing.Point(262, 109);
+            this.btCancel.Location = new System.Drawing.Point(349, 134);
+            this.btCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btCancel.Name = "btCancel";
-            this.btCancel.Size = new System.Drawing.Size(141, 30);
+            this.btCancel.Size = new System.Drawing.Size(188, 37);
             this.btCancel.TabIndex = 21;
             this.btCancel.Text = "Отмена";
             this.btCancel.UseVisualStyleBackColor = true;
@@ -107,10 +114,10 @@ namespace SQLGen
             // FormLoginJira
             // 
             this.AcceptButton = this.btConnect;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btCancel;
-            this.ClientSize = new System.Drawing.Size(491, 166);
+            this.ClientSize = new System.Drawing.Size(655, 204);
             this.Controls.Add(this.cbSavePassword);
             this.Controls.Add(this.tbPassword);
             this.Controls.Add(this.btCancel);
@@ -118,9 +125,10 @@ namespace SQLGen
             this.Controls.Add(this.label8);
             this.Controls.Add(this.tbUsername);
             this.Controls.Add(this.label7);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "FormLoginJira";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Login в Jira";
+            this.Text = "Login";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormLoginJira_FormClosed);
             this.Shown += new System.EventHandler(this.FormLoginJira_Shown);
             this.ResumeLayout(false);

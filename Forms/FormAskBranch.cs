@@ -40,8 +40,9 @@ namespace SQLGen
         /// </summary>
         /// <param name="projectDefault">проект по умолчанию</param>
         /// <param name="branchDefault">ветка по умолчанию</param>
+        /// <param name="info">дополнительная информация</param>
         /// <param name="logFile">лог-файл</param>
-        public FormAskBranch(string projectDefault, string branchDefault, string logFile)
+        public FormAskBranch(string projectDefault, string branchDefault, string info, string logFile)
         {
             InitializeComponent();
 
@@ -96,6 +97,20 @@ namespace SQLGen
             else
             {
                 btTask.Text = Branch + " (по умолчанию)";
+            }
+
+            if (!string.IsNullOrWhiteSpace(ProjectDefault))
+            {
+                this.Text = $"Выбрать ветку в {ProjectDefault}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(info))
+            {
+                this.lbInfo.Text = info;
+            }
+            else
+            {
+                this.lbInfo.Text = "";
             }
 
             // пользовательские настройки GUI

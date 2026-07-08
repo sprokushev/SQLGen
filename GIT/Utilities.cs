@@ -42,6 +42,8 @@ namespace SQLGen.Utilities
             { "bulk", "DATA" },
             { "copy", "DATA" },
             { "data", "DATA" },
+            { "freedocmarker", "freedocmarker" },
+            { "freedocrelationship", "freedocrelationship" },
             { "view", "VIEW" },
             { "proc", "PROCEDURE" },
             { "procedure", "PROCEDURE" },
@@ -110,6 +112,10 @@ namespace SQLGen.Utilities
                 (columnfilter != "LuquibotAliasEHFUnActUfa") &&
                 (columnfilter != "LuquibotAliasLTS") &&
                 (columnfilter != "LuquibotAliasLTSUfa") &&
+                (columnfilter != "LuquibotAliasQARel") &&
+                (columnfilter != "LuquibotAliasQARelUfa") &&
+                (columnfilter != "LuquibotAliasQA") &&
+                (columnfilter != "LuquibotAliasQAUfa") &&
                 (columnfilter != "ProjectDeploymentMS") &&
                 (columnfilter != "ProjectDeploymentPG") &&
                 (columnfilter != "ProjectCronMS") &&
@@ -159,6 +165,10 @@ namespace SQLGen.Utilities
                 (columnresult != "LuquibotAliasEHFUnActUfa") &&
                 (columnresult != "LuquibotAliasLTS") &&
                 (columnresult != "LuquibotAliasLTSUfa") &&
+                (columnresult != "LuquibotAliasQARel") &&
+                (columnresult != "LuquibotAliasQARelUfa") &&
+                (columnresult != "LuquibotAliasQA") &&
+                (columnresult != "LuquibotAliasQAUfa") &&
                 (columnresult != "ProjectDeploymentMS") &&
                 (columnresult != "ProjectDeploymentPG") &&
                 (columnresult != "ProjectCronMS") &&
@@ -372,6 +382,7 @@ namespace SQLGen.Utilities
         public static string ConvertFilepathToUrl(string project, string filepath, string branch, string logFile)
         {
             string result = "";
+            filepath = (filepath ?? "").TrimStartAllSpace().TrimEndAllSpace();
 
             // путь к локальной папке проекта
             string folder = Utilities.GITProjects.GetFolderByProject(project);
@@ -417,18 +428,33 @@ namespace SQLGen.Utilities
         /// </summary>
         /// <param name="project">проект GIT</param>
         /// <param name="url">url в web-репозитории</param>
+        /// <param name="branch">ветка из url</param>
+        /// <param name="isFullPath">=true - вернуть полный путь</param>
         /// <returns></returns>
-        public static string ConvertUrlToFilepath(string project, string url)
+        public static string ConvertUrlToFilepath(string project, string url, out string branch, bool isFullPath = true)
         {
             string result = "";
+            branch = "";
+
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return result;
+            }
 
             // костыль
-            url = url.Replace("//blob/", "/-/blob/");
-            url = url.Replace("//tree/", "/-/tree/");
+            url = (url??"").Replace("//blob/", "/-/blob/").TrimStartAllSpace().TrimEndAllSpace();
+            url = url.Replace("//tree/", "/-/tree/").TrimStartAllSpace().TrimEndAllSpace();
 
             // url проекта, без имени ветки
             string baseurl = GetURLByProject(project);
-            baseurl = baseurl.Replace("%BRANCH%/", "");
+            if (IsGITProject(project))
+            {
+                baseurl = baseurl.Replace("/release/", "/");
+            }
+            else
+            {
+                baseurl = baseurl.Replace("%BRANCH%/", "");
+            }
 
             // путь к локальной папке проекта
             string folder = Utilities.GITProjects.GetFolderByProject(project);
@@ -443,13 +469,30 @@ namespace SQLGen.Utilities
 
                 // убираем имя ветки
                 var arr = url.Split(Path.DirectorySeparatorChar);
+
+                // получаем ветку
+                if (arr.Length > 0) //-V3022
+                {
+                    branch = arr[0];
+                }
+
+                // собираем путь к файлу внутри проекта
                 url = "";
                 for (int i = 1; i < arr.Length; i++)
                 {
                     url = url + Path.DirectorySeparatorChar + arr[i];
                 }
 
-                result = folder + url;
+                if (isFullPath)
+                {
+                    result = folder + url;
+                }
+                else
+                {
+                    result = url
+                        .Replace(Path.DirectorySeparatorChar, '/')
+                        .TrimStart('/');
+                }
             }
 
             return result;
@@ -467,6 +510,52 @@ namespace SQLGen.Utilities
             if (IsGITProject(project)) return GITProjectsParam("GITProject", project, "PrefixFileRelease").ToLower();
             if (IsDEVProject(project)) return GITProjectsParam("DEVProject", project, "PrefixFileRelease").ToLower();
             return "";
+        }
+
+        /// <summary>
+        /// Вернуть url к странице Deployment Plan в confluence
+        /// </summary>
+        /// <param name="version">версия с префиксом</param>
+        /// <param name="prefix_or_project">префикс версии или проект</param>
+        /// <returns></returns>
+        public static string GetURLDeploymentPlan(string version, string prefix_or_project = "")
+        {
+            string result = "";
+
+            if (string.IsNullOrWhiteSpace(version)) return result;
+
+            if (string.IsNullOrWhiteSpace(prefix_or_project))
+            {
+                prefix_or_project = version;
+            }
+
+            prefix_or_project = prefix_or_project.TrimAllSpace();
+            version = version.TrimAllSpace();
+
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(prefix_or_project);
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                prefix = prefix_or_project.Split('.')[0];
+            }
+
+            if (prefix.StartsWith("smp"))
+            {
+                result = $"https://confluence.rtmis.ru/display/RMISRELEASES/SMP-DeploymentPlan-{version}";
+            }
+            else if (prefix.StartsWith("bi"))
+            {
+                result = $"https://confluence.rtmis.ru/display/RMISRELEASES/BI-DeploymentPlan-{version}";
+            }
+            else if (prefix.StartsWith("rpms"))
+            {
+                result = $"https://confluence.rtmis.ru/display/RMISRELEASES/UserPortal-DeploymentPlan-{version}";
+            }
+            else
+            {
+                result = $"https://confluence.rtmis.ru/display/RMISRELEASES/PROMED-DeploymentPlan-{version}";
+            }
+
+            return result;
         }
 
          /// <summary>
@@ -671,6 +760,33 @@ namespace SQLGen.Utilities
         }
 
         /// <summary>
+        /// Вернуть DBRegion, если это проект для хранения cron
+        /// </summary>
+        /// <param name="project"></param>
+        /// <returns></returns>
+        public static string GetDBRegionCron(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project)) return "";
+
+            string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+            if (string.IsNullOrWhiteSpace(prefix)) return "";
+
+            string projectMS = Utilities.GITProjects.GetProjectCron("MS SQL", prefix);
+            string projectPG = Utilities.GITProjects.GetProjectCron("PG SQL", prefix);
+
+            if (project == projectMS)
+            {
+                return "MS SQL";
+            }
+            else if (project == projectPG)
+            {
+                return "PG SQL";
+            }
+
+            return "";
+        }
+
+        /// <summary>
         /// Вернуть постфикс версии для проекта GIT
         /// </summary>
         /// <param name="project">проект GIT</param>
@@ -742,18 +858,104 @@ namespace SQLGen.Utilities
         }
 
         /// <summary>
-        /// Вернуть алиас бота для проекта GIT
+        /// Вернуть алиасы бота для проекта GIT и типа стенда
         /// </summary>
         /// <param name="project">проект GIT</param>
-        /// <param name="type">тип алиаса</param>
+        /// <param name="stand">тип стенда</param>
         /// <returns></returns>
-        public static string GetLuquibotAliasByProject(string project, string type)
+        public static List<string> GetLuquibotAliasByProject(string project, string stand)
         {
-            if (string.IsNullOrWhiteSpace(project)) return "";
+            var result = new List<string>();
 
-            if (IsGITProject(project)) return GITProjectsParam("GITProject", project, type);
-            if (IsDEVProject(project)) return GITProjectsParam("DEVProject", project, type);
-            return "";
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return result;
+            }
+
+            if (string.IsNullOrWhiteSpace(stand))
+            {
+                return result;
+            }
+            string original_project = project;
+
+            if (IsGITProject(project))
+            {
+                project = GetDEVProject(project);
+            }
+
+            stand = stand.ToUpper();
+
+            string alias = "";
+            string alias_ufa = "";
+
+            if (stand == "RELEASE")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasOld");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasOldUfa");
+            }
+            else if (stand == "SP")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasSP");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasSPUfa");
+            }
+            else if (stand == "HF")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasHF");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasHFUfa");
+            }
+            else if (stand == "EHF_ACT")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFAct");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFActUfa");
+            }
+            else if (stand == "EHF_UNACT")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnAct");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnActUfa");
+            }
+            else if (stand == "LTS")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasLTS");
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasLTSUfa");
+            }
+            else if (stand == "QA-REL")
+            {
+                if (original_project == "liquibase_project_new")
+                {
+                    alias = "qa_rel_promed";
+                    alias_ufa = "";
+                }
+                else
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQARel");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQARelUfa");
+                }
+            }
+            else if (stand == "QA")
+            {
+                if (original_project == "liquibase_project_new")
+                {
+                    alias = "qa_promed_oldrep";
+                    alias_ufa = "";
+                }
+                else
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQA");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQAUfa");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(alias))
+            {
+                result.Add(alias);
+            }
+
+            if (!string.IsNullOrWhiteSpace(alias_ufa))
+            {
+                result.Add(alias_ufa);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -1613,9 +1815,11 @@ namespace SQLGen.Utilities
         /// <param name="cmd">cmd-файл для получения списка веток</param>
         /// <param name="logFile">полный путь к лог-файлу. Если не указан, значит в App.AppLogFile</param>
         /// <param name="isFetchAll">=true - выполнить git fetch --all</param>
-        public static List<string> GitListBranches(string project, string cmd, string logFile, bool isFetchAll)
+        /// <param name="max_version">номер последней существующей версии</param>
+        public static List<string> GitListBranches(string project, string cmd, string logFile, bool isFetchAll, out double max_version)
         {
             List<string> result = new List<string>();
+            max_version = 0;
 
             if (string.IsNullOrWhiteSpace(cmd))
             {
@@ -1701,10 +1905,28 @@ namespace SQLGen.Utilities
                     }
 
                     if (
+                        prefix == "rpms" &&
+                        (
+                            branch == "rpms.9.1.0" ||
+                            branch == "rpms.9.18.0" ||
+                            branch == "rpms.9.20.0"
+                        )
+                    )
+                    {
+                        branch = "";
+                    }
+
+                    if (
                         !string.IsNullOrWhiteSpace(branch) &&
                         !result.Contains(branch)
                     )
                     {
+                        double n = Release.VerAsNum(branch);
+                        if (n > max_version)
+                        {
+                            max_version = n;
+                        }
+
                         result.Add(branch);
                     }
                 }
@@ -1775,27 +1997,51 @@ namespace SQLGen.Utilities
 
                 App.AddLog($"Результат: {listbranches}", null, App.ShowMessageMode.NONE, true, logFile);
 
+                double max_d = 0;
+                string max_s = "";
+
                 foreach (var item in listbranches.Split('|'))
                 {
-                    string txt = item.Replace("*", "").Trim().Split(' ')[0];
+                    string txt = item
+                        .Replace("*", "")
+                        .Replace("_", " ")
+                        .Trim()
+                        .Split(' ')[0];
 
                     if (txt.StartsWith("origin/"))
                     {
                         txt = txt.Substring(7).Trim();
                     }
 
-                    if (project == "dev_userportal_pg" && txt == "rpms.9.20.0")
+                    if (txt.StartsWith("version/"))
+                    {
+                        txt = txt.Substring(8).Trim();
+                    }
+
+                    if (
+                        project == "dev_userportal_pg" && txt == "rpms.9.1.0" ||
+                        project == "dev_userportal_pg" && txt == "rpms.9.20.0" ||
+                        project == "dev_userportal_pg" && txt == "rpms.9.18.0"
+                    )
                     {
                         // игнорируем неправильную ветку
                         continue;
                     }
 
-
                     if (!string.IsNullOrWhiteSpace(txt))
                     {
-                        result = txt;
-                        break;
+                        double n = Release.VerAsNum(txt);
+                        if (n > max_d)
+                        {
+                            max_d = n;
+                            max_s = txt;
+                        }
                     }
+                }
+
+                if (max_d > 0)
+                {
+                    result = max_s;
                 }
             }
 
@@ -2142,7 +2388,8 @@ namespace SQLGen.Utilities
         /// <param name="isNoMergeRequest">Вместо MergeRequest используем push</param>
         /// <param name="isWait">=true ждать завершение</param>
         /// <param name="logFile">полный путь к лог-файлу. Если не указан, значит в App.AppLogFile</param>
-        public static void GitAdd(string[] projects, string BranchName, bool isNoMergeRequest, bool isWait, string logFile)
+        /// <param name="isNoPush">=true - НЕ выполнять push</param>
+        public static void GitAdd(string[] projects, string BranchName, bool isNoMergeRequest, bool isWait, string logFile, bool isNoPush = false)
         {
             if (projects == null) return;
             if (projects.Length == 0) return;
@@ -2244,10 +2491,16 @@ namespace SQLGen.Utilities
                                 nomr = "NOMERGEREQUEST";
                             }
 
+                            string nopush = "";
+                            if (isNoPush)
+                            {
+                                nopush = "NOPUSH";
+                            }
+
                             WinExecute.AddCommand(
                                 App.AppPath,
                                 Path.Combine(App.AppPath, "git_add.cmd"),
-                                folder + " " + BranchName + " " + noupper + " " + nomr
+                                folder + " " + BranchName + " " + noupper + " " + nomr + " " + nopush
                             );
                         }
                     }
@@ -2460,7 +2713,7 @@ namespace SQLGen.Utilities
                             Utilities.GITProjects.GetFolderByProject(project),
                             path
                         ),
-                        file, out fs, out FileMode fileMode, false, isForceSave);
+                        file, true, out fs, out FileMode fileMode, false, isForceSave);
 
                     //сохранить файл
                     if (fs != null)
@@ -2496,8 +2749,9 @@ namespace SQLGen.Utilities
         /// <param name="logFile">лог-файл</param>
         /// <param name="isGitRefresh">=true - выполнить git-refresh.sh</param>
         /// <param name="isForcedGitRefresh">=true - выполнять принудительно git-refresh.sh, =false - выполнять git-refresh.sh только если после предыдущего вызова прошло MainWindow.APPinfo.GitRefreshDelay минут</param>
+        /// <param name="info">причина выбора ветки</param>
         /// <returns></returns>
-        public static bool SelectGITBranch(string project, string BranchDefault, out string branch, string logFile, bool isGitRefresh, bool isForcedGitRefresh)
+        public static bool SelectGITBranch(string project, string BranchDefault, out string branch, string logFile, bool isGitRefresh, bool isForcedGitRefresh, string info)
         {
             branch = "";
 
@@ -2521,13 +2775,13 @@ namespace SQLGen.Utilities
                 if (Utilities.GITProjects.IsDEVProject(project))
                 {
                     // выбрать ветку (в новых проектах)
-                    FormAskBranch dlg2 = new FormAskBranch(project, BranchDefault, logFile);
+                    FormAskBranch dlg2 = new FormAskBranch(project, BranchDefault, info, logFile);
 
                     // существует ли ветка по умолчанию
                     bool isBranchDefaultFound = false;
 
                     // Заполнить ListBranches
-                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", logFile, true))
+                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", logFile, true, out double n))
                     {
                         string _branch = item.Replace("*", "").Trim();
 
@@ -2610,7 +2864,7 @@ namespace SQLGen.Utilities
         }
 
         /// <summary>
-        /// Выбрать модуль (префикс) версии: prmd, rpms, smp, bi
+        /// Выбрать префикс версии (сервис): prmd, rpms, smp, bi
         /// </summary>
         /// <param name="logFile"></param>
         /// <returns></returns>
@@ -2643,7 +2897,7 @@ namespace SQLGen.Utilities
             }
             else
             {
-                App.AddLog("Модуль не выбран!", null, App.ShowMessageMode.SHOW, true, logFile);
+                App.AddLog("Префикс версии (сервис) не выбран!", null, App.ShowMessageMode.SHOW, true, logFile);
             }
 
             dlg1.Dispose();
@@ -2719,7 +2973,7 @@ namespace SQLGen.Utilities
             dlg1.Dispose();
 
             // выберем ветку
-            return SelectGITBranch(project, BranchDefault, out branch, logFile, true, isForcedGitRefresh);
+            return SelectGITBranch(project, BranchDefault, out branch, logFile, true, isForcedGitRefresh, "");
         }
 
         /// <summary>
@@ -2810,8 +3064,9 @@ namespace SQLGen.Utilities
         /// <param name="project">проект</param>
         /// <param name="logFile">лог-файл</param>
         /// <param name="infoerror">Сообщение при ошибке</param>
+        /// <param name="isNoPush">=true - НЕ выполнять push</param>
         /// <returns></returns>
-        public static bool CheckCommit(string project, string logFile, string infoerror)
+        public static bool CheckCommit(string project, string logFile, string infoerror, bool isNoPush = false)
         {
             if (!string.IsNullOrWhiteSpace(infoerror))
             {
@@ -2838,7 +3093,7 @@ namespace SQLGen.Utilities
                 App.AddLog($"Для текущей ветки {current_branch} требуется commit.", null, App.ShowMessageMode.SHOW, true, logFile);
 
                 // Отправляем в GIT
-                GIT.GitAdd(new string[] { project }, current_branch, true, true, logFile);
+                GIT.GitAdd(new string[] { project }, current_branch, true, true, logFile, isNoPush);
 
                 // еще раз проверим, нужен ли commit
                 if (GIT.GitNeedCommit(project, logFile))
@@ -2918,6 +3173,7 @@ namespace SQLGen.Utilities
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
             double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, branch));
             bool isCumulative = isNoCumulative != true;
+            string dbregion = Utilities.GITProjects.GetDBRegionCron(project);
 
             // ----------------------------------------------------------------------------
             // Составляем список веток
@@ -3114,6 +3370,8 @@ namespace SQLGen.Utilities
 
             // ----------------------------------------------------------------------------
             // Выполняем последовательный merge
+            MergeInfo lastver = null;
+
             foreach (var item in ListMerge)
             {
                 if (!ListBranch.Contains(item.VisibleName)) 
@@ -3153,7 +3411,79 @@ namespace SQLGen.Utilities
 
                     return false;
                 }
+                else
+                {
+                    // перегенерим существующий json-файл версии с заданиями
+                    if (!string.IsNullOrWhiteSpace(dbregion))
+                    {
+                        WinCron.RegenJSON(project, dbregion, item.VersionTo.Branch, "version", null, false, out string jsonFilepath, out string jsonUrl, logFile, item.VersionTo.Branch, true, null);
+                    }
+
+                    // ----------------------------------------------------------------------------
+                    // проверим, нужен ли commit в текущую ветку
+                    if (!GIT.CheckCommit(project, logFile, "Merge прерван", true))
+                    {
+                        return false;
+                    }
+                }
+
+                lastver = item;
             }
+
+            // вольем итоговую версию (кумулятивную) в dev
+            /*if (
+                lastver != null &&
+                lastver.VersionTo != null &&
+                lastver.VersionTo.YMLFile != null &&
+                lastver.VersionTo.YMLFile.IsCumulative &&
+                (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {lastver.VersionTo.Branch} в ветку dev ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            )
+            {
+                // переключение на ветку dev
+                if (!GIT.GitSwitch(project, "dev", logFile, out string currentbranch, out err))
+                {
+                    App.AddLog($"Не получилось переключиться на ветку dev в проекте {project} или при переключении на ветку dev возникла ошибка: {err}\n\nMerge ветки {lastver.VersionTo.Branch} в ветку dev прерван\n\nТекущая ветка - {currentbranch}", null, App.ShowMessageMode.SHOW, true, logFile);
+
+                    return false;
+                }
+
+                // merge
+                if (GIT.GitMerge(project, lastver.VersionTo.Branch, "dev", true, false, logFile, false))
+                {
+                    // merge успешный, делаем push
+                    App.AddLog($"Успешный merge ветки {lastver.VersionTo.Branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.NONE, true, logFile);
+
+                    if (System.Windows.Forms.MessageBox.Show($"Успешный merge ветки {lastver.VersionTo.Branch} в проекте {project} в ветку dev\n\nВ проекте {project} текущая ветка - dev\n\nВыполнить push ветки dev ?",
+                            "ВНИМАНИЕ",
+                            System.Windows.Forms.MessageBoxButtons.YesNo
+                        ) == System.Windows.Forms.DialogResult.Yes
+                    )
+                    {
+                        // git pull
+                        GIT.GitPull(new string[] { project }, "dev", false, false, true, logFile, false);
+
+                        if (!string.IsNullOrWhiteSpace(dbregion))
+                        {
+                            // пересобрать cron.json в ветке dev
+                            GIT.MakeCronJson(project);
+                        }
+
+                        // git push
+                        GIT.GitPush(new string[] { project }, "dev", true, logFile);
+                    }
+                }
+                else
+                {
+                    App.AddLog($"Merge ветки {lastver.VersionTo.Branch} в проекте {project} в ветку dev НЕ был выполнен\n\nВ проекте {project} текущая ветка - dev", null, App.ShowMessageMode.SHOW, true, logFile);
+                }
+
+                // ----------------------------------------------------------------------------
+                // проверим, нужен ли commit в текущую ветку
+                if (!GIT.CheckCommit(project, logFile, "Merge прерван", true))
+                {
+                    return false;
+                }
+            }*/
 
             // ----------------------------------------------------------------------------
             // показываем лог
@@ -3235,6 +3565,36 @@ namespace SQLGen.Utilities
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Пересобрать cron.json в ветке dev
+        /// </summary>
+        /// <param name="project">Проект</param>
+        public static void MakeCronJson(string project)
+        {
+            if (!Utilities.GITProjects.IsDEVProject(project)) return;
+
+            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
+
+            // ----------------------------------------------------------------------------
+            if (!string.IsNullOrWhiteSpace(ProjectFolder))
+            {
+                string folder = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder);
+                if (folder.Contains(" ")) folder = "\"" + folder + "\"";
+
+                // Запустим makecron.sh
+                Utilities.External.ExecuteFile(
+                    Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder),
+                    Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "makecron.sh"),
+                    folder,
+                    true,
+                    false,
+                    false,
+                    false,
+                    MainWindow.Task.LogFileRelease
+                );
+            }
         }
     }
 

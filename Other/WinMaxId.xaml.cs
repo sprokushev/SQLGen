@@ -271,10 +271,23 @@ namespace SQLGen
 
                 foreach (var item in MainWindow.ListConnects
                     .Where(x =>
-                        //(x.isTest || x.isRelease) &&
-                        (x.GITProject == git_project || x.GITProject == dev_project)
-                        )
-                    .OrderBy(x => ((int)x.ServerDB.DBRoleType).ToString() + x.DBConnectionName)
+                        x.GITProject == git_project || x.GITProject == dev_project
+                    )
+                    .OrderBy(x =>
+                    {
+                        string _order;
+
+                        if (x.ServerDB != null)
+                        {
+                            _order = ((int)(x.ServerDB.DBRoleType)).ToString() + "_" + x.DBConnectionName;
+                        }
+                        else
+                        {
+                            _order = "0_" + x.DBConnectionName;
+                        }
+
+                        return _order;
+                    })
                 )
                 {
                     if (!dlg2.clbList.Items.Contains(item.DBConnectionName))

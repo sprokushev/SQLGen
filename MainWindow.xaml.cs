@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -83,6 +84,7 @@ namespace SQLGen
             isExtendedLog.IsChecked = (APPinfo.ExtendedLog == "true");
             isImproveSQLinVersion.IsChecked = (APPinfo.ImproveSQLinVersion == "true");
             isUseNewFunc.IsChecked = (APPinfo.UseNewFunc == "true");
+            isTaskReleaseCooperative.IsChecked = (APPinfo.TaskReleaseCooperative == "true");
 
             dgListGITProjects.ItemsSource = APPinfo.GITProjects;
             dgListGITProjects.Items.Refresh();
@@ -378,7 +380,8 @@ namespace SQLGen
                 SaveAPPinfo();
                 Search.SaveSearches();
             }
-            SaveTask(Task);
+
+            SaveTask(Task, true);
         }
 
         // -------------------------------------------------------------------------------------------------------
@@ -513,18 +516,17 @@ namespace SQLGen
             WinRelease WinRelease = new WinRelease();
             WinRelease.mainWindow = this;
 
-            WinRelease.cbGITProject.Items.Clear();
-            WinRelease.cbGITProject.Items.Add("");
+            WinRelease.listProjects.Clear();
             foreach (var item in Utilities.Files.ListFilesInDir(MainWindow.APPinfo.GITFolder, true, false, false))
             {
                 string project = Utilities.GITProjects.GetProjectByFolder(item);
                 string DBType = Utilities.GITProjects.GetDBTypeByProject(project);
                 if (
-                    GITProjects.IsDEVProject(project) &&
+                    GITProjects.IsDEVProject(project) && // собираем версии только для "новых" проектов
                     ((DBType == "MSSQL") || (DBType == "PGSQL"))
                 )
                 {
-                    WinRelease.cbGITProject.Items.Add(project);
+                    WinRelease.listProjects.Add(project);
                 }
             }
 
@@ -631,11 +633,26 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
-            string prefix = GIT.SelectGITModule(Task.LogFile);
+            // Определим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+            if (string.IsNullOrWhiteSpace(Task.ReleaseVersion))
+            {
+                App.AddLog("Сначала на форме 'Собрать релиз' заполните номер версии", null, App.ShowMessageMode.SHOW, true, null);
+                return;
+            }
+
+            string prefix = Task.ReleaseVersion.Split(new char[] { '.' })[0];
+
+            if (
+                string.IsNullOrWhiteSpace(prefix) ||
+                (prefix != "prmd" && prefix != "rpms" && prefix != "smp" && prefix != "bi")
+            )
+            {
+                // Спросим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+                prefix = GIT.SelectGITModule(Task.LogFile);
+            }
+
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                MessageBox.Show("Необходимо выбрать модуль !");
                 return;
             }
 
@@ -667,11 +684,26 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
-            string prefix = GIT.SelectGITModule(Task.LogFile);
+            // Определим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+            if (string.IsNullOrWhiteSpace(Task.ReleaseVersion))
+            {
+                App.AddLog("Сначала на форме 'Собрать релиз' заполните номер версии", null, App.ShowMessageMode.SHOW, true, null);
+                return;
+            }
+
+            string prefix = Task.ReleaseVersion.Split(new char[] { '.' })[0];
+
+            if (
+                string.IsNullOrWhiteSpace(prefix) ||
+                (prefix != "prmd" && prefix != "rpms" && prefix != "smp" && prefix != "bi")
+            )
+            {
+                // Спросим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+                prefix = GIT.SelectGITModule(Task.LogFile);
+            }
+
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                MessageBox.Show("Необходимо выбрать модуль !");
                 return;
             }
 
@@ -1034,7 +1066,7 @@ namespace SQLGen
 
             if (MainConnect != null)
             {
-                Utilities.Controls.RefreshConnectItems(WinMarker.cbConnectSQL, MainConnect.DBConnectionName, null, null);
+                Utilities.Controls.RefreshConnectItems(WinMarker.cbConnectSQL, MainConnect.DBConnectionName, null, null, true);
                 project = MainConnect.GITProject;
             }
 
@@ -2119,12 +2151,12 @@ namespace SQLGen
                 if (DevProjects.Count > 0)
                 {
                     // выбрать ветку (в новых проектах)
-                    FormAskBranch dlg2 = new FormAskBranch(null, null, MainWindow.Task.LogFile);
+                    FormAskBranch dlg2 = new FormAskBranch(null, null, MainWindow.Task.LogFile, "");
 
                     foreach (var project in DevProjects)
                     {
                         // Заполнить ListBranches
-                        foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true))
+                        foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true, out double n))
                         {
                             string _branch = item.Replace("*", "").Trim();
 
@@ -2838,7 +2870,7 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) вливаем версии: prmd, rpms, smp, bi
+            // Спросим, для какого префикса версии (сервиса) вливаем версии: prmd, rpms, smp, bi
             string prefix = GIT.SelectGITModule(Task.LogFileMerge);
 
             if (string.IsNullOrWhiteSpace(prefix))
@@ -2938,7 +2970,7 @@ namespace SQLGen
                 try
                 {
                     // сохранить текущую задачу
-                    SaveTask(Task);
+                    SaveTask(Task, false);
                 }
                 catch (Exception ex)
                 {
@@ -2982,7 +3014,7 @@ namespace SQLGen
                 try
                 {
                     // сохранить текущую задачу
-                    SaveTask(Task);
+                    SaveTask(Task, false);
                 }
                 catch (Exception ex)
                 {
@@ -3019,11 +3051,11 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+            // Спросим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
             string prefix = GIT.SelectGITModule(Task.LogFile);
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                MessageBox.Show("Необходимо выбрать модуль !");
+                MessageBox.Show("Необходимо выбрать префикс версии (сервис) !");
                 return;
             }
             string projectDeploymentMS = Utilities.GITProjects.GetProjectDeployment("MS SQL", prefix);
@@ -3032,6 +3064,7 @@ namespace SQLGen
             WinDeployment WinDeployment = new WinDeployment();
             WinDeployment.mainWindow = this;
             WinDeployment.logFile = Task.LogFile;
+            WinDeployment.prevversion = "";
             WinDeployment.ProjectDeploymentMS = projectDeploymentMS;
             WinDeployment.ProjectDeploymentPG = projectDeploymentPG;
 
@@ -3073,11 +3106,11 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) добавляем задание: prmd, rpms, smp, bi
+            // Спросим, для какого префикса версии (сервиса) добавляем задание: prmd, rpms, smp, bi
             string prefix = GIT.SelectGITModule(Task.LogFile);
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                MessageBox.Show("Необходимо выбрать модуль !");
+                MessageBox.Show("Необходимо выбрать префикс версии (сервис) !");
                 return;
             }
             string projectCronMS = Utilities.GITProjects.GetProjectCron("MS SQL", prefix);
@@ -3095,25 +3128,47 @@ namespace SQLGen
             // выбрать ветки в проектах
             bool isChoosedInMS = false;
             string BranchDefault = Task.TaskNumber;
+            string branch = "";
+            string err = "";
 
-            string branch = BranchDefault;
-
-            // есть проект для MS, выберем в нем ветку
-            if (WinCron.SelectGITBranch(projectCronMS, ref branch, ref isChoosedInMS, Task.LogFile))
+            // сначала проверим наличие ветки по номеру задачи
+            if (Utilities.GIT.GitSwitch(projectCronMS, Task.TaskNumber, Task.LogFile, out branch, out err))
             {
-                // выбрали ветку
-                WinCron.BranchMS = branch;
                 BranchDefault = branch;
+                WinCron.BranchMS = branch;
+                isChoosedInMS = true;
+            }
+            else
+            {
+                // есть проект для MS, выберем в нем ветку
+                if (WinCron.SelectGITBranch(projectCronMS, ref branch, ref isChoosedInMS, Task.LogFile, $"Ветка {Task.TaskNumber} не найдена"))
+                {
+                    // выбрали ветку
+                    BranchDefault = branch;
+                    WinCron.BranchMS = branch;
+                }
             }
 
-            branch = BranchDefault;
+            branch = "";
+            err = "";
 
-            // есть проект для PG, выберем в нем ветку
-            if (WinCron.SelectGITBranch(projectCronPG, ref branch, ref isChoosedInMS, Task.LogFile))
+            // сначала проверим наличие ветки по номеру задачи
+            if (Utilities.GIT.GitSwitch(projectCronPG, Task.TaskNumber, Task.LogFile, out branch, out err))
             {
-                // выбрали ветку
+                BranchDefault = branch;
                 WinCron.BranchPG = branch;
-                BranchDefault = branch; //-V3137
+            }
+            else
+            {
+                branch = BranchDefault;
+
+                // есть проект для PG, выберем в нем ветку
+                if (WinCron.SelectGITBranch(projectCronPG, ref branch, ref isChoosedInMS, Task.LogFile, $"Ветка {Task.TaskNumber} не найдена"))
+                {
+                    // выбрали ветку
+                    WinCron.BranchPG = branch;
+                    BranchDefault = branch; //-V3137
+                }
             }
 
             WinCron.Show();
@@ -3134,11 +3189,11 @@ namespace SQLGen
                 return;
             }
 
-            // Спросим, для какого модуля (префикса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
+            // Спросим, для какого префикса версии (сервиса) собираем версию с действиями при обновлении: prmd, rpms, smp, bi
             string prefix = GIT.SelectGITModule(Task.LogFile);
             if (string.IsNullOrWhiteSpace(prefix))
             {
-                MessageBox.Show("Необходимо выбрать модуль !");
+                MessageBox.Show("Необходимо выбрать префикс версии (сервис) !");
                 return;
             }
             string projectCronMS = Utilities.GITProjects.GetProjectCron("MS SQL", prefix);
@@ -3167,12 +3222,12 @@ namespace SQLGen
             if (dbtype == "MSSQL")
             {
                 _dbregion = "MS SQL";
-                connect = MainWindow.GetMainTestConnectByGITProject(project, "promeddev");
+                connect = MainWindow.GetConnectByGITProject(project, "promeddev", true);
             }
             else
             {
                 _dbregion = "PG SQL";
-                connect = MainWindow.GetMainTestConnectByGITProject(project, "promedtest");
+                connect = MainWindow.GetConnectByGITProject(project, "promedtest", true);
             }
 
             if (
@@ -3413,6 +3468,80 @@ namespace SQLGen
 
                 this.Cursor = Cursors.Arrow;
             }
+        }
+
+        private void btSendLog_Click(object sender, RoutedEventArgs e)
+        {
+            // спрашиваем, куда сохранить
+            string zipFilePath = Controls.Dialogs.SaveZIPDialog(Task.TaskPath, Task.ZipLogFiles);
+
+            if (string.IsNullOrWhiteSpace(zipFilePath))
+            {
+                return;
+            }
+
+            App.AddLog($"Создаем архив {zipFilePath} с log-файлами и SQLGen.json", null, App.ShowMessageMode.NONE, true, "");
+
+            try
+            {
+                using (FileStream zipToOpen = new FileStream(zipFilePath, FileMode.Create))
+                {
+                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update))
+                    {
+                        if (File.Exists(App.AppLogFile))
+                        {
+                            archive.CreateEntryFromFile(App.AppLogFile, System.IO.Path.GetFileName(App.AppLogFile));
+                        }
+                        if (File.Exists(System.IO.Path.Combine(App.AppPath, "SQLGen.json")))
+                        {
+                            archive.CreateEntryFromFile(System.IO.Path.Combine(App.AppPath, "SQLGen.json"), "SQLGen.json");
+                        }
+                        if (File.Exists(Task.LogFile))
+                        {
+                            archive.CreateEntryFromFile(Task.LogFile, System.IO.Path.GetFileName(Task.LogFile));
+                        }
+                        if (File.Exists(Task.LogFileMerge))
+                        {
+                            archive.CreateEntryFromFile(Task.LogFileMerge, System.IO.Path.GetFileName(Task.LogFileMerge));
+                        }
+                        if (File.Exists(Task.LogFileRelease))
+                        {
+                            archive.CreateEntryFromFile(Task.LogFileRelease, System.IO.Path.GetFileName(Task.LogFileRelease));
+                        }
+                        if (File.Exists(Task.LogFileTable))
+                        {
+                            archive.CreateEntryFromFile(Task.LogFileTable, System.IO.Path.GetFileName(Task.LogFileTable));
+                        }
+                        if (File.Exists(Task.TaskFile))
+                        {
+                            archive.CreateEntryFromFile(Task.TaskFile, System.IO.Path.GetFileName(Task.TaskFile));
+                        }
+                    }
+                }
+
+                if (File.Exists(zipFilePath))
+                {
+                    Utilities.External.OpenDirectory(Path.GetDirectoryName(zipFilePath));
+                    System.Diagnostics.Process.Start(zipFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                App.AddLog(null, ex, App.ShowMessageMode.SHOW, true, "");
+            }
+        }
+
+        private void isTaskReleaseCooperative_Checked(object sender, RoutedEventArgs e)
+        {
+            App.AddLog($"Включен кооперативный режим сборки версий", null, App.ShowMessageMode.NONE, true, null);
+            MainWindow.APPinfo.TaskReleaseCooperative = "true";
+
+        }
+
+        private void isTaskReleaseCooperative_Unchecked(object sender, RoutedEventArgs e)
+        {
+            App.AddLog($"Выключен кооперативный режим сборки версий", null, App.ShowMessageMode.NONE, true, null);
+            MainWindow.APPinfo.TaskReleaseCooperative = "false";
         }
     }
 }

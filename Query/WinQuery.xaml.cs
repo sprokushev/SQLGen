@@ -242,7 +242,7 @@ namespace SQLGen
                 cbScriptType.SelectedIndex = 0;
                 pbProgress.Value = 0;
 
-                var arr = sql.ToLower().Replace('\n', ' ').Replace('\r', ' ').Replace('\t', ' ').Split(' ');
+                /*var arr = sql.ToLower().Replace('\n', ' ').Replace('\r', ' ').Replace('\t', ' ').Split(' ');
                 int pos;
 
                 pos = Array.IndexOf(arr, "delete");
@@ -288,7 +288,7 @@ namespace SQLGen
                     App.AddLog("Только оператор SELECT !", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
                     tbSQL.Focus();
                     return;
-                };
+                };*/
 
                 ExecSQLInThread(sql).GetAwaiter();
             }
@@ -785,7 +785,7 @@ namespace SQLGen
                     tiSQL.IsSelected = true;
                     cbConnectSQL.Focus();
                     App.AddLog("Подключение " + cbConnectSQL.Text + " не открыто !", null, App.ShowMessageMode.SHOW, true, MainWindow.Task.LogFile);
-                    return;
+                    //return;
                 }
 
                 StartGenerate();

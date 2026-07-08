@@ -40,9 +40,6 @@ bld/
 ![Bb]in/[Rr]elease/*.txt
 ![Bb]in/[Rr]elease/sqlfluff.exe
 
-makecron/[Bb]in/[Dd]ebug/*
-makecron/[Bb]in/[Rr]elease/*
-
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot

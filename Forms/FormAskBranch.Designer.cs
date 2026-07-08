@@ -36,6 +36,7 @@ namespace SQLGen
             this.btTask = new System.Windows.Forms.Button();
             this.btAbort = new System.Windows.Forms.Button();
             this.btCurrentBranch = new System.Windows.Forms.Button();
+            this.lbInfo = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btDev
@@ -105,6 +106,15 @@ namespace SQLGen
             this.btCurrentBranch.UseVisualStyleBackColor = true;
             this.btCurrentBranch.Click += new System.EventHandler(this.btCurrentBranch_Click);
             // 
+            // lbInfo
+            // 
+            this.lbInfo.AutoSize = true;
+            this.lbInfo.Location = new System.Drawing.Point(48, 225);
+            this.lbInfo.Name = "lbInfo";
+            this.lbInfo.Size = new System.Drawing.Size(41, 15);
+            this.lbInfo.TabIndex = 6;
+            this.lbInfo.Text = "label1";
+            // 
             // FormAskBranch
             // 
             this.AcceptButton = this.btTask;
@@ -112,6 +122,7 @@ namespace SQLGen
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btAbort;
             this.ClientSize = new System.Drawing.Size(460, 277);
+            this.Controls.Add(this.lbInfo);
             this.Controls.Add(this.btCurrentBranch);
             this.Controls.Add(this.btAbort);
             this.Controls.Add(this.btChoose);
@@ -124,6 +135,7 @@ namespace SQLGen
             this.Text = "Выбрать ветку";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormAskBranch_FormClosed);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -137,5 +149,9 @@ namespace SQLGen
         /// btTask
         /// </summary>
         public System.Windows.Forms.Button btTask;
+        /// <summary>
+        /// lbInfo
+        /// </summary>
+        public System.Windows.Forms.Label lbInfo;
     }
 }

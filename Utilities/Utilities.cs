@@ -14,6 +14,8 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -69,5 +71,44 @@ namespace SQLGen.Utilities
                 action(list[i]);
         }
 
+        /// <summary>
+        /// Параметры сериализации на json-файлов настроек SQLGen (устареший)
+        /// </summary>
+        public static readonly JsonSerializerOptions oldOptionsJSON = new JsonSerializerOptions
+        {
+            IgnoreReadOnlyProperties = true,
+            WriteIndented = true
+        };
+
+        /// <summary>
+        /// Параметры сериализации на json-файлов настроек SQLGen
+        /// </summary>
+        public static readonly JsonSerializerOptions OptionsJSON = new JsonSerializerOptions
+        {
+            IgnoreReadOnlyProperties = true,
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        /// <summary>
+        /// параметры сериализации для version\xxx_cron.json (с пустыми полями)
+        /// </summary>
+        public static readonly JsonSerializerOptions VersionJSON = new JsonSerializerOptions
+        {
+            IgnoreReadOnlyProperties = true,
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        /// <summary>
+        /// параметры сериализации для PROMEDWEB-xxx.json (без пустых полей)
+        /// </summary>
+        public static readonly JsonSerializerOptions TaskJSON = new JsonSerializerOptions
+        {
+            IgnoreReadOnlyProperties = true,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
     }
 }

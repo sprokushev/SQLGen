@@ -131,11 +131,12 @@ namespace SQLGen.Utilities
         }
 
         /// <summary>
-        /// убрать больше 2-х подряд переводов строки внутри text
+        /// убрать больше count_nl подряд переводов строки внутри text
         /// </summary>
         /// <param name="text">текст</param>
+        /// <param name="count_nl">кол-во переводов строки подряд</param>
         /// <returns></returns>
-        public static string TrimInnerNewLine(this string text)
+        public static string TrimInnerNewLine(this string text, int count_nl = 2)
         {
             if (string.IsNullOrEmpty(text)) return text;
 
@@ -152,6 +153,24 @@ namespace SQLGen.Utilities
             while (text.Contains("\n\n\n"))
             {
                 text = text.Replace("\n\n\n", "\n\n");
+            }
+
+            if (count_nl == 1)
+            {
+                while (text.Contains(Environment.NewLine + Environment.NewLine))
+                {
+                    text = text.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine);
+                }
+
+                while (text.Contains("\r\r"))
+                {
+                    text = text.Replace("\r\r", "\r");
+                }
+
+                while (text.Contains("\n\n"))
+                {
+                    text = text.Replace("\n\n", "\n");
+                }
             }
 
             return text;

@@ -428,31 +428,42 @@ namespace SQLGen.Utilities
         }
 
         // -------------------------------------------------------------------------------------------------------
-        /// <summary>Создание резервной копии файла в том же каталоге, но с расширением bak, bak1, bak2 и т.д.</summary>
+        /// <summary>Создание резервной копии файла в папке path (или в том же каталоге, что и filename, если path пустой), но с расширением bak, bak1, bak2 и т.д.</summary>
         /// <param name="filename">резервируемый файл</param>
+        /// <param name="backup_path">каталог для резервных копий</param>
         /// <param name="count">максимальное количество копий</param>
-        public static string BackupFile(string filename, int count = 10)
+        public static string BackupFile(string filename, string backup_path = "", int count = 10)
         {
             string backfile = "";
+
+            string _file = Path.GetFileName(filename);
+            string _path = Path.GetDirectoryName(filename);
+            if (
+                !string.IsNullOrWhiteSpace(backup_path) &&
+                Directory.Exists(backup_path)
+            )
+            {
+                _path = backup_path;
+            }
 
             if ((filename != "") && File.Exists(filename))
                 try
                 {
-                    backfile = filename + ".bak";
+                    backfile = Path.Combine(_path, _file) + ".bak";
                     string prev = "";
                     int max = 0;
 
                     while (File.Exists(backfile))
                     {
                         max++;
-                        backfile = filename + ".bak" + max.ToString();
+                        backfile = Path.Combine(_path, _file) + ".bak" + max.ToString();
                         if (max == count) break;
                     };
 
                     for (int i = max - 1; i >= 0; i--)
                     {
-                        if (i == 0) prev = filename + ".bak";
-                        else prev = filename + ".bak" + i.ToString();
+                        if (i == 0) prev = Path.Combine(_path, _file) + ".bak";
+                        else prev = Path.Combine(_path, _file) + ".bak" + i.ToString();
 
                         File.Copy(prev, backfile, true);
 
@@ -582,13 +593,12 @@ namespace SQLGen.Utilities
 
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Смена кодировки на UTF8</summary>
-        /// <param name="fullYMLFile">yml-файл, в котором указан проверяемый файл</param>
-        /// <param name="fullSQLFile">полный путь к проверяемому файлу</param>
+        /// <param name="fullFilename">полный путь к проверяемому файлу</param>
         /// <param name="Errors">список обнаруженных ошибок</param>
         /// <returns>true - есть ошибки</returns>
-        public static bool SetEncodingToUTF8(string fullYMLFile, ref string fullSQLFile, ref string Errors) //-V3203
+        public static bool SetEncodingToUTF8(ref string fullFilename, ref string Errors) //-V3203
         {
-            if ((fullSQLFile == null) || (fullSQLFile == "")) return false;
+            if ((fullFilename == null) || (fullFilename == "")) return false;
 
             if (Errors == null) Errors = "";
 
@@ -596,18 +606,18 @@ namespace SQLGen.Utilities
 
             string[] buffer = null;
 
-            var encodingByParsing1251 = GetEncodingByParsing(fullSQLFile, Encoding.GetEncoding("windows-1251"));
+            var encodingByParsing1251 = GetEncodingByParsing(fullFilename, Encoding.GetEncoding("windows-1251"));
             if ((encodingByParsing1251 != null) && (encodingByParsing1251.ToString() == Encoding.GetEncoding("windows-1251").ToString()))
             {
                 // считываем  файл
-                buffer = File.ReadAllLines(fullSQLFile, Encoding.GetEncoding("windows-1251"));
+                buffer = File.ReadAllLines(fullFilename, Encoding.GetEncoding("windows-1251"));
             }
 
-            var encodingByParsingUTF8 = GetEncodingByParsing(fullSQLFile, Encoding.UTF8);
+            var encodingByParsingUTF8 = GetEncodingByParsing(fullFilename, Encoding.UTF8);
             if ((encodingByParsingUTF8 != null) && (encodingByParsingUTF8.ToString() == Encoding.UTF8.ToString()))
             {
                 // считываем  файл
-                buffer = File.ReadAllLines(fullSQLFile, Encoding.UTF8);
+                buffer = File.ReadAllLines(fullFilename, Encoding.UTF8);
             }
 
             string backupfileSQL = "";
@@ -616,11 +626,11 @@ namespace SQLGen.Utilities
                 try
                 {
                     // делаем архивную копию
-                    backupfileSQL = BackupFile(fullSQLFile);
+                    backupfileSQL = BackupFile(fullFilename);
 
                     // перезаписываем файл в кодировке UTF8 без BOM
                     Encoding encodingUTF8 = new UTF8Encoding(false);
-                    File.WriteAllLines(fullSQLFile, buffer, encodingUTF8);
+                    File.WriteAllLines(fullFilename, buffer, encodingUTF8);
                     res = true;
 
                     // удаляем архивную копию
@@ -639,12 +649,12 @@ namespace SQLGen.Utilities
 
             if (res)
             {
-                string info = "В файле " + fullSQLFile + " кодировка изменена на UTF8";
+                string info = "В файле " + fullFilename + " кодировка изменена на UTF8";
                 Errors += Environment.NewLine + info + Environment.NewLine;
             }
             else
             {
-                string info = "Не удалось исправить кодировку файла " + fullSQLFile + " !";
+                string info = "Не удалось исправить кодировку файла " + fullFilename + " !";
                 if (backupfileSQL != "") info = info + "\nОсталась архивная копия - " + backupfileSQL;
                 Errors += Environment.NewLine + info + Environment.NewLine;
             }

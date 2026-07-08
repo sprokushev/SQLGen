@@ -106,7 +106,8 @@ namespace SQLGen.Utilities
         /// <param name="defaultDBConnectionName">выбрать подключение после обновления</param>
         /// <param name="target">целевая БД</param>
         /// <param name="conntype">тип соединения</param>
-        public static void RefreshConnectItems(ComboBox cbConnect, string defaultDBConnectionName, Utilities.TargetDBType? target, Utilities.ConnType? conntype)
+        /// <param name="isOnlyPromed">=true - только promed</param>
+        public static void RefreshConnectItems(ComboBox cbConnect, string defaultDBConnectionName, Utilities.TargetDBType? target, Utilities.ConnType? conntype, bool isOnlyPromed = false)
         {
             ComboBoxItem cbMainItem = null;
             bool select = false;
@@ -115,7 +116,10 @@ namespace SQLGen.Utilities
             {
                 cbConnect.Items.Clear();
 
-                foreach (var item in MainWindow.ListConnects.OrderBy(x => x.DBConnectionName))
+                foreach (var item in MainWindow.ListConnects
+                    .Where(x => x.isPromed || !isOnlyPromed)
+                    .OrderBy(x => x.DBConnectionName)
+                )
                 {
                     if (
                         ((target != null) && (item.TargetDBType == target)) ||
@@ -208,7 +212,10 @@ namespace SQLGen.Utilities
         /// <param name="cbGITProject">экземпляр System.Windows.Controls.ComboBox</param>
         /// <param name="defaultGITProject">выбрать проект после обновления</param>
         /// <param name="filterConnType">с учетом указанного типа соединения</param>
-        public static void RefreshGITProjectItems(ComboBox cbGITProject, string defaultGITProject, Utilities.ConnType? filterConnType = null)
+        /// <param name="isOnlyDevPromed">=true - только "новые" проекты promed</param>
+        /// <param name="isAddAll">=true - добавить первым ВСЕ</param>
+        /// <param name="filterPrefix">только проекты с нужным префиксом</param>
+        public static void RefreshGITProjectItems(ComboBox cbGITProject, string defaultGITProject, Utilities.ConnType? filterConnType = null, bool isOnlyDevPromed = false, bool isAddAll = false, string filterPrefix = "")
         {
             bool select = false;
 
@@ -216,18 +223,40 @@ namespace SQLGen.Utilities
             {
                 cbGITProject.Items.Clear();
 
+                if (isAddAll)
+                {
+                    ComboBoxItem cbItem = new ComboBoxItem { Content = "ВСЕ", Tag = "ВСЕ" };
+                    cbGITProject.Items.Add(cbItem);
+                }
+
                 foreach (var item in Utilities.Files.ListFilesInDir(MainWindow.APPinfo.GITFolder, true, false, false))
                 {
                     string project = Utilities.GITProjects.GetProjectByFolder(item);
                     if (!string.IsNullOrWhiteSpace(project))
                     {
+                        if (
+                            isOnlyDevPromed &&
+                            (
+                                Utilities.GITProjects.GetDBAliasByProject(project) != "promed" ||
+                                !Utilities.GITProjects.IsDEVProject(project)
+                            )
+                        )
+                        {
+                            continue;
+                        }
+
                         string DBType = Utilities.GITProjects.GetDBTypeByProject(project);
                         if (DBType == "MSSQL") DBType = "Microsoft SQL";
                         else if (DBType == "PGSQL") DBType = "Postgre SQL";
 
+                        string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
+
                         var item_target = ConnectDB.GetConnTypeByProject(project);
 
-                        if ((filterConnType == null) || (item_target == filterConnType))
+                        if (
+                            ((filterConnType == null) || (item_target == filterConnType)) &&
+                            (string.IsNullOrWhiteSpace(filterPrefix) || (prefix == filterPrefix))
+                        )
                         {
                             ComboBoxItem cbItem = new ComboBoxItem { Content = DBType + " - " + project, Tag = project };
 

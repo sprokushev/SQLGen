@@ -38,7 +38,7 @@ namespace SQLGen
         {
             get
             {
-                if (Utilities.GITProjects.IsDEVProject(YMLFile.Project)) return Branch ?? "";
+                if (Utilities.GITProjects.IsDEVProject(YMLFile?.Project)) return Branch ?? "";
                 else return File;
             }
         }
@@ -46,18 +46,18 @@ namespace SQLGen
         /// <summary>
         /// Номер версии
         /// </summary>
-        public string Num => YMLFile.NumVersion ?? ""; //-V3022
+        public string Num => YMLFile?.NumVersion ?? "";
 
         /// <summary>
         /// Номер версии для сортировки
         /// </summary>
-        public double NumOrder => YMLFile.NumVersionOrder;
+        public double NumOrder => YMLFile?.NumVersionOrder ?? 0;
 
         /// <summary>Имя файла с версией</summary>
-        public string File => YMLFile.Filename ?? ""; //-V3022
+        public string File => YMLFile?.Filename ?? "";
 
         /// <summary>Номер предыдущей версии</summary>
-        public string PrevNum => YMLFile.FirstPrevVersion?.NumVersionLine ?? "";
+        public string PrevNum => YMLFile?.FirstPrevVersion?.NumVersionLine ?? "";
 
         /// <summary>
         /// Номер предыдущей версии для сортировки
@@ -65,6 +65,11 @@ namespace SQLGen
         public double PrevNumOrder => Release.VerAsNum(PrevNum);
 
         /// <summary>Имя файла с предыдущей версией</summary>
-        public string PrevFile => YMLFile.FirstPrevVersion?.file ?? "";
+        public string PrevFile => YMLFile?.FirstPrevVersion?.file ?? "";
+
+        /// <summary>
+        /// признак НЕ кумулятивной версии
+        /// </summary>
+        public bool isNoCumulative => YMLFile?.IsNoCumulative ?? false;
     }
 }

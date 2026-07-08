@@ -3,19 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using Path = System.IO.Path;
 using SQLGen.Controls;
-using SQLGen.Utilities;
-using System.Windows.Data;
-using System.Runtime.CompilerServices;
-using System.Collections.ObjectModel;
 
 
 namespace SQLGen
@@ -246,7 +237,7 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// Выход из поля Команда РТМИС
+        /// Выход из поля Команда
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -280,7 +271,7 @@ namespace SQLGen
             }
         }
 
-        /// <summary>Выбрана команда РТМИС из истории</summary>
+        /// <summary>Выбрана команда из истории</summary>
         private void tbTeam_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (tbTeam.SelectedIndex != -1)
@@ -303,10 +294,39 @@ namespace SQLGen
             tbApplicationName_LostFocus(null, null);
         }
 
-        /// <summary>Закрылся список команд РТМИС</summary>
+        /// <summary>Закрылся список команд</summary>
         private void tbTeam_DropDownClosed(object sender, EventArgs e)
         {
             tbTeam_LostFocus(null, null);
+        }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            cron.Set_regions();
+        }
+
+        private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            cron.Set_regions();
+        }
+
+        private void CheckBox_Unchecked_1(object sender, RoutedEventArgs e)
+        {
+            cron.Set_exclude_regions();
+        }
+
+        private void CheckBox_Checked_1(object sender, RoutedEventArgs e)
+        {
+            cron.Set_exclude_regions();
+        }
+
+        private void tbCheck_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(cron.check))
+            {
+                // если есть проверочный запрос, значит задание временное
+                cbIsTemp.IsChecked = true;
+            }
         }
     }
 }

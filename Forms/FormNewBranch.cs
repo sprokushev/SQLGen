@@ -69,12 +69,12 @@ namespace SQLGen
                 (ListProjects.Count > 0)
             )
             {
-                FormAskBranch dlg2 = new FormAskBranch(null, tbNewBranchName.Text, MainWindow.Task.LogFile);
+                FormAskBranch dlg2 = new FormAskBranch(null, tbNewBranchName.Text, "", MainWindow.Task.LogFile);
 
                 foreach (var project in ListProjects)
                 {
                     // Заполнить ListBranches
-                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true))
+                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true, out double n))
                     {
                         string _branch = item.Replace("*", "").Trim();
 
@@ -117,12 +117,12 @@ namespace SQLGen
                 (ListProjects.Count > 0)
             )
             {
-                FormAskBranch dlg2 = new FormAskBranch(null, tbParentBranchName.Text, MainWindow.Task.LogFile);
+                FormAskBranch dlg2 = new FormAskBranch(null, tbParentBranchName.Text, "", MainWindow.Task.LogFile);
 
                 foreach (var project in ListProjects)
                 {
                     // Заполнить ListBranches
-                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true))
+                    foreach (var item in GIT.GitListBranches(project, "git_listbranch.cmd", MainWindow.Task.LogFile, true, out double n))
                     {
                         string _branch = item.Replace("*", "").Trim();
 

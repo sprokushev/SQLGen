@@ -18,64 +18,73 @@
     <Grid x:Name="mainGrid" Background="#FFE5E5E5">
 
         <Label Content="Релизная задача:" Margin="15,10,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="110"/>
-        <TextBox x:Name="tbReleaseTaskNumber" HorizontalAlignment="Left" Height="22" Margin="140,12,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+        <TextBox x:Name="tbReleaseTaskNumber" HorizontalAlignment="Left" Height="22" Margin="145,12,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
         <Button x:Name="btSaveTask" Content="Сохранить задачу" HorizontalAlignment="Left" Margin="357,12,0,0" VerticalAlignment="Top" Width="130" Click="btSaveTask_Click" ToolTip="Сохранить рабочую информацию по сборке версии"/>
 
         <Label Content="Номер версии:" HorizontalAlignment="Left" Margin="15,40,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbNumVersion" HorizontalAlignment="Left" Height="22" Margin="140,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191"  IsReadOnly="True"/>
+        <TextBox x:Name="tbNumVersion" HorizontalAlignment="Left" Height="22" Margin="145,42,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191"  IsReadOnly="True"/>
 
-        <Button x:Name="btGitPull" Content="GIT PULL" HorizontalAlignment="Left" Margin="15,72,0,0" VerticalAlignment="Top" Width="80" Click="btGitPull_Click"/>
+        <Button x:Name="btGitPull" Content="GIT PULL" HorizontalAlignment="Left" Margin="15,102,0,0" VerticalAlignment="Top" Width="80" Click="btGitPull_Click"/>
 
-        <Label Content="Проект GIT:" Margin="103,70,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="73"/>
-        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="200,72,0,0" VerticalAlignment="Top" Width="208" SelectionChanged="cbGITProject_SelectionChanged" IsReadOnly="True" IsEditable="True"/>
+        <Label Content="Проект GIT:" Margin="15,70,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="73"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="145,72,0,0" VerticalAlignment="Top" Width="208" SelectionChanged="cbGITProject_SelectionChanged" IsReadOnly="True" IsEditable="True"/>
 
-        <Label Content="Ветка:" HorizontalAlignment="Left" Margin="430,70,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbBranch" HorizontalAlignment="Left" Height="22" Margin="480,72,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
+        <Label Content="Ветка:" HorizontalAlignment="Left" Margin="360,70,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbBranch" HorizontalAlignment="Left" Height="22" Margin="410,72,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="191" IsReadOnly="True"/>
 
-        <Button x:Name="btGitPush" Content="GIT PUSH" HorizontalAlignment="Left" Margin="700,72,0,0" VerticalAlignment="Top" Width="80" Click="btGitPush_Click"/>
+        <Button x:Name="btGitPush" Content="GIT PUSH" HorizontalAlignment="Left" Margin="620,72,0,0" VerticalAlignment="Top" Width="80" Click="btGitPush_Click"/>
 
-        <Button x:Name="btGitChangeBranch" Content="Переключиться на ветку prmd.X.X.X.X" HorizontalAlignment="Left" Margin="200,102,0,0" VerticalAlignment="Top" Width="250" Click="btGitChangeBranch_Click" ToolTip="Переключиться на существующую ветку версии"/>
+        <Button x:Name="btGitChangeBranch" Content="Переключиться на ветку prmd.X.X.X.X" HorizontalAlignment="Left" Margin="145,102,0,0" VerticalAlignment="Top" Width="250" Click="btGitChangeBranch_Click" ToolTip="Переключиться на существующую ветку версии"/>
 
-        <Label Content="Имя файла версии:" HorizontalAlignment="Left" Margin="15,130,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbDeploymentFileVersion" HorizontalAlignment="Left" Height="22" Margin="140,132,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" TextChanged="tbDeploymentFileVersion_TextChanged"/>
+        <Label x:Name="lbPrevVersion" Content="Предыдущая версия:" HorizontalAlignment="Left" Margin="15,124,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbPrevVersion" HorizontalAlignment="Left" Margin="145,127,0,0" VerticalAlignment="Top" Width="477" IsReadOnly="True"/>
+        <Button x:Name="btFindPrevVersion" Content="Найти" HorizontalAlignment="Left" Margin="635,128,0,0" VerticalAlignment="Top" Width="70" Click="btFindPrevVersion_Click"/>
 
-        <TextBox x:Name="tbDeploymentGITVersion" HorizontalAlignment="Left" Height="22" Margin="15,162,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbDeploymentGITVersion_MouseDoubleClick"/>
+        <Label Content="Имя файла версии:" HorizontalAlignment="Left" Margin="15,152,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbDeploymentFileVersion" HorizontalAlignment="Left" Height="22" Margin="145,155,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" TextChanged="tbDeploymentFileVersion_TextChanged"/>
 
-        <Button x:Name="btCopyDeploymentGITVersion" HorizontalAlignment="Left" Margin="680,162,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyDeploymentGITVersion_Click" Height="21" VerticalAlignment="Top" >
+        <TextBox x:Name="tbDeploymentGITVersion" HorizontalAlignment="Left" Height="22" Margin="15,182,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbDeploymentGITVersion_MouseDoubleClick"/>
+
+        <Button x:Name="btCopyDeploymentGITVersion" HorizontalAlignment="Left" Margin="680,182,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyDeploymentGITVersion_Click" Height="21" VerticalAlignment="Top" >
             <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
         </Button>
 
-        <TextBox x:Name="tbDeploymentConfVersion" HorizontalAlignment="Left" Height="22" Margin="15,192,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbDeploymentConfVersion_MouseDoubleClick"/>
+        <TextBox x:Name="tbDeploymentConfVersion" HorizontalAlignment="Left" Height="22" Margin="15,209,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="660" IsReadOnly="True" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontSize="10" MouseDoubleClick="tbDeploymentConfVersion_MouseDoubleClick"/>
 
-        <Button x:Name="btCopyDeploymentConfVersion" HorizontalAlignment="Left" Margin="680,192,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyDeploymentConfVersion_Click" Height="21" VerticalAlignment="Top" >
+        <Button x:Name="btCopyDeploymentConfVersion" HorizontalAlignment="Left" Margin="680,210,0,0" Width="21" ToolTip="Скопировать имя файла в буфер" Click="btCopyDeploymentConfVersion_Click" Height="21" VerticalAlignment="Top" >
             <Image Source="../Images/clipboard.png" ToolTip="Скопировать имя файла в буфер"/>
         </Button>
 
+        <Label x:Name="lbNextVersion" Content="Следующая версия:" HorizontalAlignment="Left" Margin="15,235,0,0" VerticalAlignment="Top" Width="122"/>
+        <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="145,237,0,0" VerticalAlignment="Top" Width="311" IsReadOnly="True"/>
+        <Button x:Name="btFindNextVersion" Content="Найти" HorizontalAlignment="Left" Margin="470,238,0,0" VerticalAlignment="Top" Width="70" Click="btFindNextVersion_Click"/>
 
-        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="15,220,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btGenerate_Click">
+        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="605,238,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+        <Button x:Name="btToDEV" Content="Влить в dev" HorizontalAlignment="Left" Margin="605,265,0,0" VerticalAlignment="Top" Width="100" Click="btToDEV_Click" ToolTip="Влить версию в ветку dev"/>
+
+        <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="15,265,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btGenerate_Click">
             <TextBlock x:Name="tbGenerateText" Text="Собрать json-файл Deployment Plan" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Сгенерировать json-файл Deployment Plan релиза"/>
         </Button>
 
-        <Button x:Name="btDeploymentEdit" HorizontalAlignment="Left" Margin="155,220,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btDeploymentEdit_Click">
+        <Button x:Name="btDeploymentEdit" HorizontalAlignment="Left" Margin="155,265,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btDeploymentEdit_Click">
             <TextBlock x:Name="tbDeploymentEditText" Text="Редактировать Deployment Plan" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Отредактировать Deployment Plan релиза"/>
         </Button>
 
-        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="295,220,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
-        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="410,220,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+        <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="295,265,0,0" VerticalAlignment="Top" Width="106" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
 
-        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="520,220,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
+        <Button x:Name="btExcel" Content="Выгрузить в Excel" HorizontalAlignment="Left" Margin="470,265,0,0" VerticalAlignment="Top" Width="126" Click="btExcel_Click"/>
 
-        <Label x:Name="lbCount" Content="Всего задач: 0 из них включаем в релиз: 0" HorizontalAlignment="Left" Margin="15,278,0,0" VerticalAlignment="Top" Width="368"/>
+        <Label x:Name="lbCount" Content="Всего задач: 0 из них включаем в релиз: 0" HorizontalAlignment="Left" Margin="15,315,0,0" VerticalAlignment="Top" Width="368"/>
 
-        <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="15,310,0,0" VerticalAlignment="Top" Width="23" Height="23">
+        <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="15,345,0,0" VerticalAlignment="Top" Width="23" Height="23">
             <Image Source="../Images/up.png"></Image>
         </Button>
 
-        <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="55,310,0,0" VerticalAlignment="Top" Width="23" Height="23">
+        <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="55,345,0,0" VerticalAlignment="Top" Width="23" Height="23">
             <Image Source="../Images/down.png"></Image>
         </Button>
 
-        <DataGrid x:Name="dgJSONFiles" SelectionMode = "Single" Margin="10,340,387,10" AutoGenerateColumns="False" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CurrentCellChanged="dgJSONFiles_CurrentCellChanged" MouseDoubleClick="dgJSONFiles_MouseDoubleClick" KeyDown="dgJSONFiles_KeyDown" SelectionChanged="dgJSONFiles_SelectionChanged" PreviewKeyDown="dgJSONFiles_PreviewKeyDown" MouseDown="dgJSONFiles_MouseDown">
+        <DataGrid x:Name="dgJSONFiles" SelectionMode = "Single" Margin="10,373,387,10" AutoGenerateColumns="False" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CurrentCellChanged="dgJSONFiles_CurrentCellChanged" MouseDoubleClick="dgJSONFiles_MouseDoubleClick" KeyDown="dgJSONFiles_KeyDown" SelectionChanged="dgJSONFiles_SelectionChanged" PreviewKeyDown="dgJSONFiles_PreviewKeyDown" MouseDown="dgJSONFiles_MouseDown">
             <DataGrid.Columns>
                 <DataGridTextColumn x:Name="YMLOrder" Header="N п/п" Width="45" Binding="{Binding YMLOrder}" IsReadOnly="false">
                     <DataGridTextColumn.CellStyle>
