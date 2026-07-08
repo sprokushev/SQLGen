@@ -1,0 +1,45 @@
+﻿<Window x:Name="winUpdRelBD" x:Class="SQLGen.WinUpdRelBD"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:SQLGen"
+        mc:Ignorable="d"
+        xmlns:local="clr-namespace:SQLGen"
+        Title="Обновить релизный стенд" Height="500" Width="1100" Closed="winUpdRelBD_Closed" WindowStartupLocation="CenterScreen">
+
+    <Grid x:Name="mainGrid" Background="#FFE5E5E5">
+
+        <Label x:Name="lbStand" Content="Релизный стенд:" HorizontalAlignment="Left" Margin="12,8,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbStand" HorizontalAlignment="Left" Margin="175,10,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True" SelectionChanged="cbStand_SelectionChanged"/>
+
+        <Label x:Name="lbPrefix" Content="Префикс версии (сервис):" HorizontalAlignment="Left" Margin="12,38,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbPrefix" HorizontalAlignment="Left" Margin="175,40,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True" SelectionChanged="cbPrefix_SelectionChanged"/>
+
+        <Label x:Name="lbFromVersion" Content="Начиная с версии:" HorizontalAlignment="Left" Margin="12,68,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbFromVersion" HorizontalAlignment="Left" Margin="175,70,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True" SelectionChanged="cbFromVersion_SelectionChanged"/>
+
+        <Label x:Name="lbToVersion" Content="По версию:" HorizontalAlignment="Left" Margin="12,98,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbToVersion" HorizontalAlignment="Left" Margin="175,100,0,0" VerticalAlignment="Top" Width="420" IsReadOnly="True"/>
+
+        <Button x:Name="btDatabasechangelog" Content="Определить по databasechangelog" HorizontalAlignment="Left" Margin="612,72,0,0" VerticalAlignment="Top" Width="230" ToolTip="Определить текущую версию стенда по databasechangelog" Click="btDatabasechangelog_Click"/>
+        <Button x:Name="btSetMaxVersion" Content="Установить максимальную версию" HorizontalAlignment="Left" Margin="612,100,0,0" VerticalAlignment="Top" Width="230" ToolTip="Установить максимальную версию для стенда" Click="btSetMaxVersion_Click"/>
+
+        <Button x:Name="btGenerate" Content="Сгенерировать список команд" Margin="12,140,0,0" Height="24" Click="btGenerate_Click" HorizontalAlignment="Left" Width="210" VerticalAlignment="Top"/>
+        <Button x:Name="btClipboard" HorizontalAlignment="Left" Margin="230,140,0,0" Height="24" Width="150" ToolTip="В буфер обмена" Click="btClipboard_Click" VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Images/clipboard.png"></Image>
+                <TextBlock>В буфер обмена</TextBlock>
+            </StackPanel>
+        </Button>
+
+        <RadioButton x:Name="rbAll" GroupName="DBType" Content="MS+PG" HorizontalAlignment="Left" Margin="405,145,0,0" VerticalAlignment="Top" IsChecked="True" Checked="rbAll_Checked"/>
+        <RadioButton x:Name="rbMS" GroupName="DBType" Content="только MS" HorizontalAlignment="Left" Margin="475,145,0,0" VerticalAlignment="Top" Checked="rbMS_Checked"/>
+        <RadioButton x:Name="rbPG" GroupName="DBType" Content="только PG" HorizontalAlignment="Left" Margin="565,145,0,0" VerticalAlignment="Top" Checked="rbPG_Checked"/>
+
+        <Label Content="Проект:" Margin="650,140,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="124"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="710,140,0,0" VerticalAlignment="Top" Width="275"/>
+
+        <local:SQLEditor x:Name="tbList" Margin="11,170,11,10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" IsReadOnly="True"/>
+    </Grid>
+</Window>

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="LOG" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="Warning" fontWeight="bold"/>
+	<Color name="Error" fontWeight="bold" foreground="Red"/>
+	<RuleSet ignoreCase="false">
+		<Keywords color="Warning">
+			<Word>ВНИМАНИЕ:</Word>
+		</Keywords>
+		<Keywords color="Error">
+			<Word>ОШИБКА:</Word>
+			<Word>НЕ СКОПИРОВАН:</Word>
+		</Keywords>
+	</RuleSet>
+</SyntaxDefinition>

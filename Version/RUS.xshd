@@ -1,0 +1,8 @@
+﻿<?xml version="1.0"?>
+<SyntaxDefinition name="RUS" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<!-- This is the main ruleset. -->
+	<RuleSet>
+		<!-- Rus -->
+		<Rule fontWeight="bold">[а-яА-Я]+</Rule>
+	</RuleSet>
+</SyntaxDefinition>
