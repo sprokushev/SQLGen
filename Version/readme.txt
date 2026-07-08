@@ -11,12 +11,6 @@
 - [Npgsql PostgreSQL Integration](https://github.com/npgsql/npgsql) (для доступа к Postgre SQL)
 - [Microsoft.SqlServer.SqlManagementObjects](https://docs.microsoft.com/ru-ru/sql/relational-databases/server-management-objects-smo/overview-smo) (для доступа к MS SQL) 
 
-[Changelog](https://git.promedweb.ru/rtmisdb/sqlgen/-/blob/master/CHANGELOG)
+## SAST Tools
 
-[Проект ГИТ](https://git.promedweb.ru/rtmisdb/sqlgen)
-
-[Инструкция по эксплуатации](https://git.promedweb.ru/rtmisdb/sqlgen/-/wikis/home)
-
-[Задача в Jira PROMEDWEB-89788 для сбора замечаний и предложений по доработке](https://jira.is-mis.ru/browse/PROMEDWEB-89788)
-
-
+[PVS-Studio](https://pvs-studio.com/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
