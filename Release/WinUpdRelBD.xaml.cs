@@ -210,7 +210,7 @@ namespace SQLGen
 
                                 if (
                                     !string.IsNullOrWhiteSpace(item.file) &&
-                                    item.file.ToLower().StartsWith("/update")
+                                    item.file.ToLower().StartsWith("/update") //-V3125
                                 )
                                 {
                                     result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.file);
@@ -254,7 +254,7 @@ namespace SQLGen
 
                                 if (
                                     !string.IsNullOrWhiteSpace(item.file) &&
-                                    item.file.ToLower().StartsWith("/update")
+                                    item.file.ToLower().StartsWith("/update") //-V3125
                                 )
                                 {
                                     result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.file);
