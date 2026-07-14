@@ -549,7 +549,7 @@
         <member name="M:SQLGen.MainWindow.SaveConnects">
             <summary>Сохранить список коннектов</summary>
         </member>
-        <member name="M:SQLGen.MainWindow.UpdateLiquibaseRTMIS(System.String,System.String,System.String,System.Collections.Generic.List{System.String}@)">
+        <member name="M:SQLGen.MainWindow.UpdateLiquibaseRTMIS(System.String,System.String,System.String,System.Collections.Generic.List{System.String}@,System.String@)">
             <summary>
             Собрать строку для повышения максимальной версии стенда
             </summary>
@@ -557,6 +557,7 @@
             <param name="version">номер версии с префиксом</param>
             <param name="prefix">префикс версии</param>
             <param name="list_cmd">список комманд</param>
+            <param name="max_version">максимальная версия</param>
             <returns></returns>
         </member>
         <member name="M:SQLGen.MainWindow.GetConnectByGITProject(System.String,System.String,System.Boolean,System.Boolean,System.String)">
@@ -7744,6 +7745,13 @@
             <summary>
             Настроить список проектов
             </summary>
+        </member>
+        <member name="M:SQLGen.WinUpdRelBD.btSetMaxVersion_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка "Установить максимальную версию"
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
         </member>
         <member name="M:SQLGen.WinUpdRelBD.InitializeComponent">
             <summary>

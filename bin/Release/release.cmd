@@ -23,7 +23,7 @@ mkdir %VERSION_DIR%
 mkdir %BETA_DIR% 
 mkdir %BACKUP_DIR%
 
-move /Y %VERSION_DIR%\SQLGen.zip %BACKUP_DIR%\SQLGen_%now%.zip >> %LOGFILE% 
+rem move /Y %VERSION_DIR%\SQLGen.zip %BACKUP_DIR%\SQLGen_%now%.zip >> %LOGFILE% 
 del %VERSION_DIR%\*.* /F /Q /S >> %LOGFILE% 
 rem copy /y %SOURCE_DIR%\CHANGELOG %RELEASE_DIR%\changelog.txt >> %LOGFILE% 
 rem copy /y %SOURCE_DIR%\README.md %RELEASE_DIR%\readme.txt >> %LOGFILE% 
