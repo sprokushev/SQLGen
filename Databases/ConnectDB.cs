@@ -2182,7 +2182,7 @@ and n.nspname ilike '" + table.SchemaNameToSeekForLike + @"';";
 Select s.name + '.' + t.name as table_name
 from sys.tables t with (nolock)
 JOIN sys.schemas s with (nolock) ON s.schema_id = t.schema_id
-where s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'liquibase', 'diff', 'box')
+where s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'box')
 and s.name + '.' + t.name like '%" + tablename + @"%'
 order by s.name + '.' + t.name";
             else if (this.ConnType == Utilities.ConnType.PGSQL)
@@ -2192,7 +2192,7 @@ SELECT n.nspname || '.' || t.relname as table_name
 FROM pg_catalog.pg_class t
 LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('r','f','p')
-AND n.nspname NOT IN ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+AND n.nspname NOT IN ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname || '.' || t.relname ilike '%" + tablename + @"%'
 order by n.nspname || '.' || t.relname;";
             }
@@ -3186,7 +3186,7 @@ select distinct
     TABLE_NAME as name,
     '' as Autogen
 from information_schema.TABLES
-where TABLE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'liquibase', 'diff', 'box')
+where TABLE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'box')
 and TABLE_SCHEMA + '.' + TABLE_NAME like '" + partname + @"'
 and TABLE_TYPE = 'BASE TABLE'
 ";
@@ -3215,7 +3215,7 @@ outer apply (
     from sys.syscomments with (NOLOCK) 
     where id = object_id(TABLE_SCHEMA + '.' + TABLE_NAME)
 ) comments
-where TABLE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'liquibase', 'diff', 'box')
+where TABLE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'box')
 and TABLE_SCHEMA + '.' + TABLE_NAME like '" + partname + @"'
 ";
                 }
@@ -3247,7 +3247,7 @@ outer apply (
     from sys.syscomments with (NOLOCK) 
     where id = object_id(ROUTINE_SCHEMA + '.' + ROUTINE_NAME)
 ) comments
-where ROUTINE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'liquibase', 'diff', 'box')
+where ROUTINE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'box')
 and ROUTINE_SCHEMA + '.' + ROUTINE_NAME like '" + partname + @"'
 ";
                 }
@@ -3266,7 +3266,7 @@ SELECT distinct
 FROM sys.indexes i (NOLOCK)
 inner join sys.TABLES t (NOLOCK) on t.object_id = i.object_id
 inner join sys.schemas s (nolock) on s.schema_id = t.schema_id
-where s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'liquibase', 'diff', 'box')
+where s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'eyes', 'box')
 and s.name + '.' + t.name like '" + partname + @"'
 AND i.[type] <> 1
 ";
@@ -3294,7 +3294,7 @@ FROM pg_catalog.pg_class t
 inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('r','p')
 and n.nspname || '.' || t.relname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3315,7 +3315,7 @@ FROM pg_catalog.pg_class t
 inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('f')
 and n.nspname || '.' || t.relname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3345,7 +3345,7 @@ select
 	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname)), 'pg_class') as description
 from pg_views
 where schemaname || '.' || viewname ilike '" + partname + @"'
-AND schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff', 'box')
+AND schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'box')
 AND schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 
@@ -3360,7 +3360,7 @@ select distinct
 	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname)), 'pg_class') as description
 from pg_matviews 
 where schemaname || '.' || matviewname ilike '" + partname + @"'
-and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 ) t
@@ -3396,7 +3396,7 @@ select
 from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname || '.' || p.proname ilike '" + partname + @"'
-AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast')
 AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 AND exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
@@ -3433,7 +3433,7 @@ select
 from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname || '.' || p.proname ilike '" + partname + @"'
-AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+AND n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast')
 AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 and exists (select 1 from pg_language l where l.oid = p.prolang and not l.lanname in ('sql', 'plpgsql'))
@@ -3457,7 +3457,7 @@ inner join pg_class t on t.oid = trg.tgrelid
 inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('r','f','p')
 and n.nspname || '.' || trg.tgname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 AND trg.tgname not like '%\_audit\_%'
@@ -3481,7 +3481,7 @@ from pg_class t
 inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('S')
 and n.nspname || '.' || t.relname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3503,7 +3503,7 @@ inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 inner join pg_index i on i.indexrelid = t.oid and not indisprimary
 where t.relkind in ('i')
 and n.nspname || '.' || t.relname ilike '" + partname + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3569,7 +3569,7 @@ inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('r','p')
 and n.nspname ilike '" + schema + @"'
 and t.relname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3590,7 +3590,7 @@ inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('f')
 and n.nspname ilike '" + schema + @"'
 and t.relname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3609,7 +3609,7 @@ select
 from pg_views 
 where schemaname ilike '" + schema + @"'
 and viewname ilike '" + name + @"'
-and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 
@@ -3623,7 +3623,7 @@ select
 from pg_matviews 
 where schemaname ilike '" + schema + @"'
 and matviewname ilike '" + name + @"'
-and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 ";
@@ -3643,7 +3643,7 @@ from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname ilike '" + schema + @"'
 and p.proname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 and exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
@@ -3664,7 +3664,7 @@ from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
 where n.nspname ilike '" + schema + @"'
 and p.proname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 and exists (select 1 from pg_language l where l.oid = p.prolang and not l.lanname in ('sql', 'plpgsql'))
@@ -3687,7 +3687,7 @@ inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('r','f','p')
 and n.nspname ilike '" + schema + @"'
 and trg.tgname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 AND trg.tgname not like '%\_audit\_%'
@@ -3711,7 +3711,7 @@ inner JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
 where t.relkind in ('S')
 and n.nspname ilike '" + schema + @"'
 and t.relname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";
@@ -3733,7 +3733,7 @@ inner join pg_index i on i.indexrelid = t.oid and not indisprimary
 where t.relkind in ('i')
 and n.nspname ilike '" + schema + @"'
 and t.relname ilike '" + name + @"'
-and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff', 'box')
+and n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'box')
 and n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 ";

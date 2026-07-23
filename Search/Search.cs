@@ -64,7 +64,7 @@ WHERE (
     sm.definition LIKE '%%%SEARCH%%%'
     OR s.name + '.' + sp.name LIKE '%%%SEARCH%%%'
 )
-AND s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'liquibase', 'diff', 'box')
+AND s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'box')
 AND (%%WITHAUTOGEN%%=2 OR sm.definition NOT LIKE '%autogen%')
 AND (%%WITHREGISTRY%%=2 OR sp.name NOT LIKE '%registry%')
 ORDER BY s.name, sp.name
@@ -95,7 +95,7 @@ WHERE (
     comments.description LIKE '%%%SEARCH%%%'
     OR ROUTINE_SCHEMA + '.' + ROUTINE_NAME LIKE '%%%SEARCH%%%'
 )
-AND ROUTINE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'liquibase', 'diff')
+AND ROUTINE_SCHEMA NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public')
 )
 select *
 from cte
@@ -132,7 +132,7 @@ select
 	obj_description(p.oid, 'pg_proc') as description
 from pg_proc p
 INNER JOIN pg_namespace n ON n.oid = p.pronamespace
-WHERE n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+WHERE n.nspname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast')
 AND n.nspname not like '%\_old'
 AND n.nspname not like 'pg\_%'
 AND exists (select 1 from pg_language l where l.oid = p.prolang and l.lanname in ('sql', 'plpgsql'))
@@ -187,7 +187,7 @@ WHERE (
     sm.definition LIKE '%%%SEARCH%%%'
     OR s.name + '.' + sv.name LIKE '%%%SEARCH%%%'
 )
-AND s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'liquibase', 'diff')
+AND s.name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public')
 AND (%%WITHAUTOGEN%%=2 OR sm.definition NOT LIKE '%autogen%')
 AND (%%WITHREGISTRY%%=2 OR sv.name NOT LIKE '%registry%')
 ORDER BY s.name, sv.name
@@ -216,7 +216,7 @@ select
 	definition as viewtext,
 	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(viewname)), 'pg_class') as description
 from pg_views
-WHERE schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'liquibase', 'diff')
+WHERE schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast')
 AND schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 
@@ -229,7 +229,7 @@ select
 	definition as viewtext,
 	obj_description(to_regclass(quote_ident(schemaname) || '.' || quote_ident(matviewname)), 'pg_class') as description
 from pg_matviews 
-where schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff')
+where schemaname not in ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes')
 and schemaname not like '%\_old'
 AND schemaname not like 'pg\_%'
 )
@@ -279,7 +279,7 @@ SELECT
 FROM dbo.v_columns c with (NOLOCK) 
 WHERE (1=1)
 AND c.table_type='U' 
-AND c.schema_name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public', 'liquibase', 'diff')
+AND c.schema_name NOT IN ('information_schema', 'sys', 'tmp', 'TABLE tmp', 'raw', 'symdict', 'SWN\savage', 'audit', 'public')
 AND (
     c.schema_name + '.' + table_name LIKE '%%%SEARCH%%%'
     OR c.table_description LIKE '%%%SEARCH%%%'
@@ -313,7 +313,7 @@ FROM dbo.v_columns c
 inner join pg_catalog.pg_class p on p.oid = c.tbloid
 WHERE (1=1)
 AND p.relkind IN ('r','f','p')
-AND c.schema_name NOT IN ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes', 'liquibase', 'diff')
+AND c.schema_name NOT IN ('information_schema', 'pg_catalog', 'sys', 'tmp', 'TABLE tmp', 'public', 'audit', 'pg_toast', 'eyes')
 AND c.schema_name not like '%\_old'
 AND c.schema_name not like 'pg\_%'
 AND (
