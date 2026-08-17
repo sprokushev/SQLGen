@@ -1060,6 +1060,16 @@ namespace SQLGen
                         // имя файла для add
                         string _addfilename = FilenameDefault.Replace(".json", ".add");
 
+                        // пересортируем
+                        var new_add = new ObservableCollection<Cron>();
+
+                        foreach (var item in ListAddCron.OrderBy(x => x.order))
+                        {
+                            new_add.Add(item);
+                        }
+
+                        ListAddCron = new_add;
+
                         // сгенерить json с заданиями для add
                         jsonText = Cron.GenerateJSON(null, ListAddCron, logFile, null, false, true);
 

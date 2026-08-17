@@ -2087,26 +2087,22 @@ namespace SQLGen
 
             int _order = 0;
 
-            // выделяем папку внутри проекта и имя файла
-            string ProjectFolder = Utilities.GITProjects.GetFolderByProject(project);
-            string gitfolder = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder);
-            string cronfolder = "";
-            string cronfilename = "";
+            // загруженный список
+            var load_list = new ObservableCollection<Cron>();
 
-            if (json_filepath.StartsWith(gitfolder, StringComparison.OrdinalIgnoreCase))
+            foreach (var item in json_list
+                .OrderBy(x => x.order)
+            )
             {
-                cronfolder = Regex.Replace(json_filepath, gitfolder.Replace(@"\", @"\\"), "", RegexOptions.IgnoreCase)
-                    .TrimStart(new char[] { Path.DirectorySeparatorChar });
+                var _cron = new Cron();
 
-                cronfilename = Path.GetFileName(cronfolder);
-                cronfolder = Path.GetDirectoryName(cronfolder);
+                _cron.SetCron(item.order, item.task, _dbregion, item.state, item.database, item.stage, item.application_name, item.comment, item.command, item.schedule, item.regions, item.exclude_regions, item.timeout, item.hosts, item.check, item.team, item.istemp == 2);
+
+                load_list.Add(_cron);
             }
 
             // новый список
             var new_list = new ObservableCollection<Cron>();
-
-            // список уже загруженных заданий
-            var ReLoadedCron = new List<string>();
 
             // перебираем старый список
             foreach (var old_item in all_list
@@ -2117,8 +2113,7 @@ namespace SQLGen
                 // проверяем, есть ли "старое" задание в загружаемом файле
                 bool isreload = false;
 
-                foreach (var item in json_list
-                    .Select(x => x.ToCron(_dbregion, cronfolder, cronfilename))
+                foreach (var item in load_list
                     .Where(x => x.IsKeyEqual(old_item))
                     .OrderBy(x => x.order)
                 )
@@ -2150,8 +2145,7 @@ namespace SQLGen
             }
 
             // перебираем новый список
-            foreach (var item in json_list
-                .Select(x => x.ToCron(_dbregion, cronfolder, cronfilename))
+            foreach (var item in load_list
                 .OrderBy(x => x.order)
             )
             {
