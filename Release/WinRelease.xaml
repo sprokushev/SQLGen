@@ -96,7 +96,7 @@
         <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="524,227,0,0" VerticalAlignment="Top" Width="305" IsReadOnly="True"/>
         <Button x:Name="btFindNextVersion" Content="Найти" HorizontalAlignment="Left" Margin="839,227,0,0" VerticalAlignment="Top" Width="70" Click="btFindNextVersion_Click"/>
         <Button x:Name="btSetNextVersion" Content="Сменить" HorizontalAlignment="Left" Margin="914,227,0,0" VerticalAlignment="Top" Width="65" Click="btSetNextVersion_Click" ToolTip="Сменить в yml-файле следующей версии ссылку на файл текущей версии"/>
-        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="984,227,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
+        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="984,227,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить текущую версию во все последующие"/>
 
 
         <Label Content="Фильтр 1:" HorizontalAlignment="Left" Margin="682,347,0,0" VerticalAlignment="Top" Width="66"/>
@@ -134,15 +134,20 @@
         <!--Button x:Name="btTransfer" Content="Выполнить transfer.sh" HorizontalAlignment="Left" Margin="844,244,0,0" VerticalAlignment="Top" Width="136" Click="btTransfer_Click" ToolTip="Выполнить transfer.sh" /-->
         <Button x:Name="btTortoiseGIT" Content="Отправить в GIT" HorizontalAlignment="Left" Margin="845,280,0,0" VerticalAlignment="Top" Width="145" Click="btTortoiseGIT_Click" ToolTip="Выполнить GIT PULL + GIT ADD + GIT COMMIT + GIT PUSH"/>
         <Button x:Name="btToDEV" HorizontalAlignment="Left" Margin="1000,280,0,0" VerticalAlignment="Top" Width="90" Click="btToDEV_Click">
-            <TextBlock Text="Влить в dev" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Влить ветку текущей версии в dev"/>
+            <TextBlock Text="Влить в dev" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Влить ветку ТЕКУЩЕЙ версии в dev"/>
         </Button>
-        <Button x:Name="btFormGIT" HorizontalAlignment="Left" Margin="1000,305,0,0" VerticalAlignment="Top" Width="90" Click="btFormGIT_Click" Height="39">
+
+        <Button x:Name="btMergeNextVersionAndDEV" HorizontalAlignment="Left" Margin="1000,305,0,0" VerticalAlignment="Top" Width="90" Click="btMergeNextVersionAndDEV_Click">
+            <TextBlock Text="Влить дальше + dev" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Влить текущую версию во все последующие, а ПОСЛЕДНЮЮ версию влить в dev"/>
+        </Button>
+
+        <Button x:Name="btFormGIT" HorizontalAlignment="Left" Margin="900,305,0,0" VerticalAlignment="Top" Width="90" Click="btFormGIT_Click" Height="39">
             <TextBlock Text="Скопировать из GIT" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Скопировать все скрипты версии в папку задачи"/>
         </Button>
 
-        <CheckBox x:Name="isCorrectEncoding" Content="предлагать исправлять кодировку ?" HorizontalAlignment="Left" Margin="686,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 ?" HorizontalAlignment="Left" Margin="686,316,0,0" VerticalAlignment="Top"/>
-        <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="686,331,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="isCorrectEncoding" Content="предлагать исправлять кодировку ?" HorizontalAlignment="Left" Margin="665,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 ?" HorizontalAlignment="Left" Margin="665,316,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="665,331,0,0" VerticalAlignment="Top"/>
 
         <Button x:Name="btUp" Grid.Row="2" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="10,430,0,0" VerticalAlignment="Top" Width="23" Height="23">
             <Image Source="../Images/up.png"></Image>

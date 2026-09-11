@@ -621,7 +621,7 @@ namespace SQLGen
             {
                 case Utilities.ScriptType.DROP:
 
-                    ScriptIndex += "-- Drop index: " + index.IndexNameToScript;
+                    ScriptIndex += "-- Drop index: " + index.IndexNameToSeek;
 
                     if (index.ParentTableDB.TargetDB == Utilities.TargetDBType.MSSQL)
                     {
@@ -658,7 +658,7 @@ namespace SQLGen
                                 " DROP CONSTRAINT IF EXISTS " + index.IndexNameToScript + Environment.NewLine +
                                 Environment.NewLine +
                                 "EXEC dbo.p_IndexDelete" + Environment.NewLine +
-                                "\t@pIndexName = '" + index.IndexNameToScript + "'," + Environment.NewLine +
+                                "\t@pIndexName = '" + index.IndexNameToSeek + "'," + Environment.NewLine +
                                 "\t@task = '" + MainWindow.Task.TaskNumber + "'," + Environment.NewLine +
                                 "\t@pSchema = '" + index.ParentTableDB.TableEdit.SchemaNameToScript + "'," + Environment.NewLine +
                                 "\t@pTable = '" + index.ParentTableDB.TableEdit.TableNameToScript + "'";
@@ -667,7 +667,7 @@ namespace SQLGen
                             {
                                 ScriptIndex += Environment.NewLine +
                                 "EXEC dbo.p_IndexDelete" + Environment.NewLine +
-                                "\t@pIndexName = '" + index.IndexNameToScript + "'," + Environment.NewLine +
+                                "\t@pIndexName = '" + index.IndexNameToSeek + "'," + Environment.NewLine +
                                 "\t@task = '" + MainWindow.Task.TaskNumber + "'," + Environment.NewLine +
                                 "\t@pSchema = '" + index.ParentTableDB.TableEdit.SchemaNameToScript + "'," + Environment.NewLine +
                                 "\t@pTable = '" + index.ParentTableDB.TableEdit.TableNameToScript + "'";
@@ -737,7 +737,7 @@ namespace SQLGen
                 case Utilities.ScriptType.CREATE:
                 default:
 
-                    ScriptIndex += "-- Add index: " + index.IndexNameToScript;
+                    ScriptIndex += "-- Add index: " + index.IndexNameToSeek;
 
                     if (index.ParentTableDB.TargetDB == Utilities.TargetDBType.MSSQL)
                     {
@@ -754,7 +754,7 @@ namespace SQLGen
                                 "AND NOT EXISTS (" + Environment.NewLine +
                                 "\tSELECT TOP(1) 1" + Environment.NewLine +
                                 "\tFROM sys.sysindexes WITH (nolock)" + Environment.NewLine +
-                                "\tWHERE name = '" + index.IndexNameToScript + "'" + Environment.NewLine +
+                                "\tWHERE name = '" + index.IndexNameToSeek + "'" + Environment.NewLine +
                                 "\tAND id = OBJECT_ID(N'" + index.ParentTableDB.TableEdit.FullTableNameToScript + "', 'U')" + Environment.NewLine +
                                 ")" + Environment.NewLine +
                                 "BEGIN" + Environment.NewLine +
@@ -817,10 +817,17 @@ namespace SQLGen
 
                                 foreach (var indextodel in arr)
                                 {
+                                    string _name = indextodel;
+
+                                    if (_name.Contains("-"))
+                                    {
+                                        _name = "[" + _name + "]";
+                                    }
+
                                     ScriptIndex += Environment.NewLine +
                                         "IF OBJECT_ID(N'" + index.ParentTableDB.TableEdit.FullTableNameToScript + "', 'U') IS NOT NULL" + Environment.NewLine +
                                         "BEGIN" + Environment.NewLine +
-                                        "\tDROP INDEX IF EXISTS " + indextodel + 
+                                        "\tDROP INDEX IF EXISTS " + _name + 
                                         " ON " + index.ParentTableDB.TableEdit.FullTableNameToScript + Environment.NewLine +
                                         "END";
                                 }
@@ -830,7 +837,7 @@ namespace SQLGen
                         {
                             ScriptIndex += Environment.NewLine +
                                 "EXEC dbo.p_IndexCreate" + Environment.NewLine +
-                                "\t@pIndexName = '" + index.IndexNameToScript + "'," + Environment.NewLine +
+                                "\t@pIndexName = '" + index.IndexNameToSeek + "'," + Environment.NewLine +
                                 "\t@task = '" + MainWindow.Task.TaskNumber + "'," + Environment.NewLine +
                                 "\t@pSchema = '" + index.ParentTableDB.TableEdit.SchemaNameToScript + "'," + Environment.NewLine +
                                 "\t@pTable = '" + index.ParentTableDB.TableEdit.TableNameToScript + "'," + Environment.NewLine +
@@ -1065,8 +1072,14 @@ namespace SQLGen
 
                                 foreach (var indextodel in arr)
                                 {
+                                    string _name = indextodel;
+                                    if (_name.Contains("-"))
+                                    {
+                                        _name = "\"" + _name + "\"";
+                                    }
+
                                     ScriptIndex += Environment.NewLine +
-                                        "\tDROP INDEX IF EXISTS " + index.ParentTableDB.TableEdit.SchemaNameToScript + "." + indextodel + ";";
+                                        "\tDROP INDEX IF EXISTS " + index.ParentTableDB.TableEdit.SchemaNameToScript + "." + _name + ";";
                                 }
                             }
 
@@ -3518,17 +3531,24 @@ WHERE (1 = 1)
             set
             {
                 _index_name = value;
-                if (string.IsNullOrWhiteSpace(_index_name)) _index_name = "";
-                _index_name = _index_name
-                    .Replace("\"", string.Empty)
-                    .Replace("[", string.Empty)
-                    .Replace("]", string.Empty)
-                    .Trim();
+                if (string.IsNullOrWhiteSpace(_index_name))
+                {
+                    _index_name = "";
+                }
+                else
+                {
+                    _index_name = _index_name
+                        .TrimAllSpace();
+                }
             }
         }
 
         /// <summary>Имя индекса - в оригинальном регистре, но без кавычек</summary>
-        public string IndexNameReady => IndexName.Replace("\"", "");
+        public string IndexNameReady => IndexName
+                    .Replace("\"", string.Empty)
+                    .Replace("[", string.Empty)
+                    .Replace("]", string.Empty)
+                    .TrimAllSpace();
 
         /// <summary>Имя индекса - для сравнения, в нижнем регистре и без кавычек</summary>
         public string IndexNameCompare => IndexNameReady.ToLower();
@@ -3538,15 +3558,41 @@ WHERE (1 = 1)
         {
             get
             {
+                string result = "";
+
                 switch (this.ParentTableDB.TargetDB)
                 {
+                    case Utilities.TargetDBType.MSSQL:
+                        {
+                            result = this.IndexNameReady;
+
+                            if (result.Contains("-"))
+                            {
+                                result = "[" + result + "]";
+                            }
+
+                            break;
+                        }
                     case Utilities.TargetDBType.EMD:
                     case Utilities.TargetDBType.PGSQL:
-                        return this.IndexNameReady.ToLower();
-                    case Utilities.TargetDBType.MSSQL:
+                        {
+                            result = this.IndexNameReady.ToLower();
+
+                            if (result.Contains("-"))
+                            {
+                                result = "\"" + result + "\"";
+                            }
+
+                            break;
+                        }
                     default:
-                        return this.IndexNameReady;
+                        {
+                            result = this.IndexNameReady;
+                            break;
+                        }
                 }
+
+                return result;
             }
         }
 
@@ -3568,7 +3614,11 @@ WHERE (1 = 1)
         }
 
         /// <summary>Имя индекса в целевой БД, для поиска в БД</summary>
-        public string IndexNameToSeek => IndexNameToScript.Replace("\"", "");
+        public string IndexNameToSeek => IndexNameToScript
+            .Replace("\"", "")
+            .Replace("[", "")
+            .Replace("]", "")
+            .TrimAllSpace();
 
         /// <summary>Имя индекса в целевой БД, для поиска в БД в like\ilike</summary>
         public string IndexNameToSeekForLike
@@ -3679,8 +3729,18 @@ WHERE (1 = 1)
             set
             {
                 _predicat = value;
-                if (string.IsNullOrWhiteSpace(_predicat)) _predicat = "";
-                _predicat = _predicat.Replace("[", string.Empty).Replace("]", string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(_predicat))
+                {
+                    _predicat = "";
+                }
+                else
+                {
+                    _predicat = _predicat
+                        //.Replace("\"", string.Empty)
+                        //.Replace("[", string.Empty)
+                        //.Replace("]", string.Empty)
+                        .TrimAllSpace();
+                }
             }
         }
 
@@ -3751,8 +3811,18 @@ WHERE (1 = 1)
             set
             {
                 _include = value;
-                if (string.IsNullOrWhiteSpace(_include)) _include = "";
-                _include = _include.Replace("[", string.Empty).Replace("]", string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(_include))
+                {
+                    _include = "";
+                }
+                else
+                {
+                    _include = _include
+                        //.Replace("\"", string.Empty)
+                        //.Replace("[", string.Empty)
+                        //.Replace("]", string.Empty)
+                        .TrimAllSpace();
+                }
             }
         }
 
@@ -3785,8 +3855,17 @@ WHERE (1 = 1)
             set
             {
                 _where = value;
-                if (string.IsNullOrWhiteSpace(_where)) _where = "";
-                _where = _where.Replace("[", string.Empty).Replace("]", string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(_where))
+                {
+                    _where = "";
+                }
+                else
+                {
+                    _where = _where
+                        .Replace("[", string.Empty)
+                        .Replace("]", string.Empty)
+                        .TrimAllSpace();
+                }
             }
         }
 
@@ -3876,8 +3955,18 @@ WHERE (1 = 1)
             set
             {
                 _indextodel = value;
-                if (string.IsNullOrWhiteSpace(_indextodel)) _indextodel = "";
-                _indextodel = _indextodel.Replace("\"", string.Empty).Replace("[", string.Empty).Replace("]", string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(_indextodel))
+                {
+                    _indextodel = "";
+                }
+                else
+                {
+                    _indextodel = _indextodel
+                        .Replace("\"", string.Empty)
+                        .Replace("[", string.Empty)
+                        .Replace("]", string.Empty)
+                        .TrimAllSpace();
+                }
             }
         }
 
@@ -3889,12 +3978,12 @@ WHERE (1 = 1)
                 switch (this.ParentTableDB.TargetDB)
                 {
                     case Utilities.TargetDBType.EMD:
-                        return this.IndexToDel.Replace("\"", string.Empty);
+                        return this.IndexToDel;
                     case Utilities.TargetDBType.PGSQL:
-                        return this.IndexToDel.Replace("\"", string.Empty).ToLower();
+                        return this.IndexToDel.ToLower();
                     case Utilities.TargetDBType.MSSQL:
                     default:
-                        return this.IndexToDel.Replace("\"", string.Empty);
+                        return this.IndexToDel;
                 }
             }
         }

@@ -4,6 +4,37 @@ M - месяц
 D - день
 N - номер фикса по порядку
 
+2026.9.10.0:
+- Релиз: на формах "Собрать Deployment Plan" и "Собрать Cron" если версия НЕ кумулятивная - не считывать информацию из веток последующих КУМУЛЯТИВНЫХ версий
+- Релиз: на формах "Собрать Deployment Plan" и "Собрать Cron" окно редактирования открывается в диалоговом режиме, исключающем воможность открытия нескольких экземпляров окон
+- Релиз: при Code Review версии проверяется наличие файла *_deployment.json
+- Релиз: на всех формах добавил кнопку "Влить дальше + dev"
+- Выполнение SQL-скриптов: если номер задачи в changeset отличается от номера текущей задачи,
+	то пропускаются ТОЛЬКО те changeset, у которых есть тег labels:struct или без тега labels,
+	а остальные скрипты выполняются вне зависимости от номера задачи в changeset
+- Таблица: создание или удаление индекса - если в названии есть знак "-" то название индекса обернуть в двойные кавычки " (на ПГ) или скобки [] (на МС)
+- Таблица: при создании уникального индекса название индекса начинать с uk_
+- Выгрузить из GIT, Поиск в GIT: исправлена работа с русскими буквами в именах файлов
+- изменил Target Framework = .NET Framework 4.8
+- Обновление программных библиотек, используемых приложением:
+Updates:
+AngleSharp.1.1.2 -> AngleSharp.1.5.0
+Azure.Core.1.41.0 -> Azure.Core.1.50.0
+Azure.Identity.1.12.0 -> Azure.Identity.1.17.1
+Microsoft.Extensions.DependencyInjection.Abstractions.8.0.1 -> Microsoft.Extensions.DependencyInjection.Abstractions.8.0.2
+Microsoft.Extensions.Logging.Abstractions.8.0.1 -> Microsoft.Extensions.Logging.Abstractions.8.0.3
+Microsoft.Identity.Client.4.62.0 -> Microsoft.Identity.Client.4.78.0
+Microsoft.Identity.Client.Extensions.Msal.4.62.0 -> Microsoft.Identity.Client.Extensions.Msal.4.78.0
+Microsoft.IdentityModel.Abstractions.8.0.1 -> Microsoft.IdentityModel.Abstractions.8.14.0
+System.Buffers.4.5.1 -> System.Buffers.4.6.1
+System.ClientModel.1.0.0 -> System.ClientModel.1.8.0
+System.Memory.4.5.5 -> System.Memory.4.6.3
+System.Memory.Data.8.0.0 -> System.Memory.Data.8.0.1
+System.Numerics.Vectors.4.5.0 -> System.Numerics.Vectors.4.6.1
+System.Runtime.CompilerServices.Unsafe.6.0.0 -> System.Runtime.CompilerServices.Unsafe.6.1.2
+System.Text.Json.8.0.5 -> System.Text.Json.8.0.6
+System.Threading.Tasks.Extensions.4.5.4 -> System.Threading.Tasks.Extensions.4.6.0
+CronExpressionDescriptor.2.39.0 -> CronExpressionDescriptor.2.51.0
 2026.6.19.6:
 - Релиз: (fix) исправлена ошибка при сохранении version\*_cron.add
 2026.6.19.5:

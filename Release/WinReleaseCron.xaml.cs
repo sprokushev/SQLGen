@@ -1078,7 +1078,7 @@ namespace SQLGen
             }
 
             // редактируем
-            WinCron.Show();
+            WinCron.ShowDialog();
         }
 
         /// <summary>
@@ -1314,11 +1314,10 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// Нажата кнопка Влить дальше
+        /// Влить текущую версию в следующие
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btMergeNextVersion_Click(object sender, RoutedEventArgs e)
+        /// <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        private void MergeNextVersion(bool isAddDev)
         {
             if (!CheckBranch(out string cur_branch)) return;
 
@@ -1368,7 +1367,7 @@ namespace SQLGen
             if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во все последующие ветки ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
                 // вливаем во все последующие после ТЕКУЩЕЙ
-                GIT.GitMergeNextVersion(project, branch, isNoCumulative, Versions, MainWindow.Task.LogFileRelease);
+                GIT.GitMergeNextVersion(project, branch, isNoCumulative, Versions, MainWindow.Task.LogFileRelease, isAddDev);
 
                 // ----------------------------------------------------------------------------
                 // показываем лог
@@ -1385,6 +1384,27 @@ namespace SQLGen
                 CheckBranch(out branch);
             }
         }
+
+        /// <summary>
+        /// Нажата кнопка Влить дальше
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btMergeNextVersion_Click(object sender, RoutedEventArgs e)
+        {
+            MergeNextVersion(false);
+        }
+
+        /// <summary>
+        /// Нажата кнопка Влить дальше + dev
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btMergeNextVersionAndDEV_Click(object sender, RoutedEventArgs e)
+        {
+            MergeNextVersion(true);
+        }
+
 
         /// <summary>
         /// Нажата кнопка "Влить в dev"

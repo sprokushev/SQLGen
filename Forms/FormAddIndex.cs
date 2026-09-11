@@ -21,7 +21,7 @@ namespace SQLGen
         /// <summary>Изменяемый IndexDB</summary>
         public IndexDB index;
 
-        /// <summary>Родительский объект TableDB</summary>
+        /// <summary>Оригинальное имя индекса</summary>
         public string OriginalName;
 
         /// <summary>Тип скрипта</summary>
@@ -102,7 +102,14 @@ namespace SQLGen
         /// <param name="e">event</param>
         public void btAutoName_Click(object sender, EventArgs e)
         {
-            string name = "idx_" + parent.TableEdit.TableNameReady
+            string prefix = "idx";
+
+            if (cbIsUnique.Checked == true)
+            {
+                prefix = "uk";
+            }
+
+            string name = prefix + "_" + parent.TableEdit.TableNameReady
                 + "_";
             string predicat = tbIndexPredicat.Text.Trim()
                 .Replace(" ", string.Empty)
@@ -249,33 +256,70 @@ namespace SQLGen
 
         private void tbIndexName_TextChanged(object sender, EventArgs e)
         {
-            tbIndexName.Text = tbIndexName.Text.Replace("[", string.Empty).Replace("]", string.Empty).Replace("\"", string.Empty);
+            tbIndexName.Text = tbIndexName.Text
+                .Replace("\"", string.Empty)
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .TrimAllSpace();
         }
 
         private void tbIndexPredicat_TextChanged(object sender, EventArgs e)
         {
-            tbIndexPredicat.Text = tbIndexPredicat.Text.Replace("[", string.Empty).Replace("]", string.Empty);
+            tbIndexPredicat.Text = tbIndexPredicat.Text
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .TrimAllSpace();
         }
 
         private void tbIndexInclude_TextChanged(object sender, EventArgs e)
         {
-            tbIndexInclude.Text = tbIndexInclude.Text.Replace("[", string.Empty).Replace("]", string.Empty);
+            tbIndexInclude.Text = tbIndexInclude.Text
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .TrimAllSpace();
         }
 
         private void tbIndexWhere_TextChanged(object sender, EventArgs e)
         {
-            tbIndexWhere.Text = tbIndexWhere.Text.Replace("[", string.Empty).Replace("]", string.Empty);
+            tbIndexWhere.Text = tbIndexWhere.Text
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .TrimAllSpace();
         }
 
         private void tbIndexToDel_TextChanged(object sender, EventArgs e)
         {
-            tbIndexToDel.Text = tbIndexToDel.Text.Replace("[", string.Empty).Replace("]", string.Empty);
+            tbIndexToDel.Text = tbIndexToDel.Text
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .TrimAllSpace();
         }
 
         private void FormAddIndex_FormClosed(object sender, FormClosedEventArgs e)
         {
             // пользовательские настройки GUI
             Default.SaveGUI("FormAddIndex", this);
+        }
+
+        private void cbIsUnique_CheckedChanged(object sender, EventArgs e)
+        {
+            string _name = tbIndexName.Text.TrimAllSpace();
+
+            if (
+                cbIsUnique.Checked == true &&
+                _name.StartsWith("idx_")
+            )
+            {
+                tbIndexName.Text = "uk_" + _name.Substring(4);
+            }
+
+            if (
+                cbIsUnique.Checked == false &&
+                _name.StartsWith("uk_")
+            )
+            {
+                tbIndexName.Text = "idx_" + _name.Substring(3);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-среда разработки  - Visual Studio 2022, C#, Microsoft .NET Framework 4.7.2
+среда разработки  - Visual Studio 2022, C#, Microsoft .NET Framework 4.8
 
 Рабочие нагрузки: 
 - Разработка классических приложений .NET
@@ -6,6 +6,7 @@
 
 Расширения (Visual Studio Extensions):
 - [AngleSharp + AngleSharp.Io](https://github.com/AngleSharp/AngleSharp/tree/devel/docs) (для парсинга HTML)
+- [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (для интерфейса текстового редактора)
 - [Fluent.Ribbon](https://github.com/fluentribbon/Fluent.Ribbon) (для интерфейса в стиле Fluent Design) 
 - [Newtonsoft.Json](https://www.newtonsoft.com/json) (для сериализации/десериализации Json)
 - [Npgsql PostgreSQL Integration](https://github.com/npgsql/npgsql) (для доступа к Postgre SQL)

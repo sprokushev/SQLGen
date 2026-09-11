@@ -159,7 +159,8 @@ namespace SQLGen.Utilities
         /// <param name="isShowError">Выводить сообщения об ошибках</param>
         /// <param name="Idle">Максимальный период ожидания, если isWait = true, isShow = false</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
-        public static string ExecuteFile(string workdir, string filename, string param, bool isWait, bool isShow, bool isOutput, bool isShowError, string logFile, int Idle = 300)
+        /// <param name="isOutputForceUTF8">=true - принудительно читаем возвращаемый результат в кодировке UTF8</param>
+        public static string ExecuteFile(string workdir, string filename, string param, bool isWait, bool isShow, bool isOutput, bool isShowError, string logFile, bool isOutputForceUTF8 = false, int Idle = 300)
         {
             string error = "";
             string output = "";
@@ -225,6 +226,11 @@ namespace SQLGen.Utilities
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.CreateNoWindow = true;
                         process.StartInfo.RedirectStandardOutput = true;
+
+                        if (isOutputForceUTF8)
+                        {
+                            process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                        }
                     }
                     else
                     {

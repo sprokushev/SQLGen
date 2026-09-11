@@ -59,8 +59,9 @@
         <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="145,237,0,0" VerticalAlignment="Top" Width="311" IsReadOnly="True"/>
         <Button x:Name="btFindNextVersion" Content="Найти" HorizontalAlignment="Left" Margin="470,238,0,0" VerticalAlignment="Top" Width="70" Click="btFindNextVersion_Click"/>
 
-        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="605,238,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить версию во все последующие"/>
-        <Button x:Name="btToDEV" Content="Влить в dev" HorizontalAlignment="Left" Margin="605,265,0,0" VerticalAlignment="Top" Width="100" Click="btToDEV_Click" ToolTip="Влить версию в ветку dev"/>
+        <Button x:Name="btMergeNextVersion" Content="Влить дальше" HorizontalAlignment="Left" Margin="605,238,0,0" VerticalAlignment="Top" Width="100" Click="btMergeNextVersion_Click" ToolTip="Влить текущую версию во все последующие"/>
+        <Button x:Name="btToDEV" Content="Влить в dev" HorizontalAlignment="Left" Margin="605,265,0,0" VerticalAlignment="Top" Width="100" Click="btToDEV_Click" ToolTip="Влить ТЕКУЩУЮ версию в ветку dev"/>
+        <Button x:Name="btMergeNextVersionAndDEV" Content="Влить дальше + dev" HorizontalAlignment="Left" Margin="555,292,0,0" VerticalAlignment="Top" Width="150" Click="btMergeNextVersionAndDEV_Click" ToolTip="Влить текущую версию во все последующие, а ПОСЛЕДНЮЮ версию влить в dev"/>
 
         <Button x:Name="btGenerate" HorizontalAlignment="Left" Margin="15,265,0,0" VerticalAlignment="Top" Width="130" Height="50" Click="btGenerate_Click">
             <TextBlock x:Name="tbGenerateText" Text="Собрать json-файл Deployment Plan" TextWrapping="Wrap" TextAlignment="Center" ToolTip="Сгенерировать json-файл Deployment Plan релиза"/>

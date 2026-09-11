@@ -436,8 +436,12 @@ namespace SQLGen
 
                 if (isExecute)
                 {
-                    // Проверяем имя changeset на соответствие номеру задачи
-                    if (!SQLGen.Task.IsMatchTaskNumber(MainWindow.Task.TaskNumber, sql.Changeset) && (!sql.isTest))
+                    // Проверяем имя changeset на соответствие номеру задачи (только скрипты с тегом labels:struct или без тега labels)
+                    if (
+                        (sql.ScriptLabel == "struct" || sql.ScriptLabel == "") &&
+                        !SQLGen.Task.IsMatchTaskNumber(MainWindow.Task.TaskNumber, sql.Changeset) && 
+                        (!sql.isTest)
+                    )
                     {
                         Messages = $"Пропущен - имя changeset не соответствует номеру задачи {MainWindow.Task.TaskNumber}";
                         Messages = Environment.NewLine + $"{sql.Uniqname} changeset {sql.Changeset}" + Environment.NewLine + Messages + Environment.NewLine;

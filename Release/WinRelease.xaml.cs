@@ -332,6 +332,12 @@ namespace SQLGen
                                 NextVersions.Add(nn, ver);
                                 App.AddLog($"Добавлена версия {ver.Num} в список будущих версий", null, App.ShowMessageMode.NONE, true, logFile);
                             }
+
+                            if (isVersionStop && AllVersions == null)
+                            {
+                                // можно остановить перебор веток
+                                break;
+                            }
                         }
                     }
                 }
@@ -4451,11 +4457,10 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// Нажата кнопка Влить дальше
+        /// Влить текущую версию в следующие
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btMergeNextVersion_Click(object sender, RoutedEventArgs e)
+        /// <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        private void MergeNextVersion(bool isAddDev)
         {
             if (!CheckBranch(out string cur_branch)) return;
 
@@ -4510,7 +4515,7 @@ namespace SQLGen
             if (System.Windows.Forms.MessageBox.Show($"Вольем в проекте {project} ветку {branch} во все последующие ветки ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
                 // вливаем во все последующие после ТЕКУЩЕЙ
-                GIT.GitMergeNextVersion(project, branch, isCumulative.IsChecked != true, Versions, logFileRelease);
+                GIT.GitMergeNextVersion(project, branch, isCumulative.IsChecked != true, Versions, logFileRelease, isAddDev);
 
                 // ----------------------------------------------------------------------------
                 // показываем лог
@@ -4527,6 +4532,27 @@ namespace SQLGen
                 CheckBranch(out branch);
             }
         }
+
+        /// <summary>
+        /// Нажата кнопка Влить дальше
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btMergeNextVersion_Click(object sender, RoutedEventArgs e)
+        {
+            MergeNextVersion(false);
+        }
+
+        /// <summary>
+        /// Нажата кнопка Влить дальше + dev
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btMergeNextVersionAndDEV_Click(object sender, RoutedEventArgs e)
+        {
+            MergeNextVersion(true);
+        }
+
 
         /// <summary>
         /// сменить номер в поле Номер версии
@@ -5530,6 +5556,24 @@ namespace SQLGen
                     Environment.NewLine + "Файл версии: " + tbFileVersion.Text +
                     (releaseYML.IsNoCumulative ? Environment.NewLine + "ВНИМАНИЕ: НЕ кумулятивная" : "")
                 );
+
+                if (
+                    project == Utilities.GITProjects.GetProjectDeployment("MS SQL", project) ||
+                    project == Utilities.GITProjects.GetProjectDeployment("PG SQL", project)
+                )
+                {
+                    // это проекты хранения json
+
+                    // Найдем среди версий json-файл с Действиями при обновлении
+                    bool isexist = false;
+                    Release.GetJsonFile(project, tbNumVersion.Text, "deployment", out isexist);
+                    if (!isexist)
+                    {
+                        result.Append(
+                            Environment.NewLine + $"ОШИБКА: не создан файл {tbNumVersion.Text}_%_deployment.json"
+                        );
+                    }
+                }
 
                 // перебираем список проверяемых yml-файлов
                 foreach (YMLLine yml in releaseYML.Lines.Where(x => x.type == YMLLineType.TASK))

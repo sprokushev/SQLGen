@@ -1671,6 +1671,7 @@ namespace SQLGen.Utilities
                     true,
                     false,
                     logFile,
+                    true,
                     600
                 );
 
@@ -1770,6 +1771,7 @@ namespace SQLGen.Utilities
                         true,
                         false,
                         logFile,
+                        true,
                         600
                     );
 
@@ -3138,7 +3140,8 @@ namespace SQLGen.Utilities
         /// <param name="isNoCumulative">=true - текущая версия НЕ кумулятивная</param>
         /// <param name="Versions">Список версий</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в MainWindow.Task.LogFileMerge, если пустой, значит - в App.AppLogFile</param>
-        public static bool GitMergeNextVersion(string project, string branch, bool isNoCumulative, SortedDictionary<double, Version> Versions, string logFile)
+        /// <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        public static bool GitMergeNextVersion(string project, string branch, bool isNoCumulative, SortedDictionary<double, Version> Versions, string logFile, bool isAddDev)
         {
             if (string.IsNullOrWhiteSpace(project))
             {
@@ -3431,7 +3434,7 @@ namespace SQLGen.Utilities
             }
 
             // вольем итоговую версию (кумулятивную) в dev
-            /*if (
+            if (isAddDev &&
                 lastver != null &&
                 lastver.VersionTo != null &&
                 lastver.VersionTo.YMLFile != null &&
@@ -3483,7 +3486,7 @@ namespace SQLGen.Utilities
                 {
                     return false;
                 }
-            }*/
+            }
 
             // ----------------------------------------------------------------------------
             // показываем лог

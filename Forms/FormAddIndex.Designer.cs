@@ -94,6 +94,7 @@ namespace SQLGen
             this.cbIsUnique.TabIndex = 6;
             this.cbIsUnique.Text = "Уникальный индекс";
             this.cbIsUnique.UseVisualStyleBackColor = true;
+            this.cbIsUnique.CheckedChanged += new System.EventHandler(this.cbIsUnique_CheckedChanged);
             // 
             // label2
             // 
