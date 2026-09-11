@@ -307,6 +307,7 @@ namespace SQLGen
 
             if (
                 cbIsUnique.Checked == true &&
+                _name != null &&
                 _name.StartsWith("idx_")
             )
             {
@@ -315,6 +316,7 @@ namespace SQLGen
 
             if (
                 cbIsUnique.Checked == false &&
+                _name != null &&
                 _name.StartsWith("uk_")
             )
             {
