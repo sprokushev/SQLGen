@@ -2245,7 +2245,7 @@
             <param name="isNoPush">=true - НЕ выполнять push</param>
             <returns></returns>
         </member>
-        <member name="M:SQLGen.Utilities.GIT.GitMergeNextVersion(System.String,System.String,System.Boolean,System.Collections.Generic.SortedDictionary{System.Double,SQLGen.Version},System.String)">
+        <member name="M:SQLGen.Utilities.GIT.GitMergeNextVersion(System.String,System.String,System.Boolean,System.Collections.Generic.SortedDictionary{System.Double,SQLGen.Version},System.String,System.Boolean)">
             <summary>
             Влить версию во все последующие версии
             </summary>
@@ -2254,6 +2254,7 @@
             <param name="isNoCumulative">=true - текущая версия НЕ кумулятивная</param>
             <param name="Versions">Список версий</param>
             <param name="logFile">полный путь к лог-файлу. Если пустой, значит в MainWindow.Task.LogFileMerge, если пустой, значит - в App.AppLogFile</param>
+            <param name="isAddDev">=true - влить ветку последней версии в dev</param>
         </member>
         <member name="M:SQLGen.Utilities.GIT.MakeCronJson(System.String)">
             <summary>
@@ -2409,7 +2410,7 @@
             <summary>Открыть каталог для просмотра</summary>
             <param name="path">Путь к каталогу</param>
         </member>
-        <member name="M:SQLGen.Utilities.External.ExecuteFile(System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String,System.Int32)">
+        <member name="M:SQLGen.Utilities.External.ExecuteFile(System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String,System.Boolean,System.Int32)">
             <summary>Выполнить внешний исполняемый файл</summary>
             <param name="workdir">рабочий каталог</param>
             <param name="filename">Путь к исполняемому файлу</param>
@@ -2420,6 +2421,7 @@
             <param name="isShowError">Выводить сообщения об ошибках</param>
             <param name="Idle">Максимальный период ожидания, если isWait = true, isShow = false</param>
             <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
+            <param name="isOutputForceUTF8">=true - принудительно читаем возвращаемый результат в кодировке UTF8</param>
         </member>
         <member name="M:SQLGen.Utilities.External.ExecScriptInThread(SQLGen.Utilities.External.ExecType,System.Windows.Window,System.Windows.Controls.ComboBox,System.String,System.Windows.Controls.Button,System.Windows.Controls.TabItem,System.Windows.Controls.DataGrid,System.Windows.Controls.TabItem,System.Windows.Controls.Control,System.Windows.Controls.Label)">
             <summary>
@@ -6831,9 +6833,22 @@
             <param name="sender"></param>
             <param name="e"></param>
         </member>
+        <member name="M:SQLGen.WinRelease.MergeNextVersion(System.Boolean)">
+            <summary>
+            Влить текущую версию в следующие
+            </summary>
+            <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        </member>
         <member name="M:SQLGen.WinRelease.btMergeNextVersion_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Нажата кнопка Влить дальше
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinRelease.btMergeNextVersionAndDEV_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Влить дальше + dev
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -7341,9 +7356,22 @@
             <param name="isForcedGitRefresh">=true - выполнять принудительно git-refresh.sh, =false - выполнять git-refresh.sh только если после предыдущего вызова прошло MainWindow.APPinfo.GitRefreshDelay минут</param>
             <param name="isLoadNextVersions">=true - заполнить NextVersions</param>
         </member>
+        <member name="M:SQLGen.WinReleaseCron.MergeNextVersion(System.Boolean)">
+            <summary>
+            Влить текущую версию в следующие
+            </summary>
+            <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        </member>
         <member name="M:SQLGen.WinReleaseCron.btMergeNextVersion_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Нажата кнопка Влить дальше
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinReleaseCron.btMergeNextVersionAndDEV_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Влить дальше + dev
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -7632,9 +7660,22 @@
             <param name="isForcedGitRefresh">=true - выполнять принудительно git-refresh.sh, =false - выполнять git-refresh.sh только если после предыдущего вызова прошло MainWindow.APPinfo.GitRefreshDelay минут</param>
             <param name="isLoadNextVersions">=true - заполнить NextVersions</param>
         </member>
+        <member name="M:SQLGen.WinReleaseDeployment.MergeNextVersion(System.Boolean)">
+            <summary>
+            Влить текущую версию в следующие
+            </summary>
+            <param name="isAddDev">=true - влить ветку последней версии в dev</param>
+        </member>
         <member name="M:SQLGen.WinReleaseDeployment.btMergeNextVersion_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Нажата кнопка Влить дальше
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinReleaseDeployment.btMergeNextVersionAndDEV_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Влить дальше + dev
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -8322,7 +8363,7 @@
             <summary>Изменяемый IndexDB</summary>
         </member>
         <member name="F:SQLGen.FormAddIndex.OriginalName">
-            <summary>Родительский объект TableDB</summary>
+            <summary>Оригинальное имя индекса</summary>
         </member>
         <member name="F:SQLGen.FormAddIndex.ScriptType">
             <summary>Тип скрипта</summary>

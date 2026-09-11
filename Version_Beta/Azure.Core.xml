@@ -24,6 +24,15 @@
             <param name="expiresOn">The bearer access token expiry date.</param>
             <param name="refreshOn">Specifies the time when the cached token should be proactively refreshed.</param>
         </member>
+        <member name="M:Azure.Core.AccessToken.#ctor(System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.String)">
+            <summary>
+            Creates a new instance of <see cref="T:Azure.Core.AccessToken" /> using the provided <paramref name="accessToken" /> and <paramref name="expiresOn" />.
+            </summary>
+            <param name="accessToken">The access token value.</param>
+            <param name="expiresOn">The access token expiry date.</param>
+            <param name="refreshOn">Specifies the time when the cached token should be proactively refreshed.</param>
+            <param name="tokenType">The access token type.</param>
+        </member>
         <member name="P:Azure.Core.AccessToken.Token">
             <summary>
             Get the access token value.
@@ -39,11 +48,35 @@
             Gets the time when the token should be refreshed.
             </summary>
         </member>
+        <member name="P:Azure.Core.AccessToken.TokenType">
+            <summary>
+            Identifies the type of access token.
+            </summary>
+        </member>
         <member name="M:Azure.Core.AccessToken.Equals(System.Object)">
             <summary>Indicates whether this instance and a specified object are equal.</summary><param name="obj">The object to compare with the current instance. </param><returns><see langword="true" /> if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, <see langword="false" />. </returns>
         </member>
         <member name="M:Azure.Core.AccessToken.GetHashCode">
             <summary>Returns the hash code for this instance.</summary><returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        </member>
+        <member name="M:Azure.Core.AccessToken.ToAuthenticationToken">
+            <summary>
+            Converts this <see cref="T:Azure.Core.AccessToken" /> to an <see cref="T:System.ClientModel.Primitives.AuthenticationToken" />.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Azure.Core.AzureCoreContext">
+            <summary>
+            Context class used by <see cref="T:System.ClientModel.Primitives.ModelReaderWriter" /> to read and write models in an AOT compatible way.
+            </summary>
+        </member>
+        <member name="P:Azure.Core.AzureCoreContext.Default">
+            <summary> Gets the default instance </summary>
+        </member>
+        <member name="M:Azure.Core.AzureCoreContext.TryGetTypeBuilderCore(System.Type,System.ClientModel.Primitives.ModelReaderWriterTypeBuilder@)">
+            <summary>
+            Tries to gets a <see cref="T:System.ClientModel.Primitives.ModelReaderWriterTypeBuilder" /> for the given <see cref="T:System.Type" /> to allow <see cref="T:System.ClientModel.Primitives.ModelReaderWriter" /> to work with AOT.
+            </summary><param name="type">The type to get info for.</param><param name="builder">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterTypeBuilder" /> if found.</param><returns>True if the corresponding <see cref="T:System.ClientModel.Primitives.ModelReaderWriterTypeBuilder" /> if defined in the context otherwise false.</returns>
         </member>
         <member name="T:Azure.Core.AzureLocation">
             <summary>
@@ -360,6 +393,16 @@
             Public cloud location for Poland Central.
             </summary>
         </member>
+        <member name="P:Azure.Core.AzureLocation.MexicoCentral">
+            <summary>
+            Public cloud location for Mexico Central.
+            </summary>
+        </member>
+        <member name="P:Azure.Core.AzureLocation.SpainCentral">
+            <summary>
+            Public cloud location for Spain Central.
+            </summary>
+        </member>
         <member name="M:Azure.Core.AzureLocation.#ctor(System.String)">
             <summary> Initializes a new instance of Location. </summary>
             <param name="location"> The location name or the display name. </param>
@@ -480,7 +523,7 @@
         <member name="P:Azure.Core.ClientOptions.RetryPolicy">
             <summary>
             Gets or sets the policy to use for retries. If a policy is specified, it will be used in place of the <see cref="P:Azure.Core.ClientOptions.Retry" /> property.
-            The <see cref="P:Azure.Core.ClientOptions.RetryPolicy" /> type can be derived from to modify the default behavior without needing to fully implement the retry logic.
+            The <see cref="T:Azure.Core.Pipeline.RetryPolicy" /> type can be derived from to modify the default behavior without needing to fully implement the retry logic.
             If <see cref="M:Azure.Core.Pipeline.RetryPolicy.Process(Azure.Core.HttpMessage,System.ReadOnlyMemory{Azure.Core.Pipeline.HttpPipelinePolicy})" /> is overridden or a custom <see cref="T:Azure.Core.Pipeline.HttpPipelinePolicy" /> is specified,
             it is the implementer's responsibility to update the <see cref="P:Azure.Core.HttpMessage.ProcessingContext" /> values.
             </summary>
@@ -802,11 +845,18 @@
             The trait value that has to be present on all event sources collected by this listener.
             </summary>
         </member>
+        <member name="M:Azure.Core.Diagnostics.AzureEventSourceListener.#ctor(System.Action{System.Diagnostics.Tracing.EventWrittenEventArgs},System.Diagnostics.Tracing.EventLevel)">
+            <summary>
+            Creates an instance of <see cref="T:Azure.Core.Diagnostics.AzureEventSourceListener" /> that executes a <paramref name="log" /> callback every time event is written.
+            </summary>
+            <param name="log">The <see cref="T:System.Action`1" /> to call when event is written.</param>
+            <param name="level">The level of events to enable.</param>
+        </member>
         <member name="M:Azure.Core.Diagnostics.AzureEventSourceListener.#ctor(System.Action{System.Diagnostics.Tracing.EventWrittenEventArgs,System.String},System.Diagnostics.Tracing.EventLevel)">
             <summary>
             Creates an instance of <see cref="T:Azure.Core.Diagnostics.AzureEventSourceListener" /> that executes a <paramref name="log" /> callback every time event is written.
             </summary>
-            <param name="log">The <see cref="T:System.Action`2" /> to call when event is written. The second parameter is formatted message.</param>
+            <param name="log">The <see cref="T:System.Action`2" /> to call when event is written. The second parameter is the formatted message.</param>
             <param name="level">The level of events to enable.</param>
         </member>
         <member name="M:Azure.Core.Diagnostics.AzureEventSourceListener.OnEventSourceCreated(System.Diagnostics.Tracing.EventSource)">
@@ -1625,7 +1675,7 @@
               they appear in the content).
             </remarks>
         </member>
-        <member name="M:Azure.Core.Json.MutableJsonElement.ObjectEnumerator.System#Collections#Generic#IEnumerable{(System#StringName,Azure#Core#Json#MutableJsonElementValue)}#GetEnumerator">
+        <member name="M:Azure.Core.Json.MutableJsonElement.ObjectEnumerator.System#Collections#Generic#IEnumerable{System#ValueTuple{System#String,Azure#Core#Json#MutableJsonElement}}#GetEnumerator">
             <summary>
               Returns an enumerator that iterates the properties of an object.
             </summary>
@@ -2042,6 +2092,20 @@
             var point = new GeoPoint(-122.091954, 47.607148);
             </code>
             </example>
+            <summary>
+            Represents a point geometry.
+            </summary>
+            <example>
+            Creating a point:
+            <code snippet="Snippet:CreatePoint" language="csharp">
+            var point = new GeoPoint(-122.091954, 47.607148);
+            </code>
+            </example>
+        </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.#ctor">
+            <summary>
+            Initializes new instance of <see cref="T:Azure.Core.GeoJson.GeoPoint" />.
+            </summary>
         </member>
         <member name="M:Azure.Core.GeoJson.GeoPoint.#ctor(System.Double,System.Double)">
             <summary>
@@ -2640,7 +2704,7 @@
         </member>
         <member name="T:Azure.Core.Pipeline.BearerTokenAuthenticationPolicy">
             <summary>
-            A policy that sends an <see cref="T:Azure.Core.AccessToken" /> provided by a <see cref="T:Azure.Core.TokenCredential" /> as an Authentication header.
+            A policy that sends an <see cref="T:Azure.Core.AccessToken" /> provided by a <see cref="T:Azure.Core.TokenCredential" /> as an <see cref="P:Azure.Core.HttpHeader.Names.Authorization" /> header.
             </summary>
         </member>
         <member name="M:Azure.Core.Pipeline.BearerTokenAuthenticationPolicy.#ctor(Azure.Core.TokenCredential,System.String)">
@@ -2695,6 +2759,7 @@
         <member name="M:Azure.Core.Pipeline.BearerTokenAuthenticationPolicy.AuthorizeRequestOnChallengeAsync(Azure.Core.HttpMessage)">
             <summary>
             Executed in the event a 401 response with a WWW-Authenticate authentication challenge header is received after the initial request.
+            The default implementation will attempt to handle Continuous Access Evaluation (CAE) claims challenges.
             </summary>
             <remarks>Service client libraries may override this to handle service specific authentication challenges.</remarks>
             <param name="message">The <see cref="T:Azure.Core.HttpMessage" /> to be authenticated.</param>
@@ -2703,6 +2768,7 @@
         <member name="M:Azure.Core.Pipeline.BearerTokenAuthenticationPolicy.AuthorizeRequestOnChallenge(Azure.Core.HttpMessage)">
             <summary>
             Executed in the event a 401 response with a WWW-Authenticate authentication challenge header is received after the initial request.
+            The default implementation will attempt to handle Continuous Access Evaluation (CAE) claims challenges.
             </summary>
             <remarks>Service client libraries may override this to handle service specific authentication challenges.</remarks>
             <param name="message">The <see cref="T:Azure.Core.HttpMessage" /> to be authenticated.</param>
@@ -3898,6 +3964,15 @@
             <param name="dateTimeFormat">The format to use for DateTime and DateTimeOffset values in the serialized content.</param>
             <returns>An instance of <see cref="T:Azure.Core.RequestContent" /> that wraps a serialized version of the object.</returns>
         </member>
+        <member name="M:Azure.Core.RequestContent.Create``1(``0,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Creates an instance of <see cref="T:Azure.Core.RequestContent" /> that wraps an <see cref="T:System.ClientModel.Primitives.IPersistableModel`1" />.
+            </summary>
+            <typeparam name="T">The type of the model.</typeparam>
+            <param name="model">The <see cref="T:System.ClientModel.Primitives.IPersistableModel`1" /> to use.</param>
+            <param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param>
+            <returns>An instance of <see cref="T:Azure.Core.RequestContent" /> that wraps an <see cref="T:System.ClientModel.Primitives.IPersistableModel`1" />.</returns>
+        </member>
         <member name="M:Azure.Core.RequestContent.op_Implicit(System.String)~Azure.Core.RequestContent">
             <summary>
             Creates a RequestContent representing the UTF-8 Encoding of the given <see cref="T:System.String" />.
@@ -4454,6 +4529,9 @@
             <param name="other"> <see cref="T:Azure.Core.ResourceType" /> object to compare. </param>
             <returns> True if they are equals, otherwise false. </returns>
         </member>
+        <member name="M:Azure.Core.ResourceType.CompareTo(Azure.Core.ResourceType)">
+            <summary>Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object. </summary><param name="other">An object to compare with this instance. </param><returns>A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="other" /> in the sort order.  Zero This instance occurs in the same position in the sort order as <paramref name="other" />. Greater than zero This instance follows <paramref name="other" /> in the sort order. </returns>
+        </member>
         <member name="M:Azure.Core.ResourceType.ToString">
             <summary>Returns the fully qualified type name of this instance.</summary><returns>The fully qualified type name.</returns>
         </member>
@@ -4646,7 +4724,7 @@
         </member>
         <member name="P:Azure.Core.RetryOptions.NetworkTimeout">
             <summary>
-            The timeout applied to an individual network operations.
+            The timeout applied to individual network operations.
             </summary>
         </member>
         <member name="T:Azure.Core.StatusCodeClassifier">
@@ -4939,6 +5017,28 @@
             <returns>A valid <see cref="T:Azure.Core.AccessToken" />.</returns>
             <remarks>Caching and management of the lifespan for the <see cref="T:Azure.Core.AccessToken" /> is considered the responsibility of the caller: each call should request a fresh token being requested.</remarks>
         </member>
+        <member name="M:Azure.Core.TokenCredential.GetTokenAsync(System.ClientModel.Primitives.GetTokenOptions,System.Threading.CancellationToken)">
+            <summary>
+            Gets an <see cref="T:System.ClientModel.Primitives.AuthenticationToken" /> for the provided <paramref name="properties" />.
+            </summary>
+            <param name="properties"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:Azure.Core.TokenCredential.GetToken(System.ClientModel.Primitives.GetTokenOptions,System.Threading.CancellationToken)">
+            <summary>
+            Gets an <see cref="T:System.ClientModel.Primitives.AuthenticationToken" /> for the provided <paramref name="properties" />.
+            </summary>
+            <param name="properties"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Azure.Core.TokenCredential.CreateTokenOptions(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
+            <summary>
+            Creates a new instance of <see cref="T:System.ClientModel.Primitives.GetTokenOptions" /> using the provided <paramref name="properties" />.
+            </summary><param name="properties"></param><returns>An instance of <see cref="T:System.ClientModel.Primitives.GetTokenOptions" /> or <c>null</c> if the provided options are not valid.</returns>
+        </member>
         <member name="T:Azure.Core.TokenRequestContext">
             <summary>
             Contains the details of an authentication token request.
@@ -4978,6 +5078,20 @@
             <param name="tenantId"> The tenantId to be included in the token request.</param>
             <param name="isCaeEnabled">Indicates whether to enable Continuous Access Evaluation (CAE) for the requested token.</param>
         </member>
+        <member name="M:Azure.Core.TokenRequestContext.#ctor(System.String[],System.String,System.String,System.String,System.Boolean,System.Boolean,System.String,System.Uri,System.String)">
+            <summary>
+            Creates a new TokenRequest with the specified scopes.
+            </summary>
+            <param name="scopes">The scopes required for the token.</param>
+            <param name="parentRequestId">The <see cref="P:Azure.Core.Request.ClientRequestId" /> of the request requiring a token for authentication, if applicable.</param>
+            <param name="claims">Additional claims to be included in the token.</param>
+            <param name="tenantId">The tenant ID to be included in the token request.</param>
+            <param name="isCaeEnabled">Indicates whether to enable Continuous Access Evaluation (CAE) for the requested token.</param>
+            <param name="isProofOfPossessionEnabled">Indicates whether to enable Proof of Possession (PoP) for the requested token.</param>
+            <param name="proofOfPossessionNonce">The nonce value required for PoP token requests.</param>
+            <param name="requestUri">The resource request URI to be authorized with a PoP token.</param>
+            <param name="requestMethod">The HTTP request method name of the resource request (e.g. GET, POST, etc.).</param>
+        </member>
         <member name="P:Azure.Core.TokenRequestContext.Scopes">
             <summary>
             The scopes required for the token.
@@ -5007,6 +5121,32 @@
             For this reason, if you declare your app CAE ready, your application must handle the CAE claim challenge for all resource APIs that accept Microsoft Identity access tokens.
             If you don't handle CAE responses in these API calls, your app could end up in a loop retrying an API call with a token that is still in the returned lifespan of the token but has been revoked due to CAE.
             </remarks>
+        </member>
+        <member name="P:Azure.Core.TokenRequestContext.IsProofOfPossessionEnabled">
+            <summary>
+            Indicates whether to enable Proof of Possession (PoP) for the requested token.
+            </summary>
+        </member>
+        <member name="P:Azure.Core.TokenRequestContext.ProofOfPossessionNonce">
+            <summary>
+            The nonce value required for PoP token requests. This is typically retrieved from the WWW-Authenticate header of a 401 challenge response.
+            This is used in combination with <see cref="P:Azure.Core.TokenRequestContext.ResourceRequestUri" /> and <see cref="P:Azure.Core.TokenRequestContext.ResourceRequestMethod" /> to generate the PoP token.
+            </summary>
+        </member>
+        <member name="P:Azure.Core.TokenRequestContext.ResourceRequestMethod">
+            <summary>
+            The HTTP method of the request. This is used in combination with <see cref="P:Azure.Core.TokenRequestContext.ResourceRequestUri" /> and <see cref="P:Azure.Core.TokenRequestContext.ProofOfPossessionNonce" /> to generate the PoP token.
+            </summary>
+        </member>
+        <member name="P:Azure.Core.TokenRequestContext.ResourceRequestUri">
+            <summary>
+            The URI of the request. This is used in combination with <see cref="P:Azure.Core.TokenRequestContext.ResourceRequestMethod" /> and <see cref="P:Azure.Core.TokenRequestContext.ProofOfPossessionNonce" /> to generate the PoP token.
+            </summary>
+        </member>
+        <member name="M:Azure.Core.TokenRequestContext.FromGetTokenOptions(System.ClientModel.Primitives.GetTokenOptions)">
+            <summary>
+            Creates a new instance of <see cref="T:Azure.Core.TokenRequestContext" /> from the specified <see cref="T:System.ClientModel.Primitives.GetTokenOptions" />.
+            </summary>
         </member>
         <member name="T:Azure.Core.AppContextSwitchHelper">
             <summary>
@@ -5174,6 +5314,13 @@
             <summary>
             A helper class for parsing Authorization challenge headers.
             </summary>
+        </member>
+        <member name="M:Azure.Core.AuthorizationChallengeParser.IsCaeClaimsChallenge(Azure.Response)">
+            <summary>
+            Determines if the specified <see cref="T:Azure.Core.HttpMessage" /> is a CAE claims challenge.
+            </summary>
+            <param name="response">The response containing a WWW-Authenticate header.</param>
+            <returns>True</returns>
         </member>
         <member name="M:Azure.Core.AuthorizationChallengeParser.GetChallengeParameterFromResponse(Azure.Response,System.String,System.String)">
             <summary>
@@ -5700,6 +5847,11 @@
             </list>
             </returns>
         </member>
+        <member name="M:Azure.Core.IOperation.GetRehydrationToken">
+            <summary>
+            Get a token that can be used to rehydrate the operation.
+            </summary>
+        </member>
         <member name="T:Azure.Core.OperationState">
             <summary>
             A helper structure passed to <see cref="T:Azure.Core.OperationInternal" /> to indicate the current operation state. This structure must be
@@ -5948,6 +6100,11 @@
             </list>
             </returns>
         </member>
+        <member name="M:Azure.Core.IOperation`1.GetRehydrationToken">
+            <summary>
+            Get a token that can be used to rehydrate the operation.
+            </summary>
+        </member>
         <member name="T:Azure.Core.OperationState`1">
             <summary>
             A helper structure passed to <see cref="T:Azure.Core.OperationInternal`1" /> to indicate the current operation state. This structure must be
@@ -6176,20 +6333,6 @@
             Initializes a new instance of the <see cref="T:Azure.AzureKeyCredential" /> class.
             </summary>
             <param name="key">Key to use to authenticate with the Azure service.</param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown when the <paramref name="key" /> is null.
-            </exception>
-            <exception cref="T:System.ArgumentException">
-            Thrown when the <paramref name="key" /> is empty.
-            </exception>
-        </member>
-        <member name="M:Azure.AzureKeyCredential.Update(System.String)">
-            <summary>
-            Updates the service key.
-            This is intended to be used when you've regenerated your service key
-            and want to update long lived clients.
-            </summary>
-            <param name="key">Key to authenticate the service against.</param>
             <exception cref="T:System.ArgumentNullException">
             Thrown when the <paramref name="key" /> is null.
             </exception>
@@ -6504,7 +6647,7 @@
         </member>
         <member name="M:Azure.JsonPatchDocument.AppendAddRaw(System.String,System.String)">
             <summary>
-            Initializes a new instance of <see cref="T:Azure.JsonPatchDocument" /> using an existing UTF8-encoded JSON Patch document.
+            Appends an "add" operation to this <see cref="T:Azure.JsonPatchDocument" />.
             </summary>
             <param name="path">The path to apply the addition to.</param>
             <param name="rawJsonValue">The raw JSON value to add to the path.</param>
@@ -7511,6 +7654,14 @@
             <summary>
             Represents an error returned by an Azure Service.
             </summary>
+            <summary>
+            Represents an error returned by an Azure Service.
+            </summary>
+        </member>
+        <member name="M:Azure.ResponseError.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:Azure.ResponseError" />.
+            </summary>
         </member>
         <member name="M:Azure.ResponseError.#ctor(System.String,System.String)">
             <summary>
@@ -8224,6 +8375,36 @@
         <member name="M:Azure.Pageable`1.System#Collections#IEnumerable#GetEnumerator">
             <summary>Returns an enumerator that iterates through a collection.</summary><returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
         </member>
+        <member name="M:Azure.ResponseError.System#ClientModel#Primitives#IJsonModel{Azure#ResponseError}#Write(System.Text.Json.Utf8JsonWriter,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Writes the model to the provided <see cref="T:System.Text.Json.Utf8JsonWriter" />.
+            </summary><param name="writer">The <see cref="T:System.Text.Json.Utf8JsonWriter" /> to write into.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.ResponseError.System#ClientModel#Primitives#IJsonModel{Azure#ResponseError}#Create(System.Text.Json.Utf8JsonReader@,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Reads one JSON value (including objects or arrays) from the provided reader and converts it to a model.
+            </summary><param name="reader">The <see cref="T:System.Text.Json.Utf8JsonReader" /> to read.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A <typeparamref name="T" /> representation of the JSON value.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.ResponseError.System#ClientModel#Primitives#IPersistableModel{Azure#ResponseError}#Write(System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Writes the model into a <see cref="T:System.BinaryData" />.
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A binary representation of the written model.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.ResponseError.System#ClientModel#Primitives#IPersistableModel{Azure#ResponseError}#Create(System.BinaryData,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Converts the provided <see cref="T:System.BinaryData" /> into a model.
+            </summary><param name="data">The <see cref="T:System.BinaryData" /> to parse.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A <typeparamref name="T" /> representation of the data.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.ResponseError.System#ClientModel#Primitives#IPersistableModel{Azure#ResponseError}#GetFormatFromOptions(System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Gets the data interchange format (JSON, Xml, etc) that the model uses when communicating with the service.
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to consider when serializing and deserializing the model.</param><returns>The format that the model uses when communicating with the service.</returns>
+        </member>
+        <member name="M:Azure.ResponseInnerError.System#ClientModel#Primitives#IPersistableModel{Azure#ResponseInnerError}#GetFormatFromOptions(System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Gets the data interchange format (JSON, Xml, etc) that the model uses when communicating with the service.
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to consider when serializing and deserializing the model.</param><returns>The format that the model uses when communicating with the service.</returns>
+        </member>
         <member name="M:Azure.Messaging.CloudEventExtensionAttributes`2.System#Collections#IEnumerable#GetEnumerator">
             <summary>Returns an enumerator that iterates through a collection.</summary><returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
         </member>
@@ -8250,7 +8431,7 @@
         <member name="M:Azure.Core.RehydrationToken.System#ClientModel#Primitives#IPersistableModel{Azure#Core#RehydrationToken}#GetFormatFromOptions(System.ClientModel.Primitives.ModelReaderWriterOptions)">
             <summary>
             Gets the data interchange format (JSON, Xml, etc) that the model uses when communicating with the service.
-            <param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param></summary><returns>The format that the model uses when communicating with the serivce.</returns>
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to consider when serializing and deserializing the model.</param><returns>The format that the model uses when communicating with the service.</returns>
         </member>
         <member name="M:Azure.Core.RehydrationToken.System#ClientModel#Primitives#IPersistableModel{System#Object}#Write(System.ClientModel.Primitives.ModelReaderWriterOptions)">
             <summary>
@@ -8265,7 +8446,7 @@
         <member name="M:Azure.Core.RehydrationToken.System#ClientModel#Primitives#IPersistableModel{System#Object}#GetFormatFromOptions(System.ClientModel.Primitives.ModelReaderWriterOptions)">
             <summary>
             Gets the data interchange format (JSON, Xml, etc) that the model uses when communicating with the service.
-            <param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param></summary><returns>The format that the model uses when communicating with the serivce.</returns>
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to consider when serializing and deserializing the model.</param><returns>The format that the model uses when communicating with the service.</returns>
         </member>
         <member name="M:Azure.Core.RehydrationToken.System#ClientModel#Primitives#IJsonModel{System#Object}#Write(System.Text.Json.Utf8JsonWriter,System.ClientModel.Primitives.ModelReaderWriterOptions)">
             <summary>
@@ -8289,6 +8470,31 @@
         <member name="M:Azure.Core.GeoJson.GeoLineStringCollection.System#Collections#IEnumerable#GetEnumerator">
             <summary>Returns an enumerator that iterates through a collection.</summary><returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
         </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.System#ClientModel#Primitives#IJsonModel{Azure#Core#GeoJson#GeoPoint}#Write(System.Text.Json.Utf8JsonWriter,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Writes the model to the provided <see cref="T:System.Text.Json.Utf8JsonWriter" />.
+            </summary><param name="writer">The <see cref="T:System.Text.Json.Utf8JsonWriter" /> to write into.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.System#ClientModel#Primitives#IJsonModel{Azure#Core#GeoJson#GeoPoint}#Create(System.Text.Json.Utf8JsonReader@,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Reads one JSON value (including objects or arrays) from the provided reader and converts it to a model.
+            </summary><param name="reader">The <see cref="T:System.Text.Json.Utf8JsonReader" /> to read.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A <typeparamref name="T" /> representation of the JSON value.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.System#ClientModel#Primitives#IPersistableModel{Azure#Core#GeoJson#GeoPoint}#Write(System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Writes the model into a <see cref="T:System.BinaryData" />.
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A binary representation of the written model.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.System#ClientModel#Primitives#IPersistableModel{Azure#Core#GeoJson#GeoPoint}#Create(System.BinaryData,System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Converts the provided <see cref="T:System.BinaryData" /> into a model.
+            </summary><param name="data">The <see cref="T:System.BinaryData" /> to parse.</param><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to use.</param><returns>A <typeparamref name="T" /> representation of the data.</returns><exception cref="T:System.FormatException">If the model does not support the requested <see cref="P:System.ClientModel.Primitives.ModelReaderWriterOptions.Format" />.</exception>
+        </member>
+        <member name="M:Azure.Core.GeoJson.GeoPoint.System#ClientModel#Primitives#IPersistableModel{Azure#Core#GeoJson#GeoPoint}#GetFormatFromOptions(System.ClientModel.Primitives.ModelReaderWriterOptions)">
+            <summary>
+            Gets the data interchange format (JSON, Xml, etc) that the model uses when communicating with the service.
+            </summary><param name="options">The <see cref="T:System.ClientModel.Primitives.ModelReaderWriterOptions" /> to consider when serializing and deserializing the model.</param><returns>The format that the model uses when communicating with the service.</returns>
+        </member>
         <member name="M:Azure.Core.Pipeline.TaskExtensions.Enumerable`1.System#Collections#Generic#IEnumerable{T}#GetEnumerator">
             <summary>Returns an enumerator that iterates through the collection.</summary><returns>An enumerator that can be used to iterate through the collection.</returns>
         </member>
@@ -8301,7 +8507,7 @@
         <member name="P:Azure.Core.GeoJson.GeoArray`1.Enumerator.System#Collections#IEnumerator#Current">
             <summary>Gets the element in the collection at the current position of the enumerator.</summary><returns>The element in the collection at the current position of the enumerator.</returns>
         </member>
-        <member name="M:Azure.Core.Json.MutableJsonElement.ObjectEnumerator.System#Collections#Generic#IEnumerable{(System#StringName@Azure#Core#Json#MutableJsonElementValue)}#GetEnumerator">
+        <member name="M:Azure.Core.Json.MutableJsonElement.ObjectEnumerator.System#Collections#Generic#IEnumerable{System#ValueTuple{System#String@Azure#Core#Json#MutableJsonElement}}#GetEnumerator">
             <summary>Returns an enumerator that iterates through the collection.</summary><returns>An enumerator that can be used to iterate through the collection.</returns>
         </member>
     </members>
