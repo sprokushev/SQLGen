@@ -176,21 +176,130 @@ namespace SQLGen
                             result.Append(Environment.NewLine + MainWindow.UpdateLiquibaseRTMIS(stand, cbToVersion.Text, prefix, out List<string> list_cmd, out string max_version) + Environment.NewLine);
                         }
 
-                        // перебираем страницы
+                        // перебираем Deployment Plan
                         foreach (var page in ListDeploymentPlan)
                         {
+                            // перенумеруем, чтобы исключить дубли и чтобы MS SQL был первым, а PG SQL последним
+                            int _ord = 0;
+
+                            foreach (var item in page.ListDBAction
+                                .Where(x =>
+                                    x.dbregion == "MS SQL"
+                                )
+                                .OrderBy(x => x.order)
+                            )
+                            {
+                                _ord++;
+                                item.order = _ord;
+                            }
+
+                            foreach (var item in page.ListDBAction
+                                .Where(x =>
+                                    x.dbregion == "PG SQL"
+                                )
+                                .OrderBy(x => x.order)
+                            )
+                            {
+                                _ord++;
+                                item.order = _ord;
+                            }
+
+                            // список совпадений emd
+                            var emd_pos = new Dictionary<int, int>();
+
+                            // перебираем действия для emd из раздела PG SQL
+                            foreach (var item in page.ListDBAction
+                                .Where(x =>
+                                    x.dbregion == "PG SQL" &&
+                                    x.database == "emd" &&
+                                    !string.IsNullOrWhiteSpace(x.script) &&
+                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                )
+                                .OrderBy(x => x.order)
+                            )
+                            {
+                                // ищем аналогичный пункт в разделе MS SQL
+                                var found = page.ListDBAction
+                                    .Where(x =>
+                                        x.dbregion == "MS SQL" &&
+                                        x.database == item.database &&
+                                        x.type == item.type &&
+                                        !string.IsNullOrWhiteSpace(x.script) &&
+                                        x.script == item.script &&
+                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    ).FirstOrDefault();
+
+                                if (found != null && !emd_pos.ContainsKey(found.order))
+                                {
+                                    // заполняем список совпадений (первый MS, второй PG)
+                                    emd_pos.Add(found.order, item.order);
+                                }
+                            }
+
+                            // перебираем список совпадений и совмещаем перечни MS SQL и PG SQL
+                            _ord = 1000;
+                            foreach (var emd_pair in emd_pos)
+                            {
+                                // сначала перенумеруем пункты MS SQL
+                                foreach (var item in page.ListDBAction
+                                    .Where(x =>
+                                        x.dbregion == "MS SQL" &&
+                                        x.order <= emd_pair.Key &&
+                                        x.order < 1000 &&
+                                        !string.IsNullOrWhiteSpace(x.script) &&
+                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    )
+                                    .OrderBy(x => x.order)
+                                )
+                                {
+                                    if (item.order == emd_pair.Key)
+                                    {
+                                        // чтобы не было дублей
+                                        item.script = "";
+                                    }
+                                    else
+                                    {
+                                        _ord++;
+                                        item.order = _ord;
+                                    }
+                                }
+
+                                // затем перенумеруем пункты PG SQL
+                                foreach (var item in page.ListDBAction
+                                    .Where(x =>
+                                        x.dbregion == "PG SQL" &&
+                                        x.order <= emd_pair.Value &&
+                                        x.order < 1000 &&
+                                        !string.IsNullOrWhiteSpace(x.script) &&
+                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    )
+                                    .OrderBy(x => x.order)
+                                )
+                                {
+                                    _ord++;
+                                    item.order = _ord;
+                                }
+                            }
+
+                            // перенумеруем оставшиеся пункты
+                            foreach (var item in page.ListDBAction
+                                .Where(x =>
+                                    x.order < 1000 &&
+                                    !string.IsNullOrWhiteSpace(x.script) &&
+                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                )
+                                .OrderBy(x => x.order)
+                            )
+                            {
+                                _ord++;
+                                item.order = _ord;
+                            }
+
+                            // формируем результат
                             result.Append(Environment.NewLine + page.NumVersion + ":" + Environment.NewLine);
 
-                            string _title = Environment.NewLine + "MS SQL:" + Environment.NewLine;
-                            if (prefix != "prmd")
-                            {
-                                _title = "";
-                            }
-                            string _footer = "";
-
                             foreach (var item in page.ListDBAction
                                 .Where(x => 
-                                    x.dbregion == "MS SQL" &&
                                     !string.IsNullOrWhiteSpace(x.script) &&
                                     (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
                                 )
@@ -205,7 +314,7 @@ namespace SQLGen
                                     item.regions[0] != "all"
                                 )
                                 {
-                                    _reg = Environment.NewLine + item.regions_str + ":";
+                                    _reg = item.regions_str + ":" + Environment.NewLine;
                                 }
 
                                 if (
@@ -213,65 +322,23 @@ namespace SQLGen
                                     item.file.ToLower().StartsWith("/update") //-V3125
                                 )
                                 {
-                                    result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.file);
+                                    result.Append(Environment.NewLine + Environment.NewLine + _reg + item.file.TrimInnerNewLine());
                                 }
                                 else
                                 {
-                                    result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.script);
+                                    string _title = item.dbregion + ": ";
+                                    if (prefix != "prmd")
+                                    {
+                                        _title = "";
+                                    }
+                                    result.Append(Environment.NewLine + Environment.NewLine + _title + _reg + item.script.TrimInnerNewLine(1));
                                 }
-                                _title = "";
-                                _footer = Environment.NewLine;
                             }
 
-                            result.Append(_footer);
-
-                            _title = Environment.NewLine + "PG SQL:" + Environment.NewLine;
-                            if (prefix != "prmd")
-                            {
-                                _title = "";
-                            }
-                            _footer = "";
-
-                            foreach (var item in page.ListDBAction
-                                .Where(x => 
-                                    x.dbregion == "PG SQL" &&
-                                    !string.IsNullOrWhiteSpace(x.script) &&
-                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
-                                )
-                                .OrderBy(l => l.order)
-                            )
-                            {
-                                string _reg = "";
-
-                                if (
-                                    !string.IsNullOrWhiteSpace(item.file) &&
-                                    item.regions.Count > 0 &&
-                                    item.regions[0] != "all"
-                                )
-                                {
-                                    _reg = Environment.NewLine + item.regions_str + ":";
-                                }
-
-                                if (
-                                    !string.IsNullOrWhiteSpace(item.file) &&
-                                    item.file.ToLower().StartsWith("/update") //-V3125
-                                )
-                                {
-                                    result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.file);
-                                }
-                                else
-                                {
-                                    result.Append(_title + Environment.NewLine + _reg + Environment.NewLine + item.script);
-                                }
-
-                                _title = "";
-                                _footer = Environment.NewLine;
-                            }
-
-                            result.Append(_footer);
+                            result.Append(Environment.NewLine);
                         }
 
-                        // заполним
+                        // заполним на форме
                         tbList.Text = result.ToString().TrimInnerNewLine().TrimAllSpace();
 
                         // Включаем элементы интерфейса

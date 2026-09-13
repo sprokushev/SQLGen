@@ -208,6 +208,9 @@ namespace SQLGen
                 }
             } while (flag);
 
+            // костыль
+            value = value.Replace("\r\n&nbsp;\r\n", " ");
+
             return value;
         }
 
@@ -467,10 +470,15 @@ namespace SQLGen
                                             string _action = ExtractActionValue(div_tr.Children[3].InnerHtml, stand, version, false);
                                             List<string> _regions = ExtractRegionsValue(div_tr.Children[5].InnerHtml);
 
+                                            string _database = "promed";
+                                            if (_action.Contains("dev_emd_pg"))
+                                            {
+                                                _database = "emd";
+                                            }
 
                                             if (_task != "Задача/Документ")
                                             {
-                                                DP.SetDeployment(_task, _order, DBREGION, "after", "sql", _action, null, "promed", "all", _regions);
+                                                DP.SetDeployment(_task, _order, DBREGION, "after", "sql", _action, null, _database, "all", _regions);
 
                                                 DP.Html = div_block.InnerHtml;
                                                 DP.file = ExtractActionValue(div_tr.Children[3].InnerHtml, stand, version, true);
