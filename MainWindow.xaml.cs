@@ -1,9 +1,14 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 using ICSharpCode.AvalonEdit.Highlighting;
+using SQLGen.Controls;
+using SQLGen.Forms;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -13,12 +18,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using SQLGen.Controls;
-using SQLGen.Utilities;
-using SQLGen.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
-using System.Collections.ObjectModel;
-using System.Data.Common;
 
 namespace SQLGen
 {
@@ -3542,6 +3542,111 @@ namespace SQLGen
         {
             App.AddLog($"Выключен кооперативный режим сборки версий", null, App.ShowMessageMode.NONE, true, null);
             MainWindow.APPinfo.TaskReleaseCooperative = "false";
+        }
+
+        private void btJenkinsYML_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(Task.TaskNumber))
+            {
+                MessageBox.Show("Необходимо заполнить Номер задачи !");
+                if (!tabTask.IsSelected) tabTask.IsSelected = true;
+                if (!tbTaskNumber.IsFocused) tbTaskNumber.Focus();
+                return;
+            }
+
+            //сборка и проверка имени yml-файла 
+            string YMLFile = tbYMLFile.Text.Trim();
+            if ((YMLFile.Length < 4) || (YMLFile.Substring(YMLFile.Length - 4, 4).ToLower() != ".yml")) YMLFile += ".yml";
+            tbYMLFile.Text = YMLFile;
+
+            if (string.IsNullOrWhiteSpace(tbYMLFile.Text))
+            {
+                MessageBox.Show("Необходимо заполнить имя YML-файла");
+                if (!tabTask.IsSelected) tabTask.IsSelected = true;
+                if (!tbYMLFile.IsFocused) tbYMLFile.Focus();
+                return;
+            }
+
+            // проверка текущего подключения
+            if (MainConnect == null)
+            {
+                MessageBox.Show("Необходимо выбрать подключение к БД");
+                if (!tabTask.IsSelected) tabTask.IsSelected = true;
+                if (!cbMainConnect.IsFocused) cbMainConnect.Focus();
+                return;
+            }
+
+            //сначала спросим
+            if (System.Windows.Forms.MessageBox.Show($"Выполнить sql-файлы из {tbYMLFile.Text}\nчерез Jenkins CLI ?",
+                    "ВНИМАНИЕ",
+                    System.Windows.Forms.MessageBoxButtons.YesNo
+                ) == System.Windows.Forms.DialogResult.No
+            )
+            {
+                return;
+            }
+
+            // определим тип стенда по роли БД
+            string _stand = "";
+
+            foreach (var _database in MainWindow.APPinfo.ListDatabases)
+            {
+                if (
+                    Utilities.Databases.ServerAddrEqual(_database.ServerAddr, MainConnect.ServerAddr) &&
+                    Utilities.Databases.ServerPortEqual(_database.ServerPort, _database.DBType, MainConnect.ServerAddr + ":" + MainConnect.ServerPort, MainConnect.DBType) &&
+                    Utilities.Databases.DBNameEqual(_database.DBName, MainConnect.DBName) &&
+                    Utilities.Databases.DBTypeEqual(_database.DBType, MainConnect.DBType)
+                )
+                {
+                    _stand = _database.DBRole;
+                    break;
+                }
+            }
+
+           
+            // выбрать алиасы
+            FormCheckedListBox dlg1 = new FormCheckedListBox();
+            dlg1.Text = "Выбрать алиас(ы)";
+            dlg1.clbList.Items.Clear();
+
+            // заполнить список алиасы
+            Utilities.Controls.FillCheckedListBoxAlias(
+                dlg1.clbList,
+                MainConnect.GITProject,
+                _stand,
+                MainConnect.DBName
+                );
+
+            // заполнить список выбранных алиасов
+            List<JenkinsJob> jobs = new List<JenkinsJob>();
+
+            if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                foreach (object itemChecked in dlg1.clbList.CheckedItems)
+                {
+                    var _alias = MainWindow.APPinfo.ListAliases
+                        .Where(x => x.AliasName.ToLower() == itemChecked.ToString().ToLower())
+                        .FirstOrDefault();
+
+                    if (_alias != null)
+                    {
+                        jobs.Add(new JenkinsJob()
+                        {
+                            JobName = _alias.JobName,
+                            AliasName = _alias.AliasName,
+                            FileName = $"task/{YMLFile}",
+                            Branch = "dev",
+                            ExecutionMode = false
+                        });
+                    }
+                }
+            }
+            dlg1.Dispose();
+
+            if (jobs.Count > 0)
+            {
+                //JenkinsCLI.Execute(jobs, true, null);
+            }
         }
     }
 }

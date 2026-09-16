@@ -23,6 +23,7 @@ del %VERSION_DIR%\*.* /F /Q /S >> %LOGFILE%
 copy /y %SOURCE_DIR%\CHANGELOG %RELEASE_DIR%\changelog.txt >> %LOGFILE% 
 copy /y %SOURCE_DIR%\README.md %RELEASE_DIR%\readme.txt >> %LOGFILE% 
 copy /y %DEBUG_DIR%\*.cmd %RELEASE_DIR% >> %LOGFILE% 
+copy /y %DEBUG_DIR%\jenkins-cli.jar %RELEASE_DIR% >> %LOGFILE% 
 copy /y %DEBUG_DIR%\*.sh %RELEASE_DIR% >> %LOGFILE% 
 copy /y %DEBUG_DIR%\*.cur %RELEASE_DIR% >> %LOGFILE% 
 copy /y %DEBUG_DIR%\*.txt %RELEASE_DIR% >> %LOGFILE% 

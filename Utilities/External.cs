@@ -159,8 +159,9 @@ namespace SQLGen.Utilities
         /// <param name="isShowError">Выводить сообщения об ошибках</param>
         /// <param name="Idle">Максимальный период ожидания, если isWait = true, isShow = false</param>
         /// <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
-        /// <param name="isOutputForceUTF8">=true - принудительно читаем возвращаемый результат в кодировке UTF8</param>
-        public static string ExecuteFile(string workdir, string filename, string param, bool isWait, bool isShow, bool isOutput, bool isShowError, string logFile, bool isOutputForceUTF8 = false, int Idle = 300)
+        /// <param name="OutputEncoding">если != null - принудительно читаем возвращаемый результат в указанной кодировке</param>
+        /// <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
+        public static string ExecuteFile(string workdir, string filename, string param, bool isWait, bool isShow, bool isOutput, bool isShowError, string logFile, Encoding OutputEncoding = null, int Idle = 300, string show = null)
         {
             string error = "";
             string output = "";
@@ -184,6 +185,9 @@ namespace SQLGen.Utilities
 
             if (string.IsNullOrWhiteSpace(param)) param = "";
             else param = param.Trim();
+
+            if (string.IsNullOrWhiteSpace(show)) show = filename + " " + param;
+            else show = show.Trim();
 
             if (
                 string.IsNullOrWhiteSpace(filename) ||
@@ -227,9 +231,9 @@ namespace SQLGen.Utilities
                         process.StartInfo.CreateNoWindow = true;
                         process.StartInfo.RedirectStandardOutput = true;
 
-                        if (isOutputForceUTF8)
+                        if (OutputEncoding != null)
                         {
-                            process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                            process.StartInfo.StandardOutputEncoding = OutputEncoding;
                         }
                     }
                     else
@@ -237,7 +241,7 @@ namespace SQLGen.Utilities
                         process.StartInfo.UseShellExecute = true;
                     }
 
-                    App.AddLog(process.StartInfo.FileName + " " + process.StartInfo.Arguments, null, App.ShowMessageMode.NONE, true, logFile);
+                    App.AddLog("cmd.exe /C " + show, null, App.ShowMessageMode.NONE, true, logFile);
 
                     process.Start();
 

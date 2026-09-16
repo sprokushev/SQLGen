@@ -159,22 +159,23 @@
             <CheckBox x:Name="isCheckBOM" Content="исправлять BOM для UTF8 при копировании ?" HorizontalAlignment="Left" Margin="880,203,0,0" VerticalAlignment="Top"/>
             <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="880,219,0,0" VerticalAlignment="Top"/>
             <!--Button x:Name="btCopyYMLtoDEV" Content="Перенос задачи из GIT в DEV" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btCopyYMLtoDEV_Click"/-->
-            <Button x:Name="btExecuteYML" Content="Выполнить YML-файл" HorizontalAlignment="Left" Height="23" Margin="1175,187,0,0" VerticalAlignment="Top" Width="196" Click="btExecuteYML_Click"/>
+            <Button x:Name="btExecuteYML" Content="Выполнить YML-файл" HorizontalAlignment="Left" Height="23" Margin="1175,187,0,0" VerticalAlignment="Top" Width="196" Click="btExecuteYML_Click" ToolTip="Выполнить yml-файл локально на рабочем ПК"/>
+            <Button x:Name="btJenkinsYML" Content="YML-файл через Jenkins" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btJenkinsYML_Click" ToolTip="Выполнить yml-файл через Jenkins CLI"/>
 
-            <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="1175,220,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="15,245,0,0" VerticalAlignment="Top" Width="23" Height="23">
               <Image Source="Images/up.png"></Image>
             </Button>
               
-            <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="1210,220,0,0" VerticalAlignment="Top" Width="23" Height="23">
+            <Button x:Name="btDown" ToolTip="Опустить строку ниже" Click="btDown_Click" HorizontalAlignment="Left" Margin="45,245,0,0" VerticalAlignment="Top" Width="23" Height="23">
               <Image Source="Images/down.png"></Image>
             </Button>
               
             <Label Content="Проект GIT:" HorizontalAlignment="Left" Margin="10,215,0,0" Height="26" VerticalAlignment="Top"/>
             <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="139,217,0,0" VerticalAlignment="Top" Width="300" Height="23" SelectionChanged="cbGITProject_SelectionChanged"/>
             <Label x:Name="lbGITBranch" Content="Текущая ветка GIT:" HorizontalAlignment="Left" Margin="450,215,0,0" VerticalAlignment="Top" Width="Auto"/>
-            <Label x:Name="lbGITCount" Content="Кол-во:" HorizontalAlignment="Left" Margin="750,215,0,0" VerticalAlignment="Top" Width="Auto"/>
+            <Label x:Name="lbGITCount" Content="Кол-во:" HorizontalAlignment="Left" Margin="80,243,0,0" VerticalAlignment="Top" Width="Auto"/>
 
-            <DataGrid x:Name="dgScriptsInTask" AutoGenerateColumns="False" Margin="0,250,0,0" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgScriptsInTask_MouseDoubleClick">
+            <DataGrid x:Name="dgScriptsInTask" AutoGenerateColumns="False" Margin="0,275,0,0" CanUserSortColumns="False" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" CanUserAddRows="False" CanUserDeleteRows="False" MouseDoubleClick="dgScriptsInTask_MouseDoubleClick">
               <DataGrid.Columns>
                 <DataGridTextColumn x:Name="GITOrder" Binding="{Binding Path=GITOrder}" Width="45" Header="N п\п" IsReadOnly="false" />
                 <DataGridTextColumn x:Name="GITScriptname" Binding="{Binding Path=GITScriptname}" Width="400" Header="Исходный файл" IsReadOnly="true" />

@@ -749,6 +749,53 @@ namespace SQLGen.Utilities
         }
 
         /// <summary>
+        /// Заполнить CheckedListBox список алиасов liquibase по проекту GIT и имени стенда или БД
+        /// </summary>
+        /// <param name="clb">экземпляр System.Windows.Forms.CheckedListBox</param>
+        /// <param name="project">проект</param>
+        /// <param name="stand">стенд</param>
+        /// <param name="dbname">имя БД</param>
+        public static void FillCheckedListBoxAlias(System.Windows.Forms.CheckedListBox clb, string project, string stand, string dbname)
+        {
+            clb.Items.Clear();
+
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(stand))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dbname))
+            {
+                return;
+            }
+
+            if (
+                MainWindow.APPinfo.ListAliases != null &&
+                MainWindow.APPinfo.ListAliases.Count > 0
+            )
+            {
+                foreach (var item in MainWindow.APPinfo.ListAliases
+                    .Where(x => 
+                        x.GITProject.ToLower() == project.ToLower() &&
+                        (
+                            x.Stand.ToUpper() == stand.ToUpper() ||
+                            string.IsNullOrWhiteSpace(stand) && x.DBName.ToLower() == dbname.ToLower()
+                        )
+                    )
+                )
+                {
+                    bool isChecked = item.DBName.ToLower() == dbname.ToLower();
+                    clb.Items.Add(item.AliasName, isChecked);
+                }
+            }
+        }
+
+        /// <summary>
         /// Блокирование элементов интерфейса при старте
         /// </summary>
         /// <param name="mainGrid">экземпляр Grid</param>

@@ -4640,6 +4640,7 @@ namespace SQLGen
 
             WinExecute WinExecute = new WinExecute(logFileRelease);
             WinExecute.Title = "Merge задач в ветку " + tbBranch.Text.Trim();
+            WinExecute.isStopAfterFirstError = true;
 
             // текущая версия
             double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, tbNumVersion.Text));
@@ -4922,7 +4923,14 @@ namespace SQLGen
                 }
                 else
                 {
-                    App.AddLog($"Merge задач в ветку {tbBranch.Text} завершен.{Environment.NewLine}{Environment.NewLine}Теперь необходимо собрать yml-файл версии.", null, App.ShowMessageMode.SHOW, true, logFileRelease);
+                    if (string.IsNullOrWhiteSpace(WinExecute.LastError))
+                    {
+                        App.AddLog($"Merge задач в ветку {tbBranch.Text} завершен.", null, App.ShowMessageMode.NONE, true, logFileRelease);
+                    }
+                    else
+                    {
+                        App.AddLog($"Merge задач в ветку {tbBranch.Text} возможно завершился с ошибкой:{Environment.NewLine}{Environment.NewLine}{WinExecute.LastError}", null, App.ShowMessageMode.SHOW, true, logFileRelease);
+                    }
                 }
 
                 if (System.Windows.Forms.MessageBox.Show("Посмотреть лог merge ?", "", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
@@ -4942,6 +4950,8 @@ namespace SQLGen
                     }
                     WinInfo.ShowDialog();
                 }
+
+                App.AddLog($"Теперь необходимо собрать или дополнить yml-файл версии.", null, App.ShowMessageMode.SHOW, true, logFileRelease);
             }
             else
             {

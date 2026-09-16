@@ -30,11 +30,13 @@ bld/
 [Bb]in/[Dd]ebug/*
 [Bb]in/[Rr]elease/*
 ![Bb]in/[Dd]ebug/*.cmd
+![Bb]in/[Dd]ebug/jenkins-cli.jar
 ![Bb]in/[Dd]ebug/*.sh
 ![Bb]in/[Dd]ebug/*.cur
 ![Bb]in/[Dd]ebug/*.txt
 ![Bb]in/[Dd]ebug/sqlfluff.exe
 ![Bb]in/[Rr]elease/*.cmd
+![Bb]in/[Rr]elease/jenkins-cli.jar
 ![Bb]in/[Rr]elease/*.sh
 ![Bb]in/[Rr]elease/*.cur
 ![Bb]in/[Rr]elease/*.txt

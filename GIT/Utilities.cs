@@ -116,6 +116,8 @@ namespace SQLGen.Utilities
                 (columnfilter != "LuquibotAliasQARelUfa") &&
                 (columnfilter != "LuquibotAliasQA") &&
                 (columnfilter != "LuquibotAliasQAUfa") &&
+                (columnfilter != "LuquibotAliasTest") &&
+                (columnfilter != "LuquibotAliasTestUfa") &&
                 (columnfilter != "ProjectDeploymentMS") &&
                 (columnfilter != "ProjectDeploymentPG") &&
                 (columnfilter != "ProjectCronMS") &&
@@ -169,6 +171,8 @@ namespace SQLGen.Utilities
                 (columnresult != "LuquibotAliasQARelUfa") &&
                 (columnresult != "LuquibotAliasQA") &&
                 (columnresult != "LuquibotAliasQAUfa") &&
+                (columnresult != "LuquibotAliasTest") &&
+                (columnresult != "LuquibotAliasTestUfa") &&
                 (columnresult != "ProjectDeploymentMS") &&
                 (columnresult != "ProjectDeploymentPG") &&
                 (columnresult != "ProjectCronMS") &&
@@ -200,7 +204,7 @@ namespace SQLGen.Utilities
                 {
                     res = (string)row[columnresult];
                     // позвращаем первое значение
-                    break; 
+                    break;
                 }
             }
             catch
@@ -887,8 +891,16 @@ namespace SQLGen.Utilities
 
             string alias = "";
             string alias_ufa = "";
+            List<string> list = null;
 
-            if (stand == "RELEASE")
+            if (stand == "TEST")
+            {
+                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasTest");
+                list = alias.ToList(new char[] { ';' }, true);
+                alias = "";
+                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasTestUfa");
+            }
+            else if (stand == "RELEASE")
             {
                 alias = GITProjectsParam("DEVProject", project, "LuquibotAliasOld");
                 alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasOldUfa");
@@ -948,6 +960,14 @@ namespace SQLGen.Utilities
             if (!string.IsNullOrWhiteSpace(alias))
             {
                 result.Add(alias);
+            }
+
+            if (
+                list != null &&
+                list.Count > 0
+            )
+            {
+                result.AddRange(list);
             }
 
             if (!string.IsNullOrWhiteSpace(alias_ufa))
@@ -1671,7 +1691,7 @@ namespace SQLGen.Utilities
                     true,
                     false,
                     logFile,
-                    true,
+                    System.Text.Encoding.UTF8,
                     600
                 );
 
@@ -1771,7 +1791,7 @@ namespace SQLGen.Utilities
                         true,
                         false,
                         logFile,
-                        true,
+                        System.Text.Encoding.UTF8,
                         600
                     );
 

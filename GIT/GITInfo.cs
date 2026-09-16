@@ -223,12 +223,12 @@ namespace SQLGen
         public string DBRegion { get; set; }
 
         /// <summary>
-        /// Алиас бота старый
+        /// Алиас бота для общей релизной
         /// </summary>
         public string LuquibotAliasOld { get; set; }
 
         /// <summary>
-        /// Алиас бота старый Уфа
+        /// Алиас бота для общей релизной Уфа
         /// </summary>
         public string LuquibotAliasOldUfa { get; set; }
 
@@ -253,22 +253,22 @@ namespace SQLGen
         public string LuquibotAliasHFUfa { get; set; }
 
         /// <summary>
-        /// Алиас бота для EHF актуальный
+        /// Алиас бота для EHF_ACT
         /// </summary>
         public string LuquibotAliasEHFAct { get; set; }
 
         /// <summary>
-        /// Алиас бота для EHF актуальный Уфа
+        /// Алиас бота для EHF_ACT Уфа
         /// </summary>
         public string LuquibotAliasEHFActUfa { get; set; }
 
         /// <summary>
-        /// Алиас бота для EHF не актуальный
+        /// Алиас бота для EHF_UNACT
         /// </summary>
         public string LuquibotAliasEHFUnAct { get; set; }
 
         /// <summary>
-        /// Алиас бота для EHF не актуальный Уфа
+        /// Алиас бота для EHF_UNACT Уфа
         /// </summary>
         public string LuquibotAliasEHFUnActUfa { get; set; }
 
@@ -320,5 +320,15 @@ namespace SQLGen
         /// Проект для хранения заданий PG
         /// </summary>
         public string ProjectCronPG { get; set; }
+
+        /// <summary>
+        /// Алиасы бота для тестовых (если несколько, то через ;)
+        /// </summary>
+        public string LuquibotAliasTest { get; set; }
+
+        /// <summary>
+        /// Алиас бота для тестовой Уфы
+        /// </summary>
+        public string LuquibotAliasTestUfa { get; set; }
     }
 }

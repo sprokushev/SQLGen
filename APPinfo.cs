@@ -32,13 +32,14 @@ namespace SQLGen
             this.IsNewGen = "true";
             this.NoUpperBranch = new List<string>();
             this.ReleaseBranch = new List<string>();
-            this.CumulativeGap = new List<string>();
+            //this.CumulativeGap = new List<string>();
             this.relativeToChangelogFile = "true";
             this.ExtendedLog = "false";
             this.ImproveSQLinVersion = "true";
             this.UseNewFunc = "false";
             this.CheckLastCommit = "true";
             this.TaskReleaseCooperative = "false";
+            this.ListAliases = new BindingList<AliasJenkins>();
         }
 
         // -------------------------------------------------------------------------------------------------------
@@ -193,22 +194,24 @@ namespace SQLGen
         /// <param name="git_LuquibotAliasSPUfa">Алиас бота для SP Уфа</param>
         /// <param name="git_LuquibotAliasHF">Алиас для HF</param>
         /// <param name="git_LuquibotAliasHFUfa">Алиас для HF Уфа</param>
-        /// <param name="git_LuquibotAliasEHFAct">Алиас для EHF актуального</param>
-        /// <param name="git_LuquibotAliasEHFActUfa">Алиас для EHF актуального Уфа</param>
-        /// <param name="git_LuquibotAliasEHFUnAct">Алиас для EHF не актуального</param>
-        /// <param name="git_LuquibotAliasEHFUnActUfa">Алиас для EHF не актуального Уфа</param>
+        /// <param name="git_LuquibotAliasEHFAct">Алиас для EHF_ACT</param>
+        /// <param name="git_LuquibotAliasEHFActUfa">Алиас для EHF_ACT Уфа</param>
+        /// <param name="git_LuquibotAliasEHFUnAct">Алиас для EHF_UNACT</param>
+        /// <param name="git_LuquibotAliasEHFUnActUfa">Алиас для EHF_UNACT Уфа</param>
         /// <param name="git_LuquibotAliasLTS">Алиас для LTS</param>
         /// <param name="git_LuquibotAliasLTSUfa">Алиас для LTS Уфа</param>
         /// <param name="git_LuquibotAliasQARel">Алиас для QA-Rel</param>
         /// <param name="git_LuquibotAliasQARelUfa">Алиас для QA-Rel Уфа</param>
         /// <param name="git_LuquibotAliasQA">Алиас для QA</param>
         /// <param name="git_LuquibotAliasQAUfa">Алиас для QA Уфа</param>
-        /// <param name="git_ProjectDeploymentMS">Алиас для EHF2 N2 Уфы</param>
-        /// <param name="git_ProjectDeploymentPG">Алиас для EHF2 N2 Уфы</param>
-        /// <param name="git_ProjectCronMS">Алиас для EHF2 N2 Уфы</param>
-        /// <param name="git_ProjectCronPG">Алиас для EHF2 N2 Уфы</param>
+        /// <param name="git_ProjectDeploymentMS">проект хранения Deployment Plan для MS</param>
+        /// <param name="git_ProjectDeploymentPG">проект хранения Deployment Plan для PG</param>
+        /// <param name="git_ProjectCronMS">проект хранения Cron для MS</param>
+        /// <param name="git_ProjectCronPG">проект хранения Cron для PG</param>
+        /// <param name="git_LuquibotAliasTest">Алиас для тестовой</param>
+        /// <param name="git_LuquibotAliasTestUfa">Алиас для тестовой Уфа</param>
         /// <returns></returns>
-        public GITInfo AddGITProject(string git_project, string git_folder, string _prefixsql, string _prefixrelease, string _postfixrelease, string git_url, string git_urlalt, string git_ymlfield, string git_datafolder, string git_issinglescript, string _dbtype, string dev_project, string dev_folder, string dev_url, string dev_urlalt, string dev_ymlfield, string dev_datafolder, string dev_issinglescriptstruct, string dev_issinglescriptcode, string dev_issinglescriptdata, string dev_startver, List<string> cumulativegap, string git_isevninherit, string git_dbalias, string git_dbregion, string git_LuquibotAliasOld, string git_LuquibotAliasOldUfa, string git_LuquibotAliasSP, string git_LuquibotAliasSPUfa, string git_LuquibotAliasHF, string git_LuquibotAliasHFUfa, string git_LuquibotAliasEHFAct, string git_LuquibotAliasEHFActUfa, string git_LuquibotAliasEHFUnAct, string git_LuquibotAliasEHFUnActUfa, string git_LuquibotAliasLTS, string git_LuquibotAliasLTSUfa, string git_LuquibotAliasQARel, string git_LuquibotAliasQARelUfa, string git_LuquibotAliasQA, string git_LuquibotAliasQAUfa, string git_ProjectDeploymentMS, string git_ProjectDeploymentPG, string git_ProjectCronMS, string git_ProjectCronPG
+        public GITInfo AddGITProject(string git_project, string git_folder, string _prefixsql, string _prefixrelease, string _postfixrelease, string git_url, string git_urlalt, string git_ymlfield, string git_datafolder, string git_issinglescript, string _dbtype, string dev_project, string dev_folder, string dev_url, string dev_urlalt, string dev_ymlfield, string dev_datafolder, string dev_issinglescriptstruct, string dev_issinglescriptcode, string dev_issinglescriptdata, string dev_startver, List<string> cumulativegap, string git_isevninherit, string git_dbalias, string git_dbregion, string git_LuquibotAliasOld, string git_LuquibotAliasOldUfa, string git_LuquibotAliasSP, string git_LuquibotAliasSPUfa, string git_LuquibotAliasHF, string git_LuquibotAliasHFUfa, string git_LuquibotAliasEHFAct, string git_LuquibotAliasEHFActUfa, string git_LuquibotAliasEHFUnAct, string git_LuquibotAliasEHFUnActUfa, string git_LuquibotAliasLTS, string git_LuquibotAliasLTSUfa, string git_LuquibotAliasQARel, string git_LuquibotAliasQARelUfa, string git_LuquibotAliasQA, string git_LuquibotAliasQAUfa, string git_ProjectDeploymentMS, string git_ProjectDeploymentPG, string git_ProjectCronMS, string git_ProjectCronPG, string git_LuquibotAliasTest, string git_LuquibotAliasTestUfa
         )
         {
             if (string.IsNullOrWhiteSpace(git_project)) return null;
@@ -268,6 +271,8 @@ namespace SQLGen
             _git.ProjectDeploymentPG = git_ProjectDeploymentPG;
             _git.ProjectCronMS = git_ProjectCronMS;
             _git.ProjectCronPG = git_ProjectCronPG;
+            _git.LuquibotAliasTest = git_LuquibotAliasTest;
+            _git.LuquibotAliasTestUfa = git_LuquibotAliasTestUfa;
 
             var list = (_git.CumulativeGap ?? "").ToList(new char[] { ',', ';' }, true);
 
@@ -824,6 +829,69 @@ namespace SQLGen
         /// <summary>Флаг сохранения пароля Jira</summary>
         public bool isSavePasswordJira { get; set; }
 
+
+        // -------------------------------------------------------------------------------------------------------
+        private string _usernamejenkins;
+        /// <summary>Пользователь Jenkins</summary>
+        public string UsernameJenkins
+        {
+            get
+            {
+                return _usernamejenkins ?? "";
+            }
+            set
+            {
+                _usernamejenkins = value;
+                if (string.IsNullOrWhiteSpace(_usernamejenkins)) _usernamejenkins = "";
+                _usernamejenkins = _usernamejenkins.Trim();
+
+                MainWindow.Task.OnPropertyChanged("UsernameJenkins");
+            }
+        }
+
+        // -------------------------------------------------------------------------------------------------------
+        /// <summary>Зашифрованный пароль Jenkins</summary>
+        public string CryptedPasswordJenkins { get; set; }
+
+        /// <summary>Пароль Jenkins</summary>
+        [JsonIgnore]
+        internal string PasswordJenkins
+        {
+            get
+            {
+                string decrypt = "";
+
+                try
+                {
+                    decrypt = CryptoClass.decrypt_from_string(CryptedPasswordJenkins);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка дешифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    decrypt = "";
+                }
+
+                return decrypt;
+            }
+            set
+            {
+                CryptedPasswordJenkins = "";
+
+                try
+                {
+                    CryptedPasswordJenkins = CryptoClass.encrypt_to_string(value);
+                }
+                catch (Exception ex)
+                {
+                    App.AddLog("Ошибка шифровки пароля, надо его ввести повторно: ", ex, App.ShowMessageMode.SHOW, true, "");
+                    CryptedPasswordJenkins = "";
+                }
+            }
+        }
+
+        /// <summary>Флаг сохранения пароля Jenkins</summary>
+        public bool isSavePasswordJenkins { get; set; }
+
         // -------------------------------------------------------------------------------------------------------
         /// <summary>
         /// Список регионов
@@ -1107,10 +1175,10 @@ namespace SQLGen
         /// <summary>Список веток, от которых можно создавать релизы</summary>
         public List<string> ReleaseBranch { get; set; }
 
-        /// <summary>
+        /*/// <summary>
         /// (ПАРАМЕТР УСТАРЕЛ и НЕ ИСПОЛЬЗУЕТСЯ) Список версий, на которых разрывается кумулятивность
         /// </summary>
-        public List<string> CumulativeGap { get; set; }
+        public List<string> CumulativeGap { get; set; }*/
 
         // -------------------------------------------------------------------------------------------------------
         private string _checklastcommit;
@@ -1206,6 +1274,46 @@ namespace SQLGen
             this.TaskReleaseCooperative == "true" && // если включен кооперативный режим работы с релизными задачами
             Directory.Exists(this.TaskReleasePath) // есть проект для кооперативного режима и папка для хранения файлов
         ;
+
+        // -------------------------------------------------------------------------------------------------------
+        /// <summary>Список алиасов Jenkins</summary>
+        public BindingList<AliasJenkins> ListAliases { get; set; }
+    }
+
+    /// <summary>
+    /// Описание алиса Jenkins
+    /// </summary>
+    public class AliasJenkins
+    {
+        /// <summary>
+        /// Имя алиаса
+        /// </summary>
+        public string AliasName { get; set; }
+
+        /// <summary>
+        /// Имя задания в Jenkins
+        /// </summary>
+        public string JobName { get; set; }
+
+        /// <summary>
+        /// релизный стенд
+        /// </summary>
+        public string Stand {  get; set; }
+
+        /// <summary>
+        /// Имя БД
+        /// </summary>
+        public string DBName { get; set; }
+
+        /// <summary>
+        /// Проект GIT
+        /// </summary>
+        public string GITProject { get; set; }  
+
+        /// <summary>
+        /// Ветка БД
+        /// </summary>
+        public string Branch { get; set; }
     }
 
     // -------------------------------------------------------------------------------------------------------
@@ -1281,6 +1389,1115 @@ namespace SQLGen
                 App.AddLog("нет файла SQLGen.json либо в SQLGen.json нет перечня проектов GIT, используем значения по умолчанию", null, App.ShowMessageMode.NONE, true, null);
             }
 
+            // список алиасов Jenkins
+            APPinfo.ListAliases.Clear();
+
+            // релизные MS
+            APPinfo.ListAliases.Add(new AliasJenkins { 
+                AliasName = "rel_promed_ms",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "ProMedWebRelease", 
+                GITProject = "dev_promed_ms", 
+                Branch = null 
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "ProMedWebRelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "ProMedWebRelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "ProMedWebRelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "ProMedWebRelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "ProMedWebRelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_ms_ufa_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "promedwebufarelease",
+                GITProject = "dev_promed_ms",
+                Branch = null
+            });
+
+            // тестовая MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_promedtest",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "ProMedTest",
+                GITProject = "dev_promed_ms",
+                Branch = "dev"
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_promedufa",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "ProMedUfa",
+                GITProject = "dev_promed_ms",
+                Branch = "dev"
+            });
+
+            // релизные PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_promed_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "promedrelease",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_qa_promed",
+                JobName = "liquibase/release",
+                Stand = "QA-Rel",
+                DBName = "promed",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "qa_promed",
+                JobName = "liquibase/release",
+                Stand = "QA",
+                DBName = "promed",
+                GITProject = "dev_promed_pg",
+                Branch = null
+            });
+
+            // тестовые PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_promedadygea",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "promedadygea",
+                GITProject = "dev_promed_pg",
+                Branch = "dev"
+            });
+
+            // релизные EMD
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_emd_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "EMDrelease",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_qa_EMD",
+                JobName = "liquibase/release",
+                Stand = "QA-Rel",
+                DBName = "emd",
+                GITProject = "dev_emd_pg",
+                Branch = null
+            });
+
+            // тестовые EMD
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_emd",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "EMD",
+                GITProject = "dev_emd_pg",
+                Branch = "dev"
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_emd33",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "EMD",
+                GITProject = "dev_emd_pg",
+                Branch = "dev"
+            });
+            
+            // релизные LIS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "lisrelease",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_lis_pg_ufa_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "lisrelease_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = null
+            });
+
+            // тестовая LIS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_promedlistest2",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "promedlistest2",
+                GITProject = "dev_lis_pg",
+                Branch = "dev"
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_promedlistest_ufa",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "promedlistest_ufa",
+                GITProject = "dev_lis_pg",
+                Branch = "dev"
+            });
+
+            // релизные LOG_SERVICE PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_qa_log_service",
+                JobName = "liquibase/release",
+                Stand = "QA-Rel",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "qa_log_service",
+                JobName = "liquibase/release",
+                Stand = "QA",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = null
+            });
+
+            // тестовые LOG_SERVICE PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_log_service_pg",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "log_service",
+                GITProject = "dev_logservice_pg",
+                Branch = "dev"
+            });
+
+            // релизные LOG_SERVICE MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_logservice_ms_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = null
+            });
+
+            // тестовые LOG_SERVICE MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_log_service_ms",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "log_service",
+                GITProject = "dev_logservice_ms",
+                Branch = "dev"
+            });
+
+            // релизные PHP_LOG PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "qa_rel_php_log",
+                JobName = "liquibase/release",
+                Stand = "QA-Rel",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "qa_php_log",
+                JobName = "liquibase/release",
+                Stand = "QA",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = null
+            });
+
+            // тестовые PHP_LOG PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_php_log_pg",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "php_log",
+                GITProject = "dev_phplog_pg",
+                Branch = "dev"
+            });
+
+
+            // релизные PHP_LOG MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_phplog_ms_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = null
+            });
+
+            // тестовые PHP_LOG MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_php_log_ms",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "php_log",
+                GITProject = "dev_phplog_ms",
+                Branch = "dev"
+            });
+
+
+            // релизные USERPORTAL PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_qa_userportal",
+                JobName = "liquibase/release",
+                Stand = "QA-Rel",
+                DBName = "userportal",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "qa_userportal",
+                JobName = "liquibase/release",
+                Stand = "QA",
+                DBName = "userportal",
+                GITProject = "dev_userportal_pg",
+                Branch = null
+            });
+
+
+            // релизные USERPORTAL MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_userportal_ms_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "userportalrelease",
+                GITProject = "dev_userportal_ms",
+                Branch = null
+            });
+
+
+            // тестовая FER_LOG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_fer_log",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "fer_log",
+                GITProject = "dev_ferlog_pg",
+                Branch = "dev"
+            });
+
+
+            // релизные AC_MLO PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = null
+            });
+
+            // тестовые AC_MLO PG
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_ac_mlo_pg",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_pg",
+                Branch = "dev"
+            });
+
+            
+            // релизные AC_MLO MS
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_acmlo_ms_lts",
+                JobName = "liquibase/little",
+                Stand = "LTS",
+                DBName = "ac_mlo",
+                GITProject = "dev_acmlo_ms",
+                Branch = null
+            });
+
+
+            // релизные PROXY
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg",
+                JobName = "liquibase/release",
+                Stand = "RELEASE",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg_sp1",
+                JobName = "liquibase/release",
+                Stand = "SP",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg_hf",
+                JobName = "liquibase/release",
+                Stand = "HF",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg_ehf_act",
+                JobName = "liquibase/release",
+                Stand = "EHF_ACT",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg_ehf_unact",
+                JobName = "liquibase/release",
+                Stand = "EHF_UNACT",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "rel_proxy_pg_lts",
+                JobName = "liquibase/release",
+                Stand = "LTS",
+                DBName = "proxyrelease",
+                GITProject = "dev_proxy_pg",
+                Branch = null
+            });
+
+            // тестовые PROXY
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_proxy_pg",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "proxy",
+                GITProject = "dev_proxy_pg",
+                Branch = "dev"
+            });
+
+
+            // тестовые SMP2
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_smp2",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "smptest3",
+                GITProject = "dev_smp2_pg",
+                Branch = "dev"
+            });
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "smptest3_integrms",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "smptest3_integrms",
+                GITProject = "dev_smp2_pg",
+                Branch = "dev"
+            });
+
+
+            // тестовые GAR
+            APPinfo.ListAliases.Add(new AliasJenkins
+            {
+                AliasName = "dev_gar_pg",
+                JobName = "liquibase/little",
+                Stand = "TEST",
+                DBName = "gar",
+                GITProject = "dev_gar_pg",
+                Branch = "dev"
+            });
+
+
+
             // обновим список проектов GIT
             APPinfo.AddGITProject(
                 "msdbupdate_new",
@@ -1327,7 +2544,9 @@ namespace SQLGen
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
-                ""
+                "",
+                "dev_promedtest",
+                "dev_promedufa"
                 );
 
             APPinfo.AddGITProject(
@@ -1356,7 +2575,7 @@ namespace SQLGen
                 "NO",
                 "promed",
                 "PG SQL",
-                git_LuquibotAliasOld: "rel_promed_pg",
+                "rel_promed_pg",
                 "",
                 "rel_promed_pg_sp1",
                 "",
@@ -1375,7 +2594,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_promedadygea",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1423,7 +2644,9 @@ namespace SQLGen
                 "dev_promed_ms",
                 "dev_promed_pg",
                 "dev_promed_ms",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_emd;dev_emd33",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1471,7 +2694,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_promedlistest2",
+                "dev_promedlistest_ufa"
                 );
 
             APPinfo.AddGITProject(
@@ -1519,7 +2744,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_log_service_pg",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1567,6 +2794,8 @@ namespace SQLGen
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
+                "",
+                "dev_log_service_ms",
                 ""
                 );
 
@@ -1615,7 +2844,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_php_log_pg",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1663,6 +2894,8 @@ namespace SQLGen
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
+                "",
+                "dev_php_log_ms",
                 ""
                 );
 
@@ -1711,7 +2944,9 @@ namespace SQLGen
                 "",
                 "dev_userportal_pg",
                 "",
-                "dev_userportal_pg"
+                "dev_userportal_pg",
+                "",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1759,6 +2994,8 @@ namespace SQLGen
                 "dev_userportal_ms",
                 "",
                 "dev_userportal_ms",
+                "",
+                "",
                 ""
                 );
 
@@ -1807,7 +3044,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_fer_log",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1855,7 +3094,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_ac_mlo_pg",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1903,7 +3144,9 @@ namespace SQLGen
                 "",
                 "dev_smp2_pg",
                 "",
-                "dev_smp2_pg"
+                "dev_smp2_pg",
+                "dev_smp2;smptest3_integrms",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -1951,6 +3194,8 @@ namespace SQLGen
                 "dev_promed_ms",
                 "",
                 "dev_promed_ms",
+                "",
+                "",
                 ""
                 );
 
@@ -1999,7 +3244,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_gar_pg",
+                ""
                 );
 
             APPinfo.AddGITProject(
@@ -2047,7 +3294,9 @@ namespace SQLGen
                 "",
                 "dev_promed_pg",
                 "",
-                "dev_promed_pg"
+                "dev_promed_pg",
+                "dev_proxy_pg",
+                ""
             );
 
             APPinfo.AddGITProject(
@@ -2095,7 +3344,9 @@ namespace SQLGen
                 "",
                 "dev_bi",
                 "",
-                "dev_bi"
+                "dev_bi",
+                "",
+                ""
                 );
 
             // принудительно меняем

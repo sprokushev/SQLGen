@@ -481,6 +481,7 @@
       <DependentUpon>FormSaveToGIT.cs</DependentUpon>
     </Compile>
     <Compile Include="GIT\Utilities.cs" />
+    <Compile Include="Jenkins\Jenkins.cs" />
     <Compile Include="Other\WinAddFK.xaml.cs">
       <DependentUpon>WinAddFK.xaml</DependentUpon>
     </Compile>

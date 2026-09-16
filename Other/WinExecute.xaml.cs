@@ -1,6 +1,8 @@
 ﻿// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+using SQLGen.Controls;
+using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,8 +13,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using SQLGen.Controls;
-using SQLGen.Utilities;
 using static SQLGen.App;
 
 namespace SQLGen
@@ -42,10 +42,8 @@ namespace SQLGen
         /// </summary>
         private int Idle = 600;
 
-        /// <summary>
-        /// спрашивать при запуске каждой программы 
-        /// </summary>
-        private bool isAskByOne = false;
+        // спрашивать при запуске каждой программы 
+        //private bool isAskByOne = false;
 
         /// <summary>
         ///  Выводить все сообщения об ошибка
@@ -61,6 +59,45 @@ namespace SQLGen
         /// Результат выполнения внешних команд для записи в лог-файл
         /// </summary>
         private StringBuilder execLogText = new StringBuilder(100000);
+
+        /// <summary>
+        /// Что вернула последняя команда
+        /// 99999 - выполнение прервано пользователем
+        /// -1 - неизвестная ошибка
+        /// >0 - коды ошибок
+        /// 0 - выполнено успешно
+        /// </summary>
+        public int LastExitCode = 0;
+
+        /// <summary>
+        /// Номер по порядку последней выполненной успешно команды
+        /// </summary>
+        public int LastExecutedSuccess = 0;
+
+        /// <summary>
+        /// Последняя ошибка
+        /// </summary>
+        public string LastError = "";
+
+        /// <summary>
+        /// =true - Прервать выполнение списка комманд после первой ошибки (без запросов о продолжении)
+        /// </summary>
+        public bool isStopAfterFirstError = false;
+
+        /// <summary>
+        /// =true - оставлять окно открытым после ошибок
+        /// </summary>
+        public bool isShowLogAfterError = false;
+
+        /// <summary>
+        /// =true - оставлять окно открытым после успешного завершения
+        /// </summary>
+        public bool isShowLogAfterSuccess = false;
+
+        /// <summary>
+        /// если != null - принудительно читаем возвращаемый результат в указанной кодировке
+        /// </summary>
+        public Encoding OutputEncoding = null;
 
         /// <summary>
         /// Вернуть лог 
@@ -160,7 +197,8 @@ namespace SQLGen
         /// <param name="workdir">рабочий каталог</param>
         /// <param name="filename">исполняемый файл</param>
         /// <param name="param">параметры</param>
-        public void AddCommand(string workdir, string filename, string param)
+        /// <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
+        public void AddCommand(string workdir, string filename, string param, string show = null)
         {
             if (string.IsNullOrWhiteSpace(workdir)) workdir = "";
             else workdir = workdir.Trim();
@@ -171,7 +209,16 @@ namespace SQLGen
             if (string.IsNullOrWhiteSpace(param)) param = "";
             else param = param.Trim();
 
-            if (string.IsNullOrWhiteSpace(filename) || (!File.Exists(filename)))
+            if (string.IsNullOrWhiteSpace(show)) show = filename + " " + param;
+            else show = show.Trim();
+
+            if (
+                string.IsNullOrWhiteSpace(filename) ||
+                (
+                    (!string.IsNullOrWhiteSpace(Path.GetExtension(filename))) &&
+                    (!File.Exists(filename))
+                )
+            )
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -183,7 +230,7 @@ namespace SQLGen
                 if (workdir.Contains(" ")) workdir = "\"" + workdir + "\"";
                 if (filename.Contains(" ")) filename = "\"" + filename + "\"";
 
-                ListCommands.Add(new System.Diagnostics.ProcessStartInfo
+                var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
                     WindowStyle = ProcessWindowStyle.Hidden,
                     WorkingDirectory = workdir,
@@ -193,8 +240,11 @@ namespace SQLGen
                     RedirectStandardOutput = true,
                     //RedirectStandardError = true,
                     CreateNoWindow = true
-                }
-                );
+                };
+
+                startInfo.Environment.Add("sqlgenshowcommand", show);
+
+                ListCommands.Add(startInfo);
             }
         }
 
@@ -243,7 +293,7 @@ namespace SQLGen
         public void Start(bool isWait, int _idle = 600, bool _isAskByOne = false)
         {
             Idle = _idle;
-            isAskByOne = _isAskByOne;
+            //isAskByOne = _isAskByOne;
 
             if (
                 (Worker.IsBusy == false) &&
@@ -276,10 +326,16 @@ namespace SQLGen
 
             int maximum = ListCommands.Count;
             int current = 0;
+            LastExecutedSuccess = 0;
 
             worker.ReportProgress(0);
 
             AddExecLog($"Начинаем выполнение внешних команд", null, App.ShowMessageMode.NONE);
+
+            if (isStopAfterFirstError)
+            {
+                AddExecLog($"Включен режим принудительного прерывания после первой ошибки", null, App.ShowMessageMode.NONE);
+            }
 
             foreach (var startInfo in ListCommands)
             {
@@ -288,7 +344,9 @@ namespace SQLGen
                     e.Cancel = true;
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        AddExecLog($"Прервано выполнение внешних команд", null, App.ShowMessageMode.NONE);
+                        LastExitCode = 99999;
+                        LastError = "Пользователь прервал выполнение внешних команд";
+                        AddExecLog(LastError, null, App.ShowMessageMode.NONE);
 
                         this.Close();
                     });
@@ -298,26 +356,51 @@ namespace SQLGen
                 current++;
 
                 bool isExec = true;
-                int ExitCode = 0;
+                LastExitCode = 0;
+                LastError = "";
                 Process CommandProcess = new Process();
-                string error = "";
+
+                // что показывать в логах вместо оригинальной команды
+                string showCommand;
+                if (!startInfo.Environment.ContainsKey("sqlgenshowcommand"))
+                {
+                    showCommand = startInfo.FileName + " " + startInfo.Arguments;
+                }
+                else
+                {
+                    showCommand = startInfo.Environment["sqlgenshowcommand"];
+                }
 
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    this.tbCommand.Text = startInfo.FileName + " " + startInfo.Arguments;
-                    this.tbInfo.ScrollToEnd();
-                    //this.tbInfo.Text = "";
-
-                    if (isAskByOne)
                     {
-                        /*var isAsk = System.Windows.Forms.MessageBox.Show($"Выполнить {this.tbCommand.Text} ?", "", System.Windows.Forms.MessageBoxButtons.YesNo);
-                        if (isAsk == System.Windows.Forms.DialogResult.No)
-                        {
-                            isExec = false;
-                        }*/
-                    }
+                        this.tbCommand.Text = showCommand
+                            .Replace(Environment.NewLine, " ")
+                            .Replace("\n", " ")
+                            .Replace("\r", " ")
+                            .Replace("\t", " ")
+                            .Replace("  ", " ")
+                            .Replace("  ", " ")
+                            .Replace("  ", " ")
+                            ;
+                        this.tbInfo.ScrollToEnd();
 
-                });
+                        //this.tbInfo.Text = "";
+
+                        /*if (isAskByOne)
+                        {
+                            var isAsk = System.Windows.Forms.MessageBox.Show($"Выполнить {this.tbCommand.Text} ?", "", System.Windows.Forms.MessageBoxButtons.YesNo);
+                            if (isAsk == System.Windows.Forms.DialogResult.No)
+                            {
+                                isExec = false;
+                            }
+                        }*/
+
+                        if (isExec)
+                        {
+                            this.tbInfo.AppendText(showCommand + Environment.NewLine + Environment.NewLine);
+                            this.tbInfo.ScrollToEnd();
+                        }
+                    });
 
                 if (isExec) //-V3022
                 {
@@ -332,7 +415,12 @@ namespace SQLGen
                         //startInfo.Arguments = startInfo.Arguments;
                         //startInfo.FileName = startInfo.FileName;
 
-                        AddExecLog(startInfo.FileName + " " + startInfo.Arguments, null, App.ShowMessageMode.NONE);
+                        AddExecLog("cmd.exe /C " + showCommand, null, App.ShowMessageMode.NONE);
+
+                        if (OutputEncoding != null)
+                        {
+                            startInfo.StandardOutputEncoding = OutputEncoding;
+                        }
 
                         CommandProcess.StartInfo = startInfo;
                         CommandProcess.Start();
@@ -351,16 +439,16 @@ namespace SQLGen
                         {
                             if (CommandProcess.ExitCode == 10001)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - неверные параметры запуска внешней программы: " + Environment.NewLine +
-                                    startInfo.FileName + " " + startInfo.Arguments;
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - неверные параметры запуска внешней программы: " + Environment.NewLine +
+                                    "cmd.exe /C " + showCommand;
                             }
                             else if (CommandProcess.ExitCode == 10002)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - текущая ветка не соответствует ветке задачи";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - текущая ветка не соответствует ветке задачи";
                             }
                             else if (CommandProcess.ExitCode == 10003)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - ошибка команды GIT";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - ошибка команды GIT";
                             }
                             else if (CommandProcess.ExitCode == 10004)
                             {
@@ -369,38 +457,47 @@ namespace SQLGen
                                     (!startInfo.Arguments.ToLower().Contains("git_switch.cmd"))
                                     )
                                 {
-                                    error = $"Ошибка {CommandProcess.ExitCode} - ветка GIT не существует";
+                                    LastError = $"Ошибка {CommandProcess.ExitCode} - ветка GIT не существует";
                                 }
                             }
                             else if (CommandProcess.ExitCode == 10005)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - ошибка при разрешении конфликта MERGE";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - ошибка при разрешении конфликта MERGE";
                             }
                             else if (CommandProcess.ExitCode == 10006)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - требуется COMMIT";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - требуется COMMIT";
                             }
                             else if (CommandProcess.ExitCode == 10007)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - НЕ требуется COMMIT";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - НЕ требуется COMMIT";
                             }
                             else if (CommandProcess.ExitCode == 10008)
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode} - ветка содержит файл BRANCH_DEV, т.е. ветка сделана от dev или в ветку сделали merge dev. Такую ветку нельзя merge в ветки версий или в master!!!";
+                                LastError = $"Ошибка {CommandProcess.ExitCode} - ветка содержит файл BRANCH_DEV, т.е. ветка сделана от dev или в ветку сделали merge dev. Такую ветку нельзя merge в ветки версий или в master!!!";
                             }
                             else
                             {
-                                error = $"Ошибка {CommandProcess.ExitCode}";
+                                LastError = $"Ошибка {CommandProcess.ExitCode}";
                             }
+
+                            AddExecLog($"{LastError}", null, App.ShowMessageMode.NONE);
+                        }
+                        else
+                        {
+                            // выполнено успешно
+                            LastExecutedSuccess = current;
                         }
 
-                        ExitCode = CommandProcess.ExitCode;
+                        LastExitCode = CommandProcess.ExitCode;
                     }
                     catch (Exception ex)
                     {
-                        ExitCode = -1;
-                        error = AddExecLog(null, ex, App.ShowMessageMode.NONE);
+                        LastExitCode = -1;
+                        LastError = AddExecLog(null, ex, App.ShowMessageMode.NONE);
                     }
+
+                    AddExecLog($"ExitCode = {LastExitCode}", null, App.ShowMessageMode.NONE);
                 }
 
                 int percentComplete = (int)((float)current / (float)maximum * 100);
@@ -415,43 +512,62 @@ namespace SQLGen
 
                 if (isExec) //-V3022
                 {
-                    if (!string.IsNullOrWhiteSpace(error))
+                    if (!string.IsNullOrWhiteSpace(LastError))
                     {
-                        AddExecLog($"{error} ", null, App.ShowMessageMode.NONE);
-                        AddExecLog($"ExitCode = {ExitCode}", null, App.ShowMessageMode.NONE);
+                        bool isexit = false;
 
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            //AddExecLog(this.tbCommand.Text + " - ошибка при выполнении: " + Environment.NewLine + Environment.NewLine + error, null, App.ShowMessageMode.SHOW);
-
-                            if (System.Windows.Forms.MessageBox.Show(
-                                this.tbCommand.Text + " - ошибка при выполнении: " + Environment.NewLine +
-                                Environment.NewLine +
-                                error + Environment.NewLine +
-                                Environment.NewLine +
-                                "Прервать выполнение ?" + Environment.NewLine +
-                                "Yes\\Да - Прервать, No\\Нет - Продолжить",
+                            if (
+                                isStopAfterFirstError ||
+                                System.Windows.Forms.MessageBox.Show(
+                                    this.tbCommand.Text + " - ошибка при выполнении: " + Environment.NewLine +
+                                    Environment.NewLine +
+                                    LastError + Environment.NewLine +
+                                    Environment.NewLine +
+                                    "Прервать выполнение ?" + Environment.NewLine +
+                                    "Yes\\Да - Прервать, No\\Нет - Продолжить",
                                 "ВНИМАНИЕ", System.Windows.Forms.MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes
                                 )
                             {
-                                AddExecLog($"Прервано выполнение внешних команд", null, App.ShowMessageMode.NONE);
+                                AddExecLog($"Прервано выполнение внешних команд после ошибки", null, App.ShowMessageMode.NONE);
 
-                                this.Close();
+                                if (!isShowLogAfterError)
+                                {
+                                    this.Close();
+                                }
+                                else
+                                {
+                                    this.tbInfo.AppendText("Прервано выполнение внешних команд после ошибки");
+                                    this.tbInfo.ScrollToEnd();
+                                }
+
+                                isexit = true;
                             }
                         });
-                    }
 
-                    AddExecLog($"ExitCode = {ExitCode}", null, App.ShowMessageMode.NONE);
+                        if (isexit)
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
+                    }
                 }
             }
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                AddExecLog($"Завершено выполнение внешних команд", null, App.ShowMessageMode.NONE);
+                AddExecLog($"Успешно завершено выполнение внешних команд", null, App.ShowMessageMode.NONE);
 
-                this.Close();
+                this.tbInfo.AppendText("Успешно завершено выполнение внешних команд");
+                this.tbInfo.ScrollToEnd();
+                this.tbCommand.Text = "";
+
+                if (!isShowLogAfterSuccess)
+                {
+                    this.Close();
+                }
             });
-
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -465,7 +581,6 @@ namespace SQLGen
                 e.Handled = true;
             }
         }
-
         private void Window_Closed(object sender, EventArgs e)
         {
             SaveLog();

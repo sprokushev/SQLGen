@@ -2286,7 +2286,8 @@ namespace SQLGen.Utilities
             if (seekPort == "" && seekDBType == "MSSQL") seekPort = "1433";
             if (seekPort == "" && seekDBType == "PGSQL") seekPort = "5432";
 
-            return basePort == seekPort;
+            bool result = (basePort == seekPort);
+            return result;
         }
 
         /// <summary>
@@ -2325,7 +2326,8 @@ namespace SQLGen.Utilities
 
             string seekAddr = GetAddrFromServerName(seekServerName);
 
-            return baseAddr == seekAddr;
+            bool result = (baseAddr == seekAddr);
+            return result;
         }
 
         /// <summary>
@@ -2342,7 +2344,8 @@ namespace SQLGen.Utilities
             if (string.IsNullOrWhiteSpace(seekDBName)) seekDBName = "";
             seekDBName = seekDBName.Replace(" ", "").Trim().ToLower();
 
-            return baseDBName == seekDBName;
+            bool result = (baseDBName == seekDBName);
+            return result;
         }
 
         /// <summary>
@@ -2359,7 +2362,8 @@ namespace SQLGen.Utilities
             if (string.IsNullOrWhiteSpace(seekDBType)) seekDBType = "";
             seekDBType = seekDBType.Replace(" ", "").Trim().ToUpper();
 
-            return baseDBType == seekDBType;
+            bool result = (baseDBType == seekDBType);
+            return result;
         }
     }
 
