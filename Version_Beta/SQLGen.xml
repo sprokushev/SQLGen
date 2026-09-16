@@ -45,7 +45,7 @@
             <param name="_project">проект GIT</param>
             <returns></returns>
         </member>
-        <member name="M:SQLGen.APPinfo.AddGITProject(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.List{System.String},System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:SQLGen.APPinfo.AddGITProject(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.List{System.String},System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
             <summary>
             Добавить проект GIT
             </summary>
@@ -80,20 +80,22 @@
             <param name="git_LuquibotAliasSPUfa">Алиас бота для SP Уфа</param>
             <param name="git_LuquibotAliasHF">Алиас для HF</param>
             <param name="git_LuquibotAliasHFUfa">Алиас для HF Уфа</param>
-            <param name="git_LuquibotAliasEHFAct">Алиас для EHF актуального</param>
-            <param name="git_LuquibotAliasEHFActUfa">Алиас для EHF актуального Уфа</param>
-            <param name="git_LuquibotAliasEHFUnAct">Алиас для EHF не актуального</param>
-            <param name="git_LuquibotAliasEHFUnActUfa">Алиас для EHF не актуального Уфа</param>
+            <param name="git_LuquibotAliasEHFAct">Алиас для EHF_ACT</param>
+            <param name="git_LuquibotAliasEHFActUfa">Алиас для EHF_ACT Уфа</param>
+            <param name="git_LuquibotAliasEHFUnAct">Алиас для EHF_UNACT</param>
+            <param name="git_LuquibotAliasEHFUnActUfa">Алиас для EHF_UNACT Уфа</param>
             <param name="git_LuquibotAliasLTS">Алиас для LTS</param>
             <param name="git_LuquibotAliasLTSUfa">Алиас для LTS Уфа</param>
             <param name="git_LuquibotAliasQARel">Алиас для QA-Rel</param>
             <param name="git_LuquibotAliasQARelUfa">Алиас для QA-Rel Уфа</param>
             <param name="git_LuquibotAliasQA">Алиас для QA</param>
             <param name="git_LuquibotAliasQAUfa">Алиас для QA Уфа</param>
-            <param name="git_ProjectDeploymentMS">Алиас для EHF2 N2 Уфы</param>
-            <param name="git_ProjectDeploymentPG">Алиас для EHF2 N2 Уфы</param>
-            <param name="git_ProjectCronMS">Алиас для EHF2 N2 Уфы</param>
-            <param name="git_ProjectCronPG">Алиас для EHF2 N2 Уфы</param>
+            <param name="git_ProjectDeploymentMS">проект хранения Deployment Plan для MS</param>
+            <param name="git_ProjectDeploymentPG">проект хранения Deployment Plan для PG</param>
+            <param name="git_ProjectCronMS">проект хранения Cron для MS</param>
+            <param name="git_ProjectCronPG">проект хранения Cron для PG</param>
+            <param name="git_LuquibotAliasTest">Алиас для тестовой</param>
+            <param name="git_LuquibotAliasTestUfa">Алиас для тестовой Уфа</param>
             <returns></returns>
         </member>
         <member name="P:SQLGen.APPinfo.CheckNoIdTables">
@@ -195,6 +197,18 @@
         <member name="P:SQLGen.APPinfo.isSavePasswordJira">
             <summary>Флаг сохранения пароля Jira</summary>
         </member>
+        <member name="P:SQLGen.APPinfo.UsernameJenkins">
+            <summary>Пользователь Jenkins</summary>
+        </member>
+        <member name="P:SQLGen.APPinfo.CryptedPasswordJenkins">
+            <summary>Зашифрованный пароль Jenkins</summary>
+        </member>
+        <member name="P:SQLGen.APPinfo.PasswordJenkins">
+            <summary>Пароль Jenkins</summary>
+        </member>
+        <member name="P:SQLGen.APPinfo.isSavePasswordJenkins">
+            <summary>Флаг сохранения пароля Jenkins</summary>
+        </member>
         <member name="P:SQLGen.APPinfo.Regions">
             <summary>
             Список регионов
@@ -268,11 +282,6 @@
         <member name="P:SQLGen.APPinfo.ReleaseBranch">
             <summary>Список веток, от которых можно создавать релизы</summary>
         </member>
-        <member name="P:SQLGen.APPinfo.CumulativeGap">
-            <summary>
-            (ПАРАМЕТР УСТАРЕЛ и НЕ ИСПОЛЬЗУЕТСЯ) Список версий, на которых разрывается кумулятивность
-            </summary>
-        </member>
         <member name="P:SQLGen.APPinfo.CheckLastCommit">
             <summary>
             true - проверять дату последнего коммита при Merge
@@ -308,6 +317,44 @@
         <member name="P:SQLGen.APPinfo.isTaskReleaseCooperative">
             <summary>
             =true - использовать проект sqlgen-release для хранения файлов *.task релизных задач (кооперативный режим)
+            </summary>
+        </member>
+        <member name="P:SQLGen.APPinfo.ListAliases">
+            <summary>Список алиасов Jenkins</summary>
+        </member>
+        <member name="T:SQLGen.AliasJenkins">
+            <summary>
+            Описание алиса Jenkins
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.AliasName">
+            <summary>
+            Имя алиаса
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.JobName">
+            <summary>
+            Имя задания в Jenkins
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.Stand">
+            <summary>
+            релизный стенд
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.DBName">
+            <summary>
+            Имя БД
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.GITProject">
+            <summary>
+            Проект GIT
+            </summary>
+        </member>
+        <member name="P:SQLGen.AliasJenkins.Branch">
+            <summary>
+            Ветка БД
             </summary>
         </member>
         <member name="T:SQLGen.MainWindow">
@@ -1290,6 +1337,15 @@
             <param name="AddGIT">=true - добавить "старые" проекты</param>
             <param name="AddDEV">=true - добавить "новые" проекты</param>
             <param name="isSeparate">=true - разделить проекты (сначала "новые", потом "старые")</param>
+        </member>
+        <member name="M:SQLGen.Utilities.Controls.FillCheckedListBoxAlias(System.Windows.Forms.CheckedListBox,System.String,System.String,System.String)">
+            <summary>
+            Заполнить CheckedListBox список алиасов liquibase по проекту GIT и имени стенда или БД
+            </summary>
+            <param name="clb">экземпляр System.Windows.Forms.CheckedListBox</param>
+            <param name="project">проект</param>
+            <param name="stand">стенд</param>
+            <param name="dbname">имя БД</param>
         </member>
         <member name="M:SQLGen.Utilities.Controls.DisabaleOnStart(System.Windows.Controls.Grid,System.Collections.Generic.List{System.Windows.Controls.Control})">
             <summary>
@@ -2410,7 +2466,7 @@
             <summary>Открыть каталог для просмотра</summary>
             <param name="path">Путь к каталогу</param>
         </member>
-        <member name="M:SQLGen.Utilities.External.ExecuteFile(System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String,System.Boolean,System.Int32)">
+        <member name="M:SQLGen.Utilities.External.ExecuteFile(System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String,System.Text.Encoding,System.Int32,System.String)">
             <summary>Выполнить внешний исполняемый файл</summary>
             <param name="workdir">рабочий каталог</param>
             <param name="filename">Путь к исполняемому файлу</param>
@@ -2421,7 +2477,8 @@
             <param name="isShowError">Выводить сообщения об ошибках</param>
             <param name="Idle">Максимальный период ожидания, если isWait = true, isShow = false</param>
             <param name="logFile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
-            <param name="isOutputForceUTF8">=true - принудительно читаем возвращаемый результат в кодировке UTF8</param>
+            <param name="OutputEncoding">если != null - принудительно читаем возвращаемый результат в указанной кодировке</param>
+            <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
         </member>
         <member name="M:SQLGen.Utilities.External.ExecScriptInThread(SQLGen.Utilities.External.ExecType,System.Windows.Window,System.Windows.Controls.ComboBox,System.String,System.Windows.Controls.Button,System.Windows.Controls.TabItem,System.Windows.Controls.DataGrid,System.Windows.Controls.TabItem,System.Windows.Controls.Control,System.Windows.Controls.Label)">
             <summary>
@@ -5867,6 +5924,52 @@
         <member name="F:SQLGen.FormSaveToGIT.tbPath">
             <summary>
             tbPath
+            </summary>
+        </member>
+        <member name="T:SQLGen.JenkinsCLI">
+            <summary>Класс для работы c Jenkins CLI</summary>
+        </member>
+        <member name="M:SQLGen.JenkinsCLI.OpenLoginJenkins(System.String)">
+            <summary>Окно подключения к Jenkins</summary>
+            <param name="_logfile">полный путь к лог-файлу. Если не указан, значит в App.AppLogFile</param>
+        </member>
+        <member name="M:SQLGen.JenkinsCLI.Execute(System.Collections.Generic.List{SQLGen.JenkinsJob},System.Boolean,System.String)">
+            <summary>
+            Выполнить последовательно список заданий Jenkins
+            </summary>
+            <param name="jobs">Список заданий</param>
+            <param name="isShowLogAfterFinish">=true - отображать лог после завершения</param>
+            <param name="logFile">лог-файл</param>
+            <returns>=true - выполнился успешно</returns>
+        </member>
+        <member name="T:SQLGen.JenkinsJob">
+            <summary>
+            Задание для Jenkins
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.JobName">
+            <summary>
+            Название задания Jenkins
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.AliasName">
+            <summary>
+            Алиас БД
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.FileName">
+            <summary>
+            Скрипт в формате "path/filename.ext", path - это путь в проекте GIT от корня проекта
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.Branch">
+            <summary>
+            Ветка в проекте GIT
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.ExecutionMode">
+            <summary>
+            режим выполнения: true - выполнить, false - имитация выполнения
             </summary>
         </member>
         <member name="T:SQLGen.WinAddFK">
@@ -9964,12 +10067,12 @@
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasOld">
             <summary>
-            Алиас бота старый
+            Алиас бота для общей релизной
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasOldUfa">
             <summary>
-            Алиас бота старый Уфа
+            Алиас бота для общей релизной Уфа
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasSP">
@@ -9994,22 +10097,22 @@
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasEHFAct">
             <summary>
-            Алиас бота для EHF актуальный
+            Алиас бота для EHF_ACT
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasEHFActUfa">
             <summary>
-            Алиас бота для EHF актуальный Уфа
+            Алиас бота для EHF_ACT Уфа
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasEHFUnAct">
             <summary>
-            Алиас бота для EHF не актуальный
+            Алиас бота для EHF_UNACT
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasEHFUnActUfa">
             <summary>
-            Алиас бота для EHF не актуальный Уфа
+            Алиас бота для EHF_UNACT Уфа
             </summary>
         </member>
         <member name="P:SQLGen.GITInfo.LuquibotAliasLTS">
@@ -10060,6 +10163,16 @@
         <member name="P:SQLGen.GITInfo.ProjectCronPG">
             <summary>
             Проект для хранения заданий PG
+            </summary>
+        </member>
+        <member name="P:SQLGen.GITInfo.LuquibotAliasTest">
+            <summary>
+            Алиасы бота для тестовых (если несколько, то через ;)
+            </summary>
+        </member>
+        <member name="P:SQLGen.GITInfo.LuquibotAliasTestUfa">
+            <summary>
+            Алиас бота для тестовой Уфы
             </summary>
         </member>
         <member name="T:SQLGen.GITScript">
@@ -13862,11 +13975,6 @@
             максимальное время ожидание
             </summary>
         </member>
-        <member name="F:SQLGen.WinExecute.isAskByOne">
-            <summary>
-            спрашивать при запуске каждой программы 
-            </summary>
-        </member>
         <member name="F:SQLGen.WinExecute.isShowAllErrors">
             <summary>
              Выводить все сообщения об ошибка
@@ -13880,6 +13988,45 @@
         <member name="F:SQLGen.WinExecute.execLogText">
             <summary>
             Результат выполнения внешних команд для записи в лог-файл
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.LastExitCode">
+            <summary>
+            Что вернула последняя команда
+            99999 - выполнение прервано пользователем
+            -1 - неизвестная ошибка
+            >0 - коды ошибок
+            0 - выполнено успешно
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.LastExecutedSuccess">
+            <summary>
+            Номер по порядку последней выполненной успешно команды
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.LastError">
+            <summary>
+            Последняя ошибка
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.isStopAfterFirstError">
+            <summary>
+            =true - Прервать выполнение списка комманд после первой ошибки (без запросов о продолжении)
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.isShowLogAfterError">
+            <summary>
+            =true - оставлять окно открытым после ошибок
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.isShowLogAfterSuccess">
+            <summary>
+            =true - оставлять окно открытым после успешного завершения
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinExecute.OutputEncoding">
+            <summary>
+            если != null - принудительно читаем возвращаемый результат в указанной кодировке
             </summary>
         </member>
         <member name="M:SQLGen.WinExecute.GetLog">
@@ -13907,13 +14054,14 @@
             </summary>
             <param name="_logfile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
         </member>
-        <member name="M:SQLGen.WinExecute.AddCommand(System.String,System.String,System.String)">
+        <member name="M:SQLGen.WinExecute.AddCommand(System.String,System.String,System.String,System.String)">
             <summary>
             Добавить команду для выполнения
             </summary>
             <param name="workdir">рабочий каталог</param>
             <param name="filename">исполняемый файл</param>
             <param name="param">параметры</param>
+            <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
         </member>
         <member name="M:SQLGen.WinExecute.btOk_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>Нажата кнопка Ok</summary>
