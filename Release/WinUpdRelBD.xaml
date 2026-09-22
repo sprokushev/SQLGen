@@ -25,20 +25,21 @@
         <Button x:Name="btDatabasechangelog" Content="Определить по databasechangelog" HorizontalAlignment="Left" Margin="612,72,0,0" VerticalAlignment="Top" Width="230" ToolTip="Определить текущую версию стенда по databasechangelog" Click="btDatabasechangelog_Click"/>
         <Button x:Name="btSetMaxVersion" Content="Установить максимальную версию" HorizontalAlignment="Left" Margin="612,100,0,0" VerticalAlignment="Top" Width="230" ToolTip="Установить максимальную версию для стенда" Click="btSetMaxVersion_Click"/>
 
-        <Button x:Name="btGenerate" Content="Сгенерировать список команд" Margin="12,140,0,0" Height="24" Click="btGenerate_Click" HorizontalAlignment="Left" Width="210" VerticalAlignment="Top"/>
-        <Button x:Name="btClipboard" HorizontalAlignment="Left" Margin="230,140,0,0" Height="24" Width="150" ToolTip="В буфер обмена" Click="btClipboard_Click" VerticalAlignment="Top">
+        <Button x:Name="btGenerate" Content="Сгенерировать для liquibot" Margin="12,140,0,0" Height="24" Click="btGenerate_Click" HorizontalAlignment="Left" Width="200" VerticalAlignment="Top" ToolTip="Сегенировать список команд для liquibot" />
+        <Button x:Name="btClipboard" HorizontalAlignment="Left" Margin="220,140,0,0" Height="24" Width="140" ToolTip="В буфер обмена" Click="btClipboard_Click" VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal">
                 <Image Source="../Images/clipboard.png"></Image>
                 <TextBlock>В буфер обмена</TextBlock>
             </StackPanel>
         </Button>
+        <Button x:Name="btJenkins" Content="Выполнить через Jenkins" Margin="370,140,0,0" Height="24" Click="btJenkins_Click" HorizontalAlignment="Left" Width="160" VerticalAlignment="Top" ToolTip="Выполнить скрипты версий через Jenkins" />
 
-        <RadioButton x:Name="rbAll" GroupName="DBType" Content="MS+PG" HorizontalAlignment="Left" Margin="405,145,0,0" VerticalAlignment="Top" IsChecked="True" Checked="rbAll_Checked"/>
-        <RadioButton x:Name="rbMS" GroupName="DBType" Content="только MS" HorizontalAlignment="Left" Margin="475,145,0,0" VerticalAlignment="Top" Checked="rbMS_Checked"/>
-        <RadioButton x:Name="rbPG" GroupName="DBType" Content="только PG" HorizontalAlignment="Left" Margin="565,145,0,0" VerticalAlignment="Top" Checked="rbPG_Checked"/>
+        <RadioButton x:Name="rbAll" GroupName="DBType" Content="MS+PG" HorizontalAlignment="Left" Margin="540,145,0,0" VerticalAlignment="Top" IsChecked="True" Checked="rbAll_Checked"/>
+        <RadioButton x:Name="rbMS" GroupName="DBType" Content="только MS" HorizontalAlignment="Left" Margin="609,145,0,0" VerticalAlignment="Top" Checked="rbMS_Checked"/>
+        <RadioButton x:Name="rbPG" GroupName="DBType" Content="только PG" HorizontalAlignment="Left" Margin="702,145,0,0" VerticalAlignment="Top" Checked="rbPG_Checked"/>
 
-        <Label Content="Проект:" Margin="650,140,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="124"/>
-        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="710,140,0,0" VerticalAlignment="Top" Width="275"/>
+        <Label Content="Проект:" Margin="792,139,0,0" Height="26" VerticalAlignment="Top" HorizontalAlignment="Left" Width="61"/>
+        <ComboBox x:Name="cbGITProject" HorizontalAlignment="Left" Margin="855,140,0,0" VerticalAlignment="Top" Width="233"/>
 
         <local:SQLEditor x:Name="tbList" Margin="11,170,11,10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" IsReadOnly="True"/>
     </Grid>

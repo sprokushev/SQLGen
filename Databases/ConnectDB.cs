@@ -172,8 +172,7 @@ namespace SQLGen
                 !string.IsNullOrWhiteSpace(dbname)
             )
             {
-                result = $"--Выполни в базе {dbname} на Postgre-стенде {stand} ({addr}:{port}) команду:" + Environment.NewLine +
-                $"update liquibase.rtmis set version = '{max_version}' where liquibase.VerAsNum(version) < liquibase.VerAsNum('{max_version}');" + Environment.NewLine +
+                result = $"--Выполни в базе {dbname} на Postgre-стенде {stand} ({addr}:{port}) команду: {Environment.NewLine}update liquibase.rtmis{Environment.NewLine}set version = '{max_version}'{Environment.NewLine}where liquibase.VerAsNum(version) < liquibase.VerAsNum('{max_version}');" + Environment.NewLine +
                 "--------------------------------------------------------------------";
             }
             else

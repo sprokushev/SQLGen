@@ -220,9 +220,13 @@ namespace SQLGen
         /// <param name="value">строка</param>
         /// <param name="stand">стенд</param>
         /// <param name="version">версия с префиксом</param>
+        /// <param name="title">добавить в начало непонятных пунктов</param>
+        /// <param name="jobs">список заданий для Jeskins</param>
         /// <returns></returns>
-        public static string ReplaceUrlToLiquibot(string value, string stand, string version)
+        public static string ReplaceUrlToLiquibot(string value, string stand, string version, string title, out List<JenkinsJob> jobs)
         {
+            jobs = new List<JenkinsJob>();
+            
             if (string.IsNullOrWhiteSpace(value))
             {
                 return "";
@@ -277,7 +281,6 @@ namespace SQLGen
 
                 var list_alias = GITProjects.GetLuquibotAliasByProject(project, stand);
 
-
                 if (
                     !string.IsNullOrWhiteSpace(filepath) &&
                     list_alias.Count > 0
@@ -287,6 +290,10 @@ namespace SQLGen
 
                     foreach (var alias in list_alias)
                     {
+                        var alias_jenkins = MainWindow.APPinfo.ListAliases
+                            .Where(x => x.AliasName.ToLower() == alias.ToString().ToLower())
+                            .FirstOrDefault();
+
                         if (
                             project == "liquibase_project_new" ||
                             project == "msdbupdate_new"
@@ -298,11 +305,35 @@ namespace SQLGen
                             )
                             {
                                 new_url += Environment.NewLine + $"/update {filepath} {alias}";
+
+                                jobs.Add(new JenkinsJob()
+                                {
+                                    Order = 0,
+                                    JobName = alias_jenkins.JobName,
+                                    AliasName = alias_jenkins.AliasName,
+                                    FileName = filepath,
+                                    Branch = "release",
+                                    ExecutionMode = true,
+                                    Version = version,
+                                    Stand = stand
+                                });
                             }
                         }
                         else
                         {
                             new_url += Environment.NewLine + $"/update {filepath} {alias} {version}";
+
+                            jobs.Add(new JenkinsJob()
+                            {
+                                Order = 0,
+                                JobName = alias_jenkins.JobName,
+                                AliasName = alias_jenkins.AliasName,
+                                FileName = filepath,
+                                Branch = version,
+                                ExecutionMode = true,
+                                Version = version,
+                                Stand = stand
+                            });
                         }
                     }
                 }
@@ -311,14 +342,34 @@ namespace SQLGen
 
                 if (
                     !string.IsNullOrWhiteSpace(url) &&
-                    string.IsNullOrWhiteSpace(new_url) &&
-                    string.IsNullOrWhiteSpace(project)
+                    string.IsNullOrWhiteSpace(new_url)
                 )
                 {
-                    new_url = $"ВНИМАНИЕ: неизвестный проект, команда для ликвибота не собрана:{Environment.NewLine}{url}";
+                    if (string.IsNullOrWhiteSpace(project))
+                    {
+                        new_url = $"ВНИМАНИЕ: неизвестный проект{Environment.NewLine}{url}";
+                    }
+                    else
+                    {
+                        new_url = $"ВНИМАНИЕ: мы это не выполняем!{Environment.NewLine}{url}";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(title))
+                    {
+                        new_url = title + new_url;
+                    }
+
+                    jobs.Add(new JenkinsJob()
+                    {
+                        Order = 0,
+                        FileName = new_url,
+                        ExecutionMode = false,
+                        Version = version,
+                        Stand = stand
+                    });
                 }
 
-                // заменим в url в строке
+                // заменим в строке url на команды для liquibot
                 result = value.Substring(0, start_ii) + new_url;
                 value = value.Substring(finish_ii + 1);
 
@@ -327,7 +378,29 @@ namespace SQLGen
 
             } while (flag);
 
-            return (result + value)
+            value = value.TrimAllSpace();
+
+            // если что-то осталось
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                string new_url = value;
+
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    new_url = title + new_url;
+                }
+
+                jobs.Add(new JenkinsJob()
+                {
+                    Order = 0,
+                    FileName = new_url,
+                    ExecutionMode = false,
+                    Version = version,
+                    Stand = stand
+                });
+            }
+
+            return (result + Environment.NewLine + value)
                 .TrimInnerNewLine(1)
                 .TrimAllSpace();
         }
@@ -336,11 +409,8 @@ namespace SQLGen
         /// Извлечение значения Action
         /// </summary>
         /// <param name="value">строка, в которой хранится значение</param>
-        /// <param name="stand">стенд</param>
-        /// <param name="version">версия с префиксом</param>
-        /// <param name="isReplaceURLtoLiquibot">=true - заменить url на команду локвибота</param>
         /// <returns></returns>
-        public static string ExtractActionValue(string value, string stand, string version, bool isReplaceURLtoLiquibot)
+        public static string ExtractActionValue(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -348,20 +418,12 @@ namespace SQLGen
             }
 
             // заменяем блоки <> на перевод строки
-            value = ReplaceBlockToDivider(value, Environment.NewLine);
-
-            // заменяем url на команду ликвибота
-            if (isReplaceURLtoLiquibot)
-            {
-                value = ReplaceUrlToLiquibot(value, stand, version);
-            }
-
-            string result = value
+            value = ReplaceBlockToDivider(value, Environment.NewLine)
                 .Replace("&nbsp;", "")
                 .TrimInnerNewLine()
                 .TrimAllSpace();
 
-            return result;
+            return value;
         }
 
         /// <summary>
@@ -467,7 +529,7 @@ namespace SQLGen
                                             int _order = ExtractOrderValue(div_tr.Children[0].TextContent);
                                             string _task = ExtractTaskValue(div_tr.Children[1].TextContent);
                                             string _dbtype = ExtractDBTypeValue(div_tr.Children[2].TextContent);
-                                            string _action = ExtractActionValue(div_tr.Children[3].InnerHtml, stand, version, false);
+                                            string _action = ExtractActionValue(div_tr.Children[3].InnerHtml);
                                             List<string> _regions = ExtractRegionsValue(div_tr.Children[5].InnerHtml);
 
                                             string _database = "promed";
@@ -481,7 +543,6 @@ namespace SQLGen
                                                 DP.SetDeployment(_task, _order, DBREGION, "after", "sql", _action, null, _database, "all", _regions);
 
                                                 DP.Html = div_block.InnerHtml;
-                                                DP.file = ExtractActionValue(div_tr.Children[3].InnerHtml, stand, version, true);
 
                                                 ListDeployment.Add(DP);
                                             }

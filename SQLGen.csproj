@@ -482,6 +482,10 @@
     </Compile>
     <Compile Include="GIT\Utilities.cs" />
     <Compile Include="Jenkins\Jenkins.cs" />
+    <Compile Include="Jenkins\Utilities.cs" />
+    <Compile Include="Jenkins\WinJenkinsExec.xaml.cs">
+      <DependentUpon>WinJenkinsExec.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Other\WinAddFK.xaml.cs">
       <DependentUpon>WinAddFK.xaml</DependentUpon>
     </Compile>
@@ -722,6 +726,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Deployment\WinDeployment.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Jenkins\WinJenkinsExec.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

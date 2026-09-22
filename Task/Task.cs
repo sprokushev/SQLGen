@@ -259,6 +259,17 @@ namespace SQLGen
         }
 
         // -------------------------------------------------------------------------------------------------------
+        /// <summary>log-файл для Jenkins</summary>
+        public string LogFileJenkins
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this.TaskNumber)) return "";
+                else return Path.Combine(this.TaskPath, this.TaskNumber + "_jenkins.log");
+            }
+        }
+
+        // -------------------------------------------------------------------------------------------------------
         /// <summary>log-файл для информации о созданных таблицах</summary>
         public string LogFileTable
         {
@@ -1149,6 +1160,7 @@ namespace SQLGen
                 cbLogFile.Items.Add(Task.LogFileTable);
                 cbLogFile.Items.Add(Task.LogFileMerge);
                 cbLogFile.Items.Add(Task.LogFileRelease);
+                cbLogFile.Items.Add(Task.LogFileJenkins);
                 cbLogFile.SelectedIndex = 0;
             }
 

@@ -764,14 +764,18 @@ namespace SQLGen.Utilities
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(stand))
+            if (string.IsNullOrWhiteSpace(dbname))
             {
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(dbname))
+            if (string.IsNullOrWhiteSpace(stand))
             {
-                return;
+                stand = "";
+            }
+            else
+            {
+                stand = stand.ToUpper();
             }
 
             if (
@@ -780,10 +784,17 @@ namespace SQLGen.Utilities
             )
             {
                 foreach (var item in MainWindow.APPinfo.ListAliases
-                    .Where(x => 
-                        x.GITProject.ToLower() == project.ToLower() &&
+                    .Where(x =>
+                        x.Project.ToLower() == project.ToLower() &&
                         (
-                            x.Stand.ToUpper() == stand.ToUpper() ||
+                            !string.IsNullOrWhiteSpace(stand) && x.Stand.ToUpper() == stand ||
+                            (
+                                x.Stand.ToUpper() == "SP" ||
+                                x.Stand.ToUpper() == "HF" ||
+                                x.Stand.ToUpper() == "EHF_ACT" ||
+                                x.Stand.ToUpper() == "EHF_UNACT" ||
+                                x.Stand.ToUpper() == "LTS"
+                            ) && stand == "RELEASE" ||
                             string.IsNullOrWhiteSpace(stand) && x.DBName.ToLower() == dbname.ToLower()
                         )
                     )

@@ -3602,23 +3602,26 @@ namespace SQLGen
                     break;
                 }
             }
-
            
             // выбрать алиасы
             FormCheckedListBox dlg1 = new FormCheckedListBox();
             dlg1.Text = "Выбрать алиас(ы)";
             dlg1.clbList.Items.Clear();
 
-            // заполнить список алиасы
-            Utilities.Controls.FillCheckedListBoxAlias(
-                dlg1.clbList,
-                MainConnect.GITProject,
-                _stand,
-                MainConnect.DBName
-                );
+            // заполнить список алиасов только для тестовых
+            if (_stand == "TEST")
+            {
+                Utilities.Controls.FillCheckedListBoxAlias(
+                    dlg1.clbList,
+                    MainConnect.GITProject,
+                    _stand,
+                    MainConnect.DBName
+                    );
+            }
 
             // заполнить список выбранных алиасов
             List<JenkinsJob> jobs = new List<JenkinsJob>();
+            int _cnt = 0;
 
             if (dlg1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -3630,13 +3633,17 @@ namespace SQLGen
 
                     if (_alias != null)
                     {
+                        _cnt++;
+
                         jobs.Add(new JenkinsJob()
                         {
+                            Order = _cnt,
                             JobName = _alias.JobName,
                             AliasName = _alias.AliasName,
                             FileName = $"task/{YMLFile}",
                             Branch = "dev",
-                            ExecutionMode = false
+                            ExecutionMode = true,
+                            Stand = _stand
                         });
                     }
                 }

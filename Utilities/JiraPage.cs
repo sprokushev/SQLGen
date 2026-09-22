@@ -25,6 +25,7 @@ namespace SQLGen
         public static bool OpenLoginJira(string _logfile)
         {
             FormLoginJira dlg1 = new FormLoginJira(_logfile);
+            dlg1.Text = "Введите логин и пароль для Jira";
 
             dlg1.tbUsername.Text = MainWindow.APPinfo.UsernameJira;
             dlg1.tbPassword.Text = MainWindow.APPinfo.PasswordJira;

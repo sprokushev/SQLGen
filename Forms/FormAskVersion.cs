@@ -30,7 +30,7 @@ namespace SQLGen.Forms
             InitializeComponent();
 
             // пользовательские настройки GUI
-            Default.InitGUI("FormAskVersion", this, MainWindow.Task.LogFile);
+            Default.InitGUI("FormAskVersion", this, MainWindow.Task.LogFileMerge);
         }
 
         private void FormAskVersion_FormClosed(object sender, FormClosedEventArgs e)

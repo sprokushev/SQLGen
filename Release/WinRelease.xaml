@@ -85,12 +85,13 @@
         </Button>
         <Label Content="Команда для бота:" HorizontalAlignment="Left" Margin="394,200,0,0" VerticalAlignment="Top"/>
 
-        <ComboBox x:Name="cbLiquibot" HorizontalAlignment="Left" Height="22" Margin="524,202,0,0" VerticalAlignment="Top" Width="490" IsEditable="true" IsReadOnly="true"/>
+        <ComboBox x:Name="cbLiquibot" HorizontalAlignment="Left" Height="22" Margin="524,202,0,0" VerticalAlignment="Top" Width="420" IsEditable="true" IsReadOnly="true"/>
 
-        <Button x:Name="btCopyLiquibot" HorizontalAlignment="Left" Margin="1019,202,0,0" Width="21" ToolTip="Скопировать команду для ликвибота в буфер" Height="21" VerticalAlignment="Top" Click="btCopyLiquibot_Click" >
+        <Button x:Name="btCopyLiquibot" HorizontalAlignment="Left" Margin="950,202,0,0" Width="21" ToolTip="Скопировать команду для ликвибота в буфер" Height="21" VerticalAlignment="Top" Click="btCopyLiquibot_Click" >
             <Image Source="../Images/clipboard.png" ToolTip="Скопировать команду для ликвибота в буфер"/>
         </Button>
-        <Button x:Name="btCopyAllLiquibot" Content="Все" HorizontalAlignment="Left" Margin="1044,202,0,0" VerticalAlignment="Top" Width="40" Click="btCopyAllLiquibot_Click" ToolTip="Скопировать все команды для ликвибота в буфер"/>
+        <Button x:Name="btCopyAllLiquibot" Content="Все" HorizontalAlignment="Left" Margin="979,202,0,0" VerticalAlignment="Top" Width="40" Click="btCopyAllLiquibot_Click" ToolTip="Скопировать все команды для ликвибота в буфер"/>
+        <Button x:Name="btJenkins" Content="Jenkins" HorizontalAlignment="Left" Margin="1024,202,0,0" VerticalAlignment="Top" Width="60" Click="btJenkins_Click" ToolTip="Выполнить скрипты в Jenkins"/>
 
         <Label x:Name="lbNextVersion" Content="Следующая версия:" HorizontalAlignment="Left" Margin="394,225,0,0" VerticalAlignment="Top" Width="122"/>
         <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="524,227,0,0" VerticalAlignment="Top" Width="305" IsReadOnly="True"/>

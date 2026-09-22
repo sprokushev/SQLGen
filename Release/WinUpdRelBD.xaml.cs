@@ -72,17 +72,18 @@ namespace SQLGen
         }
 
         /// <summary>
-        /// генерация списка комманд
+        /// Разные сценарии генерации
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btGenerate_Click(object sender, RoutedEventArgs e)
+        /// <param name="isJenkins">=false - заполняем tbList; =true - запускаем FormJenkinsExec</param>
+        private void Generate(bool isJenkins)
         {
+            // проверки
             if (
                 cbPrefix == null ||
                 cbPrefix.SelectedIndex < 0
             )
             {
+                System.Windows.MessageBox.Show("Необходимо выбрать префикс");
                 return;
             }
 
@@ -91,6 +92,7 @@ namespace SQLGen
                 cbStand.SelectedIndex < 0
             )
             {
+                System.Windows.MessageBox.Show("Необходимо выбрать стенд");
                 return;
             }
 
@@ -99,6 +101,7 @@ namespace SQLGen
                 cbFromVersion.SelectedIndex < 0
             )
             {
+                System.Windows.MessageBox.Show("Необходимо выбрать версию, с которой начинаем обновлять (включительно)");
                 return;
             }
 
@@ -107,26 +110,33 @@ namespace SQLGen
                 cbToVersion.SelectedIndex < 0
             )
             {
+                System.Windows.MessageBox.Show("Необходимо выбрать версию, по которую обновляем (включительно)");
                 return;
             }
 
-            string GITProject = "";
+            // выбранные стартовые значения
+            string project = "";
             ComboBoxItem cbItem = (ComboBoxItem)cbGITProject.SelectedItem;
-            if ((cbItem == null) || (cbItem.Tag == null)) GITProject = "";
-            else GITProject = cbItem.Tag.ToString();
+            if ((cbItem == null) || (cbItem.Tag == null)) project = "";
+            else project = cbItem.Tag.ToString();
 
-            if (GITProject == "ВСЕ")
+            if (project == "ВСЕ")
             {
-                GITProject = "";
+                project = "";
             }
 
-            tbList.Text = "";
+            if (isJenkins == false)
+            {
+                tbList.Text = "";
+            }
+
             var prefix = cbPrefix.SelectedItem.ToString().ToLower();
             var stand = cbStand.SelectedItem.ToString().ToUpper();
             var FromVersion = Release.VerAsNum(Release.GetNumVersion(prefix, cbFromVersion.SelectedItem.ToString()));
             var ToVersion = Release.VerAsNum(Release.GetNumVersion(prefix, cbToVersion.SelectedItem.ToString()));
             ListDeploymentPlan.Clear();
 
+            // подготовка списка DP
             foreach (var item in ListBranch
                 .Where(x =>
                     Release.VerAsNum(Release.GetNumVersion(prefix, x)) >= FromVersion &&
@@ -145,7 +155,7 @@ namespace SQLGen
                 DP.isAddMS = (rbAll.IsChecked == true || rbMS.IsChecked == true);
                 DP.isAddPG = (rbAll.IsChecked == true || rbPG.IsChecked == true);
 
-                ListDeploymentPlan.Add( DP );
+                ListDeploymentPlan.Add(DP);
             }
 
             if (ListDeploymentPlan.Count > 0 && JiraHTML.OpenLoginJira(logFileRelease))
@@ -164,6 +174,8 @@ namespace SQLGen
                     finish =>
                     {
                         StringBuilder result = new StringBuilder(100000);
+                        var jobs = new ObservableCollection<JenkinsJob>();
+                        int jobOrder = 0;
 
                         if (
                             stand == "SP" ||
@@ -173,7 +185,19 @@ namespace SQLGen
                             stand == "LTS"
                         )
                         {
-                            result.Append(Environment.NewLine + MainWindow.UpdateLiquibaseRTMIS(stand, cbToVersion.Text, prefix, out List<string> list_cmd, out string max_version) + Environment.NewLine);
+                            string _txt = MainWindow.UpdateLiquibaseRTMIS(stand, cbToVersion.Text, prefix, out List<string> list_cmd, out string max_version);
+
+                            result.Append(Environment.NewLine + _txt + Environment.NewLine);
+
+                            jobOrder++;
+                            jobs.Add(new JenkinsJob()
+                            {
+                                Order = jobOrder,
+                                FileName = _txt,
+                                ExecutionMode = false,
+                                Version = max_version,
+                                Stand = stand
+                            });
                         }
 
                         // перебираем Deployment Plan
@@ -213,7 +237,7 @@ namespace SQLGen
                                     x.dbregion == "PG SQL" &&
                                     x.database == "emd" &&
                                     !string.IsNullOrWhiteSpace(x.script) &&
-                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                 )
                                 .OrderBy(x => x.order)
                             )
@@ -226,7 +250,7 @@ namespace SQLGen
                                         x.type == item.type &&
                                         !string.IsNullOrWhiteSpace(x.script) &&
                                         x.script == item.script &&
-                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                        (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                     ).FirstOrDefault();
 
                                 if (found != null && !emd_pos.ContainsKey(found.order))
@@ -247,7 +271,7 @@ namespace SQLGen
                                         x.order <= emd_pair.Key &&
                                         x.order < 1000 &&
                                         !string.IsNullOrWhiteSpace(x.script) &&
-                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                        (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                     )
                                     .OrderBy(x => x.order)
                                 )
@@ -271,7 +295,7 @@ namespace SQLGen
                                         x.order <= emd_pair.Value &&
                                         x.order < 1000 &&
                                         !string.IsNullOrWhiteSpace(x.script) &&
-                                        (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                        (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                     )
                                     .OrderBy(x => x.order)
                                 )
@@ -286,7 +310,7 @@ namespace SQLGen
                                 .Where(x =>
                                     x.order < 1000 &&
                                     !string.IsNullOrWhiteSpace(x.script) &&
-                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                 )
                                 .OrderBy(x => x.order)
                             )
@@ -299,17 +323,20 @@ namespace SQLGen
                             result.Append(Environment.NewLine + page.NumVersion + ":" + Environment.NewLine);
 
                             foreach (var item in page.ListDBAction
-                                .Where(x => 
+                                .Where(x =>
                                     !string.IsNullOrWhiteSpace(x.script) &&
-                                    (string.IsNullOrWhiteSpace(GITProject) || GITProject == x.GITProjectFromText)
+                                    (string.IsNullOrWhiteSpace(project) || project == x.GITProjectFromText)
                                 )
                                 .OrderBy(l => l.order)
                             )
                             {
+                                // добавляем команды для liquibot
+                                string _command = item.ScriptToLiquibot(stand, page.NumVersion);
+
                                 string _reg = "";
 
                                 if (
-                                    !string.IsNullOrWhiteSpace(item.file) &&
+                                    !string.IsNullOrWhiteSpace(_command) &&
                                     item.regions.Count > 0 &&
                                     item.regions[0] != "all"
                                 )
@@ -317,29 +344,53 @@ namespace SQLGen
                                     _reg = item.regions_str + ":" + Environment.NewLine;
                                 }
 
+                                string _title = "";
+
                                 if (
-                                    !string.IsNullOrWhiteSpace(item.file) &&
-                                    item.file.ToLower().StartsWith("/update") //-V3125
+                                    !string.IsNullOrWhiteSpace(_command) &&
+                                    _command.ToLower().StartsWith("/update") //-V3125
                                 )
                                 {
-                                    result.Append(Environment.NewLine + Environment.NewLine + _reg + item.file.TrimInnerNewLine());
+                                    result.Append(Environment.NewLine + Environment.NewLine + _reg + _command);
                                 }
                                 else
                                 {
-                                    string _title = item.dbregion + ": ";
+                                    _title = item.dbregion + ": ";
                                     if (prefix != "prmd")
                                     {
                                         _title = "";
                                     }
-                                    result.Append(Environment.NewLine + Environment.NewLine + _title + _reg + item.script.TrimInnerNewLine(1));
+                                    result.Append(Environment.NewLine + Environment.NewLine + _title + _reg + _command.TrimInnerNewLine(1));
+                                }
+
+                                // добавляем задания для Jenkins
+                                var _newjobs = item.ScriptToJenkins(stand, page.NumVersion, _title);
+
+                                foreach (var job in _newjobs)
+                                {
+                                    jobOrder++;
+                                    job.Order = jobOrder;
+                                    jobs.Add(job);
                                 }
                             }
 
                             result.Append(Environment.NewLine);
                         }
 
-                        // заполним на форме
-                        tbList.Text = result.ToString().TrimInnerNewLine().TrimAllSpace();
+                        if (isJenkins == false)
+                        {
+                            // заполним на форме
+                            tbList.Text = result.ToString()
+                                .TrimInnerNewLine()
+                                .TrimAllSpace();
+                        }
+                        else
+                        {
+                            // откроем форму выполнения заданий Jenkins
+                            WinJenkinsExec win_jobs = new WinJenkinsExec(jobs, MainWindow.Task.LogFileJenkins);
+                            win_jobs.ShowDialog();
+                            win_jobs.Close();
+                        }
 
                         // Включаем элементы интерфейса
                         Utilities.Controls.EnableOnFinish(mainGrid, listControls);
@@ -347,6 +398,26 @@ namespace SQLGen
                     logFileRelease
                 ).GetAwaiter();
             }
+        }
+
+        /// <summary>
+        /// генерация списка команд для liquibot
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btGenerate_Click(object sender, RoutedEventArgs e)
+        {
+            Generate(false);
+        }
+
+        /// <summary>
+        /// Выполнение скриптов через Jenkins
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btJenkins_Click(object sender, RoutedEventArgs e)
+        {
+            Generate(true);
         }
 
         private void btClipboard_Click(object sender, RoutedEventArgs e)

@@ -70,9 +70,9 @@ namespace SQLGen
         public int LastExitCode = 0;
 
         /// <summary>
-        /// Номер по порядку последней выполненной успешно команды
+        /// Список внешних номеров выполненных успешно команд
         /// </summary>
-        public int LastExecutedSuccess = 0;
+        public List<int> ListNumSuccess = new List<int>();
 
         /// <summary>
         /// Последняя ошибка
@@ -198,7 +198,8 @@ namespace SQLGen
         /// <param name="filename">исполняемый файл</param>
         /// <param name="param">параметры</param>
         /// <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
-        public void AddCommand(string workdir, string filename, string param, string show = null)
+        /// <param name="num">внешний номер задания</param>
+        public void AddCommand(string workdir, string filename, string param, string show = null, int num = 0)
         {
             if (string.IsNullOrWhiteSpace(workdir)) workdir = "";
             else workdir = workdir.Trim();
@@ -242,7 +243,8 @@ namespace SQLGen
                     CreateNoWindow = true
                 };
 
-                startInfo.Environment.Add("sqlgenshowcommand", show);
+                startInfo.Environment.Add("sqlgen_showcommand", show);
+                startInfo.Environment.Add("sqlgen_numcommand", num.ToString());
 
                 ListCommands.Add(startInfo);
             }
@@ -326,7 +328,7 @@ namespace SQLGen
 
             int maximum = ListCommands.Count;
             int current = 0;
-            LastExecutedSuccess = 0;
+            ListNumSuccess = new List<int>();
 
             worker.ReportProgress(0);
 
@@ -362,13 +364,23 @@ namespace SQLGen
 
                 // что показывать в логах вместо оригинальной команды
                 string showCommand;
-                if (!startInfo.Environment.ContainsKey("sqlgenshowcommand"))
+                if (!startInfo.Environment.ContainsKey("sqlgen_showcommand"))
                 {
                     showCommand = startInfo.FileName + " " + startInfo.Arguments;
                 }
                 else
                 {
-                    showCommand = startInfo.Environment["sqlgenshowcommand"];
+                    showCommand = startInfo.Environment["sqlgen_showcommand"];
+                }
+
+                // внешний номер выполняемой команды
+                int numCommand = 0;
+                if (startInfo.Environment.ContainsKey("sqlgen_numcommand"))
+                {
+                    if (!int.TryParse(startInfo.Environment["sqlgen_numcommand"], out numCommand))
+                    {
+                        numCommand = 0;
+                    }
                 }
 
                 Application.Current.Dispatcher.Invoke(() =>
@@ -388,7 +400,7 @@ namespace SQLGen
 
                         /*if (isAskByOne)
                         {
-                            var isAsk = System.Windows.Forms.MessageBox.Show($"Выполнить {this.tbCommand.Text} ?", "", System.Windows.Forms.MessageBoxButtons.YesNo);
+                            var isAsk = System.Windows.Forms.MessageBox.Show($"Выполнить {showCommand} ?", "", System.Windows.Forms.MessageBoxButtons.YesNo);
                             if (isAsk == System.Windows.Forms.DialogResult.No)
                             {
                                 isExec = false;
@@ -486,7 +498,7 @@ namespace SQLGen
                         else
                         {
                             // выполнено успешно
-                            LastExecutedSuccess = current;
+                            ListNumSuccess.Add(numCommand);
                         }
 
                         LastExitCode = CommandProcess.ExitCode;

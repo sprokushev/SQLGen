@@ -880,6 +880,7 @@ namespace SQLGen.Utilities
             {
                 return result;
             }
+
             string original_project = project;
 
             if (IsGITProject(project))
@@ -887,95 +888,223 @@ namespace SQLGen.Utilities
                 project = GetDEVProject(project);
             }
 
-            stand = stand.ToUpper();
-
-            string alias = "";
-            string alias_ufa = "";
-            List<string> list = null;
-
-            if (stand == "TEST")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasTest");
-                list = alias.ToList(new char[] { ';' }, true);
-                alias = "";
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasTestUfa");
-            }
-            else if (stand == "RELEASE")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasOld");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasOldUfa");
-            }
-            else if (stand == "SP")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasSP");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasSPUfa");
-            }
-            else if (stand == "HF")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasHF");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasHFUfa");
-            }
-            else if (stand == "EHF_ACT")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFAct");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFActUfa");
-            }
-            else if (stand == "EHF_UNACT")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnAct");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnActUfa");
-            }
-            else if (stand == "LTS")
-            {
-                alias = GITProjectsParam("DEVProject", project, "LuquibotAliasLTS");
-                alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasLTSUfa");
-            }
-            else if (stand == "QA-REL")
-            {
-                if (original_project == "liquibase_project_new")
-                {
-                    alias = "qa_rel_promed";
-                    alias_ufa = "";
-                }
-                else
-                {
-                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQARel");
-                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQARelUfa");
-                }
-            }
-            else if (stand == "QA")
-            {
-                if (original_project == "liquibase_project_new")
-                {
-                    alias = "qa_promed_oldrep";
-                    alias_ufa = "";
-                }
-                else
-                {
-                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQA");
-                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQAUfa");
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(alias))
-            {
-                result.Add(alias);
-            }
-
-            if (
-                list != null &&
-                list.Count > 0
+            foreach (var item in MainWindow.APPinfo.ListStands
+                .Where(x =>
+                    x.ToUpper() != "ВСЕ" &&
+                    (
+                        x.ToUpper() == stand.ToUpper() || 
+                        stand == "*"
+                    )
+                )
             )
             {
-                result.AddRange(list);
-            }
+                string alias = "";
+                string alias_ufa = "";
 
-            if (!string.IsNullOrWhiteSpace(alias_ufa))
-            {
-                result.Add(alias_ufa);
+                if (item == "TEST")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasTest");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasTestUfa");
+                }
+                else if (item == "RELEASE")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasOld");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasOldUfa");
+                }
+                if (item == "QA-REL")
+                {
+                    if (original_project == "liquibase_project_new")
+                    {
+                        alias = "qa_rel_promed";
+                        alias_ufa = "";
+                    }
+                    else
+                    {
+                        alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQARel");
+                        alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQARelUfa");
+                    }
+                }
+                else if (item == "QA")
+                {
+                    if (original_project == "liquibase_project_new")
+                    {
+                        alias = "qa_promed_oldrep";
+                        alias_ufa = "";
+                    }
+                    else
+                    {
+                        alias = GITProjectsParam("DEVProject", project, "LuquibotAliasQA");
+                        alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasQAUfa");
+                    }
+                }
+
+                var list = alias.ToList(new char[] { ';' }, true);
+
+                if (
+                    list != null &&
+                    list.Count > 0
+                )
+                {
+                    result.AddRange(list);
+                }
+
+                if (!string.IsNullOrWhiteSpace(alias_ufa))
+                {
+                    result.Add(alias_ufa);
+                }
+
+                // релизные стенды
+                if (item == "SP")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasSP");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasSPUfa");
+
+                    list = alias.ToList(new char[] { ';' }, true);
+
+                    if (
+                        list != null &&
+                        list.Count > 0
+                    )
+                    {
+                        result.AddRange(list);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(alias_ufa))
+                    {
+                        result.Add(alias_ufa);
+                    }
+                }
+
+                if (item == "HF")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasHF");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasHFUfa");
+
+                    list = alias.ToList(new char[] { ';' }, true);
+
+                    if (
+                        list != null &&
+                        list.Count > 0
+                    )
+                    {
+                        result.AddRange(list);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(alias_ufa))
+                    {
+                        result.Add(alias_ufa);
+                    }
+                }
+
+                if (item == "EHF_ACT")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFAct");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFActUfa");
+
+                    list = alias.ToList(new char[] { ';' }, true);
+
+                    if (
+                        list != null &&
+                        list.Count > 0
+                    )
+                    {
+                        result.AddRange(list);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(alias_ufa))
+                    {
+                        result.Add(alias_ufa);
+                    }
+                }
+
+                if (item == "EHF_UNACT")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnAct");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasEHFUnActUfa");
+
+                    list = alias.ToList(new char[] { ';' }, true);
+
+                    if (
+                        list != null &&
+                        list.Count > 0
+                    )
+                    {
+                        result.AddRange(list);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(alias_ufa))
+                    {
+                        result.Add(alias_ufa);
+                    }
+                }
+
+                if (item == "LTS")
+                {
+                    alias = GITProjectsParam("DEVProject", project, "LuquibotAliasLTS");
+                    alias_ufa = GITProjectsParam("DEVProject", project, "LuquibotAliasLTSUfa");
+
+                    list = alias.ToList(new char[] { ';' }, true);
+
+                    if (
+                        list != null &&
+                        list.Count > 0
+                    )
+                    {
+                        result.AddRange(list);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(alias_ufa))
+                    {
+                        result.Add(alias_ufa);
+                    }
+                }
             }
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Вернуть проект GIT по алиасу бота
+        /// </summary>
+        /// <param name="alias">проект GIT</param>
+        /// <returns></returns>
+        public static string GetProjectByLuquibotAlias(string alias)
+        {
+            if (string.IsNullOrWhiteSpace(alias))
+            {
+                return "";
+            }
+
+            // перебираем известные проекты
+            foreach (var item_project in MainWindow.APPinfo.GITProjects)
+            {
+                // перебираем алиасы для новых проектов
+                foreach (var item_alias in GetLuquibotAliasByProject(item_project.DEVProject, "*"))
+                {
+                    if (alias.ToLower() == item_alias.ToLower())
+                    {
+                        return item_project.DEVProject;
+                    }
+                }
+            }
+            // перебираем алиасы для старых проектов
+            foreach (var item_alias in GetLuquibotAliasByProject("liquibase_project_new", "*"))
+            {
+                if (alias.ToLower() == item_alias.ToLower())
+                {
+                    return "liquibase_project_new";
+                }
+            }
+            foreach (var item_alias in GetLuquibotAliasByProject("msdbupdate_new", "*"))
+            {
+                if (alias.ToLower() == item_alias.ToLower())
+                {
+                    return "msdbupdate_new";
+                }
+            }
+
+            return "";
         }
 
         /// <summary>

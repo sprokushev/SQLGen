@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -1278,6 +1279,37 @@ namespace SQLGen
         // -------------------------------------------------------------------------------------------------------
         /// <summary>Список алиасов Jenkins</summary>
         public BindingList<AliasJenkins> ListAliases { get; set; }
+
+        /// <summary>
+        /// Список стендов
+        /// </summary>
+        public List<string> ListStands
+        {
+            get
+            {
+                List<string> list = new List<string> { "ВСЕ" };
+
+                list.AddRange(ListAliases
+                    .Select(x => x.Stand)
+                    .Distinct()
+                    .OrderBy(x =>
+                    {
+                        int ord = 999;
+                        if (x == "TEST") ord = 1;
+                        else if (x == "RELEASE") ord = 2;
+                        else if (x == "SP") ord = 3;
+                        else if (x == "HF") ord = 4;
+                        else if (x == "EHF_ACT") ord = 5;
+                        else if (x == "EHF_UNACT") ord = 6;
+                        else if (x == "LTS") ord = 7;
+                        else if (x == "QA-Rel") ord = 8;
+                        else if (x == "QA") ord = 9;
+                        return ord;
+                    }));
+
+                return list;
+            }
+        }
     }
 
     /// <summary>
@@ -1308,7 +1340,7 @@ namespace SQLGen
         /// <summary>
         /// Проект GIT
         /// </summary>
-        public string GITProject { get; set; }  
+        public string Project { get; set; }  
 
         /// <summary>
         /// Ветка БД
@@ -1398,7 +1430,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "ProMedWebRelease", 
-                GITProject = "dev_promed_ms", 
+                Project = "dev_promed_ms", 
                 Branch = null 
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1407,7 +1439,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1416,7 +1448,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "ProMedWebRelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1425,7 +1457,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1434,7 +1466,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "ProMedWebRelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1443,7 +1475,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1452,7 +1484,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "ProMedWebRelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1461,7 +1493,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1470,7 +1502,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "ProMedWebRelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1479,7 +1511,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1488,7 +1520,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "ProMedWebRelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1497,7 +1529,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "promedwebufarelease",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = null
             });
 
@@ -1508,7 +1540,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "ProMedTest",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = "dev"
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1517,7 +1549,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "ProMedUfa",
-                GITProject = "dev_promed_ms",
+                Project = "dev_promed_ms",
                 Branch = "dev"
             });
 
@@ -1528,7 +1560,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1537,7 +1569,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1546,7 +1578,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1555,7 +1587,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1564,7 +1596,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1573,7 +1605,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "promedrelease",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1582,7 +1614,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA-Rel",
                 DBName = "promed",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1591,7 +1623,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA",
                 DBName = "promed",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = null
             });
 
@@ -1602,7 +1634,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "promedadygea",
-                GITProject = "dev_promed_pg",
+                Project = "dev_promed_pg",
                 Branch = "dev"
             });
 
@@ -1613,7 +1645,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1622,7 +1654,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1631,7 +1663,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1640,7 +1672,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1649,7 +1681,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1658,7 +1690,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "EMDrelease",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1667,7 +1699,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA-Rel",
                 DBName = "emd",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = null
             });
 
@@ -1678,7 +1710,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "EMD",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = "dev"
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1687,7 +1719,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "EMD",
-                GITProject = "dev_emd_pg",
+                Project = "dev_emd_pg",
                 Branch = "dev"
             });
             
@@ -1698,7 +1730,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1707,7 +1739,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1716,7 +1748,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1725,7 +1757,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1734,7 +1766,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1743,7 +1775,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1752,7 +1784,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1761,7 +1793,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1770,7 +1802,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1779,7 +1811,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1788,7 +1820,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "lisrelease",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1797,7 +1829,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "lisrelease_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = null
             });
 
@@ -1808,7 +1840,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "promedlistest2",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = "dev"
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1817,7 +1849,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "promedlistest_ufa",
-                GITProject = "dev_lis_pg",
+                Project = "dev_lis_pg",
                 Branch = "dev"
             });
 
@@ -1828,7 +1860,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1837,7 +1869,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1846,7 +1878,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1855,7 +1887,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1864,7 +1896,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1873,7 +1905,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1882,7 +1914,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA-Rel",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1891,7 +1923,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = null
             });
 
@@ -1902,7 +1934,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "log_service",
-                GITProject = "dev_logservice_pg",
+                Project = "dev_logservice_pg",
                 Branch = "dev"
             });
 
@@ -1913,7 +1945,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1922,7 +1954,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1931,7 +1963,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1940,7 +1972,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1949,7 +1981,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1958,7 +1990,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = null
             });
 
@@ -1969,7 +2001,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "log_service",
-                GITProject = "dev_logservice_ms",
+                Project = "dev_logservice_ms",
                 Branch = "dev"
             });
 
@@ -1980,7 +2012,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1989,7 +2021,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -1998,7 +2030,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2007,7 +2039,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2016,7 +2048,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2025,7 +2057,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2034,7 +2066,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA-Rel",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2043,7 +2075,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = null
             });
 
@@ -2054,7 +2086,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "php_log",
-                GITProject = "dev_phplog_pg",
+                Project = "dev_phplog_pg",
                 Branch = "dev"
             });
 
@@ -2066,7 +2098,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2075,7 +2107,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2084,7 +2116,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2093,7 +2125,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2102,7 +2134,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2111,7 +2143,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = null
             });
 
@@ -2122,7 +2154,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "php_log",
-                GITProject = "dev_phplog_ms",
+                Project = "dev_phplog_ms",
                 Branch = "dev"
             });
 
@@ -2134,7 +2166,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2143,7 +2175,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2152,7 +2184,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2161,7 +2193,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2170,7 +2202,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2179,7 +2211,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2188,7 +2220,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA-Rel",
                 DBName = "userportal",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2197,7 +2229,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "QA",
                 DBName = "userportal",
-                GITProject = "dev_userportal_pg",
+                Project = "dev_userportal_pg",
                 Branch = null
             });
 
@@ -2209,7 +2241,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2218,7 +2250,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2227,7 +2259,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2236,7 +2268,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2245,7 +2277,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2254,7 +2286,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "userportalrelease",
-                GITProject = "dev_userportal_ms",
+                Project = "dev_userportal_ms",
                 Branch = null
             });
 
@@ -2266,7 +2298,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "fer_log",
-                GITProject = "dev_ferlog_pg",
+                Project = "dev_ferlog_pg",
                 Branch = "dev"
             });
 
@@ -2278,7 +2310,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2287,7 +2319,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2296,7 +2328,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2305,7 +2337,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2314,7 +2346,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2323,7 +2355,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = null
             });
 
@@ -2334,7 +2366,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_pg",
+                Project = "dev_acmlo_pg",
                 Branch = "dev"
             });
 
@@ -2346,7 +2378,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2355,7 +2387,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2364,7 +2396,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2373,7 +2405,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2382,7 +2414,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2391,7 +2423,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "LTS",
                 DBName = "ac_mlo",
-                GITProject = "dev_acmlo_ms",
+                Project = "dev_acmlo_ms",
                 Branch = null
             });
 
@@ -2403,7 +2435,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "RELEASE",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2412,7 +2444,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "SP",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2421,7 +2453,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "HF",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2430,7 +2462,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_ACT",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2439,7 +2471,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "EHF_UNACT",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2448,7 +2480,7 @@ namespace SQLGen
                 JobName = "liquibase/release",
                 Stand = "LTS",
                 DBName = "proxyrelease",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = null
             });
 
@@ -2459,7 +2491,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "proxy",
-                GITProject = "dev_proxy_pg",
+                Project = "dev_proxy_pg",
                 Branch = "dev"
             });
 
@@ -2471,7 +2503,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "smptest3",
-                GITProject = "dev_smp2_pg",
+                Project = "dev_smp2_pg",
                 Branch = "dev"
             });
             APPinfo.ListAliases.Add(new AliasJenkins
@@ -2480,7 +2512,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "smptest3_integrms",
-                GITProject = "dev_smp2_pg",
+                Project = "dev_smp2_pg",
                 Branch = "dev"
             });
 
@@ -2492,7 +2524,7 @@ namespace SQLGen
                 JobName = "liquibase/little",
                 Stand = "TEST",
                 DBName = "gar",
-                GITProject = "dev_gar_pg",
+                Project = "dev_gar_pg",
                 Branch = "dev"
             });
 

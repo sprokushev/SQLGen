@@ -1867,6 +1867,32 @@ namespace SQLGen
         }
 
         /// <summary>
+        /// Преобразовать http-ссылки в поле script в команды для liquibot
+        /// </summary>
+        /// <param name="stand">стенд</param>
+        /// <param name="version">версия с префиксом</param>
+        /// <returns>строка с командами для liquibot</returns>
+        public string ScriptToLiquibot(string stand, string version)
+        {
+            return ConfluenceHTML.ReplaceUrlToLiquibot(this.script, stand, version, "", out List<JenkinsJob> jobs)
+                .TrimInnerNewLine()
+                .TrimAllSpace();
+        }
+
+        /// <summary>
+        /// Преобразовать http-ссылки в поле script в задания для Jenkins
+        /// </summary>
+        /// <param name="stand">стенд</param>
+        /// <param name="version">версия с префиксом</param>
+        /// <param name="title">добавить в начало непонятных пунктов</param>
+        /// <returns>список заданий Jenkins у которых Order = 0</returns>
+        public List<JenkinsJob> ScriptToJenkins(string stand, string version, string title)
+        {
+            ConfluenceHTML.ReplaceUrlToLiquibot(this.script, stand, version, title, out List<JenkinsJob> jobs);
+            return jobs;
+        }
+
+        /// <summary>
         /// проверяем корректность содержимого загруженного json-файла и по возможности исправляем
         /// </summary>
         /// <param name="deployment_list">список действий</param>

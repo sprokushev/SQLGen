@@ -8,6 +8,7 @@ using SQLGen.Forms;
 using SQLGen.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -77,6 +78,11 @@ namespace SQLGen
         /// список проектов
         /// </summary>
         public List<string> listProjects = new List<string>();
+
+        /// <summary>
+        /// список заданий Jenkins
+        /// </summary>
+        ObservableCollection<JenkinsJob> listJenkinsJob = new ObservableCollection<JenkinsJob>();
 
         /// <summary>
         /// предыдущий номер версии
@@ -727,11 +733,26 @@ namespace SQLGen
         /// </summary>
         /// <param name="stand">стенд</param>
         /// <param name="project">проект</param>
-        /// <param name="version">номер версии с префиксом</param>
+        /// <param name="jobs">накопительный список заданий для Jenkins</param>
         /// <returns></returns>
-        private List<string> ListLiquibot(string stand, string project, string version)
+        private List<string> ListLiquibot(string stand, string project, ref ObservableCollection<JenkinsJob> jobs)
         {
             List<string> list = new List<string>();
+
+            if (jobs == null)
+            {
+                jobs = new ObservableCollection<JenkinsJob>();
+            }
+
+            int _cnt = 0;
+            if (jobs.Count == 0)
+            {
+                _cnt = 0;
+            }
+            else
+            {
+                _cnt = jobs.Max(x => x.Order);
+            }
 
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
             double numversion = Release.VerAsNum(Release.GetNumVersion(prefix, tbNumVersion.Text));
@@ -766,6 +787,29 @@ namespace SQLGen
                     if (!string.IsNullOrWhiteSpace(cmd_alias))
                     {
                         list.Add(cmd_alias);
+
+                        var _alias = MainWindow.APPinfo.ListAliases
+                            .Where(x => x.AliasName.ToLower() == alias.ToLower())
+                            .FirstOrDefault();
+
+                        if (_alias != null)
+                        {
+                            // по умолчанию выполняем только на общей релизной
+                            bool exec_mode = stand == "RELEASE";
+
+                            _cnt++;
+                            jobs.Add(new JenkinsJob()
+                            {
+                                Order = _cnt,
+                                JobName = _alias.JobName,
+                                AliasName = _alias.AliasName,
+                                FileName = $"version/{file_ver}",
+                                Branch = branch,
+                                ExecutionMode = exec_mode,
+                                Version = branch,
+                                Stand = stand
+                            });
+                        }
                     }
                 }
             }
@@ -786,32 +830,34 @@ namespace SQLGen
             List<string> list = new List<string>();
             List<string> list_cmd = null;
 
-            list.AddRange(ListLiquibot("RELEASE", project, tbNumVersion.Text));
+            listJenkinsJob.Clear();
+
+            list.AddRange(ListLiquibot("RELEASE", project, ref listJenkinsJob));
             list.Add("");
 
             MainWindow.UpdateLiquibaseRTMIS("SP", tbNumVersion.Text, prefix, out list_cmd, out string max_version);
             list.AddRange(list_cmd);
-            list.AddRange(ListLiquibot("SP", project, tbNumVersion.Text));
+            list.AddRange(ListLiquibot("SP", project, ref listJenkinsJob));
             list.Add("");
 
             MainWindow.UpdateLiquibaseRTMIS("HF", tbNumVersion.Text, prefix, out list_cmd, out max_version);
             list.AddRange(list_cmd);
-            list.AddRange(ListLiquibot("HF", project, tbNumVersion.Text));
+            list.AddRange(ListLiquibot("HF", project, ref listJenkinsJob));
             list.Add("");
 
             MainWindow.UpdateLiquibaseRTMIS("EHF_ACT", tbNumVersion.Text, prefix, out list_cmd, out max_version);
             list.AddRange(list_cmd);
-            list.AddRange(ListLiquibot("EHF_ACT", project, tbNumVersion.Text));
+            list.AddRange(ListLiquibot("EHF_ACT", project, ref listJenkinsJob));
             list.Add("");
 
             MainWindow.UpdateLiquibaseRTMIS("EHF_UNACT", tbNumVersion.Text, prefix, out list_cmd, out max_version);
             list.AddRange(list_cmd);
-            list.AddRange(ListLiquibot("EHF_UNACT", project, tbNumVersion.Text));
+            list.AddRange(ListLiquibot("EHF_UNACT", project, ref listJenkinsJob));
             list.Add("");
 
             MainWindow.UpdateLiquibaseRTMIS("LTS", tbNumVersion.Text, prefix, out list_cmd, out max_version);
             list.AddRange(list_cmd);
-            list.AddRange(ListLiquibot("LTS", project, tbNumVersion.Text));
+            list.AddRange(ListLiquibot("LTS", project, ref listJenkinsJob));
             list.Add("");
 
             foreach (var item in list)
@@ -6314,7 +6360,7 @@ namespace SQLGen
             bool dev_exists = File.Exists(dev_file);
             if (!dev_exists)
             {
-                AllInfo = $"Для версии {tbNumVersion.Text.Trim()} отсутствует файл версии {dev_file} в проекте {project}" + Environment.NewLine;
+                AllInfo = $"ОШИБКА: Для версии {tbNumVersion.Text.Trim()} отсутствует файл версии {dev_file} в проекте {project}" + Environment.NewLine;
             }
             else
             {
@@ -6341,7 +6387,7 @@ namespace SQLGen
                     if (!File.Exists(Path.Combine(ProjectPath, ymlfile.path, ymlfile.file)))
                     {
                         // не найден
-                        info = info + Environment.NewLine + $"{ymlfile.path}/{ymlfile.file} отсутствует в проекте {project}";
+                        info = info + Environment.NewLine + $"ОШИБКА: {ymlfile.path}/{ymlfile.file} отсутствует в проекте {project}";
                     }
                 }
                 foreach (var sqlfile in dev_yml.ListSQL(false))
@@ -6355,7 +6401,7 @@ namespace SQLGen
                     )
                     {
                         // не найден
-                        info = info + Environment.NewLine + $"{sqlfile.Key} отсутствует в проекте {project}";
+                        info = info + Environment.NewLine + $"ОШИБКА: {sqlfile.Key} отсутствует в проекте {project}";
                     }
                 }
 
@@ -6390,7 +6436,7 @@ namespace SQLGen
                         if (found == null)
                         {
                             // не найден
-                            info = info + Environment.NewLine + $"{taskfile} из задачи {task.TaskNumber} отсутствует в {dev_yml.Filename}";
+                            info = info + Environment.NewLine + $"ОШИБКА: {taskfile} из задачи {task.TaskNumber} отсутствует в {dev_yml.Filename}";
                         }
                     }
                 }
@@ -6421,7 +6467,7 @@ namespace SQLGen
                     if (found == null)
                     {
                         // не найден
-                        info = info + Environment.NewLine + $"{ymlfile.file} есть в {dev_yml.Filename}, но отсутствует в задачах из Jira";
+                        info = info + Environment.NewLine + $"ВНИМАНИЕ: {ymlfile.file} есть в {dev_yml.Filename}, но отсутствует в задачах из Jira";
                     }
                 }
 
@@ -7295,6 +7341,27 @@ namespace SQLGen
                 // проверка текущей ветки и видимость кнопок и полей
                 CheckBranch(out branch);
             }
+        }
+
+        /// <summary>
+        ///  Нажата кнопка Jenkins
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btJenkins_Click(object sender, RoutedEventArgs e)
+        {
+            // выставляем начальные значения
+            foreach (var item in listJenkinsJob)
+            {
+                item.ExecutionMode = (item.Stand == "RELEASE");
+                item.isExecuted = false;
+                item.isFiltered = false;
+            }
+
+            // откроем форму выполнения заданий Jenkins
+            WinJenkinsExec win_jobs = new WinJenkinsExec(listJenkinsJob, MainWindow.Task.LogFileRelease);
+            win_jobs.ShowDialog();
+            win_jobs.Close();
         }
     }
 }
