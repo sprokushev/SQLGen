@@ -86,10 +86,9 @@ namespace SQLGen
             }
             if (json.regions.Count == 0) json.regions.Add("all");
 
-            json.exclude_regions = null;
+            json.exclude_regions = new List<string>();
             if (this.exclude_regions != null && this.exclude_regions.Count > 0)
             {
-                json.exclude_regions = new List<string>();
                 json.exclude_regions.AddRange(this.exclude_regions);
             }
 
