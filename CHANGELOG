@@ -43,6 +43,8 @@ System.Text.Json.8.0.5 -> System.Text.Json.8.0.6
 System.Threading.Tasks.Extensions.4.5.4 -> System.Threading.Tasks.Extensions.4.6.0
 CronExpressionDescriptor.2.39.0 -> CronExpressionDescriptor.2.51.0
 - Проверка и правка по предупреждениям новой версии статического анализатора кода PVS-Studio 8.00
+2026.6.19.7:
+- Релиз: (fix) На форме "Собрать Deployment Plan" можно редактировать json-файлы, собранные на другом ПК
 2026.6.19.6:
 - Релиз: (fix) исправлена ошибка при сохранении version\*_cron.add
 2026.6.19.5:
