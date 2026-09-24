@@ -8,6 +8,7 @@
 		</Keywords>
 		<Keywords color="Error">
 			<Word>ОШИБКА:</Word>
+			<Word>: FAILURE</Word>
 			<Word>НЕ СКОПИРОВАН:</Word>
 		</Keywords>
 	</RuleSet>

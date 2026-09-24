@@ -1219,6 +1219,28 @@ namespace SQLGen
                 WinDeployment.prevversion = cbPrevVersion.SelectedItem.ToString().Trim();
             }
 
+            if (project == this.ProjectDeploymentMS)
+            {
+                if (MainWindow.Task.ListDeploymentMS == null)
+                {
+                    MainWindow.Task.ListDeploymentMS = new ObservableCollection<Deployment>();
+                }
+
+                // Ищем существующий файл версии и загружаем его, если он существует
+                Deployment.LoadVersion(project, tbNumVersion.Text, MainWindow.Task.ListDeploymentMS, out string filename, MainWindow.Task.LogFileRelease, out bool isFound, out bool isError);
+            }
+
+            if (project == this.ProjectDeploymentPG)
+            {
+                if (MainWindow.Task.ListDeploymentPG == null)
+                {
+                    MainWindow.Task.ListDeploymentPG = new ObservableCollection<Deployment>();
+                }
+
+                // Ищем существующий файл версии и загружаем его, если он существует
+                Deployment.LoadVersion(project, tbNumVersion.Text, MainWindow.Task.ListDeploymentPG, out string filename, MainWindow.Task.LogFileRelease, out bool isFound, out bool isError);
+            }
+
             WinDeployment.ProjectDeploymentMS = this.ProjectDeploymentMS;
             WinDeployment.ProjectDeploymentPG = this.ProjectDeploymentPG;
             WinDeployment.ProjectDefault = project;
