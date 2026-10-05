@@ -3652,7 +3652,7 @@ namespace SQLGen
 
             if (jobs.Count > 0)
             {
-                //JenkinsCLI.Execute(jobs, true, null);
+                JenkinsCLI.Execute(jobs, true, null);
             }
         }
     }

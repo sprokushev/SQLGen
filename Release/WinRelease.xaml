@@ -91,7 +91,7 @@
             <Image Source="../Images/clipboard.png" ToolTip="Скопировать команду для ликвибота в буфер"/>
         </Button>
         <Button x:Name="btCopyAllLiquibot" Content="Все" HorizontalAlignment="Left" Margin="979,202,0,0" VerticalAlignment="Top" Width="40" Click="btCopyAllLiquibot_Click" ToolTip="Скопировать все команды для ликвибота в буфер"/>
-        <Button x:Name="btJenkins" Content="Jenkins" HorizontalAlignment="Left" Margin="1024,202,0,0" VerticalAlignment="Top" Width="60" Click="btJenkins_Click" ToolTip="Выполнить скрипты в Jenkins"/>
+        <Button x:Name="btJenkins" Content="Jenkins" HorizontalAlignment="Left" Margin="1024,202,0,0" VerticalAlignment="Top" Width="60" Click="btJenkins_Click" ToolTip="Выполнить скрипты в Jenkins" IsEnabled="False"/>
 
         <Label x:Name="lbNextVersion" Content="Следующая версия:" HorizontalAlignment="Left" Margin="394,225,0,0" VerticalAlignment="Top" Width="122"/>
         <ComboBox x:Name="cbNextVersion" HorizontalAlignment="Left" Margin="524,227,0,0" VerticalAlignment="Top" Width="305" IsReadOnly="True"/>

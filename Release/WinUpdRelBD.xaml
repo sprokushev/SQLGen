@@ -32,7 +32,7 @@
                 <TextBlock>В буфер обмена</TextBlock>
             </StackPanel>
         </Button>
-        <Button x:Name="btJenkins" Content="Выполнить через Jenkins" Margin="370,140,0,0" Height="24" Click="btJenkins_Click" HorizontalAlignment="Left" Width="160" VerticalAlignment="Top" ToolTip="Выполнить скрипты версий через Jenkins" />
+        <Button x:Name="btJenkins" Content="Выполнить через Jenkins" Margin="370,140,0,0" Height="24" Click="btJenkins_Click" HorizontalAlignment="Left" Width="160" VerticalAlignment="Top" ToolTip="Выполнить скрипты версий через Jenkins" IsEnabled="False" />
 
         <RadioButton x:Name="rbAll" GroupName="DBType" Content="MS+PG" HorizontalAlignment="Left" Margin="540,145,0,0" VerticalAlignment="Top" IsChecked="True" Checked="rbAll_Checked"/>
         <RadioButton x:Name="rbMS" GroupName="DBType" Content="только MS" HorizontalAlignment="Left" Margin="609,145,0,0" VerticalAlignment="Top" Checked="rbMS_Checked"/>

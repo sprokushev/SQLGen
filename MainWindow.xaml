@@ -160,7 +160,7 @@
             <CheckBox x:Name="isCopyPrevVersion" Content="копировать предыдущие версии ?" HorizontalAlignment="Left" Margin="880,219,0,0" VerticalAlignment="Top"/>
             <!--Button x:Name="btCopyYMLtoDEV" Content="Перенос задачи из GIT в DEV" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btCopyYMLtoDEV_Click"/-->
             <Button x:Name="btExecuteYML" Content="Выполнить YML-файл" HorizontalAlignment="Left" Height="23" Margin="1175,187,0,0" VerticalAlignment="Top" Width="196" Click="btExecuteYML_Click" ToolTip="Выполнить yml-файл локально на рабочем ПК"/>
-            <Button x:Name="btJenkinsYML" Content="YML-файл через Jenkins" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btJenkinsYML_Click" ToolTip="Выполнить yml-файл через Jenkins CLI"/>
+            <Button x:Name="btJenkinsYML" Content="YML-файл через Jenkins" HorizontalAlignment="Left" Height="23" Margin="1175,217,0,0" VerticalAlignment="Top" Width="196" Click="btJenkinsYML_Click" ToolTip="Выполнить yml-файл через Jenkins CLI" IsEnabled="False"/>
 
             <Button x:Name="btUp" ToolTip="Поднять строку выше" Click="btUp_Click" HorizontalAlignment="Left" Margin="15,245,0,0" VerticalAlignment="Top" Width="23" Height="23">
               <Image Source="Images/up.png"></Image>

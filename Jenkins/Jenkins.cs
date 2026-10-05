@@ -121,8 +121,8 @@ namespace SQLGen
                 WinExecute.AddCommand(
                     App.AppPath,
                     "java",
-                    $"-jar jenkins-cli.jar -s https://jenkins-dev.dev.k8s.rtmis.ru/ -auth {MainWindow.APPinfo.UsernameJenkins}:{MainWindow.APPinfo.PasswordJenkins} build \"{job.JobName}\" -s -p ALIASChoice=\"{job.AliasName}\" -p EnvPathFile=\"{job.FileName}\" -p EnvRepobranch=\"{job.Branch}\" -p ExecutionMode=\"{_mode}\"",
-                    $"java -jar jenkins-cli.jar -s https://jenkins-dev.dev.k8s.rtmis.ru/\n-auth %USERNAME%:%PASSWORD%\nbuild \"{job.JobName}\" -s\n-p ALIASChoice=\"{job.AliasName}\"\n-p EnvPathFile=\"{job.FileName}\"\n-p EnvRepobranch=\"{job.Branch}\"\n-p ExecutionMode=\"{_mode}\"",
+                    $"-jar jenkins-cli.jar -s https://jenkins.dev.k8s.rtmis.ru/ -auth {MainWindow.APPinfo.UsernameJenkins}:{MainWindow.APPinfo.PasswordJenkins} build \"{job.JobName}\" -s -p ALIASChoice=\"{job.AliasName}\" -p EnvPathFile=\"{job.FileName}\" -p EnvRepobranch=\"{job.Branch}\" -p ExecutionMode=\"{_mode}\"",
+                    $"java -jar jenkins-cli.jar -s https://jenkins.dev.k8s.rtmis.ru/\n-auth %USERNAME%:%PASSWORD%\nbuild \"{job.JobName}\" -s\n-p ALIASChoice=\"{job.AliasName}\"\n-p EnvPathFile=\"{job.FileName}\"\n-p EnvRepobranch=\"{job.Branch}\"\n-p ExecutionMode=\"{_mode}\"",
                     job.Order
                 );
             }
