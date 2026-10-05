@@ -322,6 +322,11 @@
         <member name="P:SQLGen.APPinfo.ListAliases">
             <summary>Список алиасов Jenkins</summary>
         </member>
+        <member name="P:SQLGen.APPinfo.ListStands">
+            <summary>
+            Список стендов
+            </summary>
+        </member>
         <member name="T:SQLGen.AliasJenkins">
             <summary>
             Описание алиса Jenkins
@@ -347,7 +352,7 @@
             Имя БД
             </summary>
         </member>
-        <member name="P:SQLGen.AliasJenkins.GITProject">
+        <member name="P:SQLGen.AliasJenkins.Project">
             <summary>
             Проект GIT
             </summary>
@@ -2008,6 +2013,13 @@
             </summary>
             <param name="project">проект GIT</param>
             <param name="stand">тип стенда</param>
+            <returns></returns>
+        </member>
+        <member name="M:SQLGen.Utilities.GITProjects.GetProjectByLuquibotAlias(System.String)">
+            <summary>
+            Вернуть проект GIT по алиасу бота
+            </summary>
+            <param name="alias">проект GIT</param>
             <returns></returns>
         </member>
         <member name="M:SQLGen.Utilities.GITProjects.GetDataFolderByProject(System.String)">
@@ -4749,6 +4761,23 @@
             Тип БД по тексту script или file
             </summary>
         </member>
+        <member name="M:SQLGen.Deployment.ScriptToLiquibot(System.String,System.String)">
+            <summary>
+            Преобразовать http-ссылки в поле script в команды для liquibot
+            </summary>
+            <param name="stand">стенд</param>
+            <param name="version">версия с префиксом</param>
+            <returns>строка с командами для liquibot</returns>
+        </member>
+        <member name="M:SQLGen.Deployment.ScriptToJenkins(System.String,System.String,System.String)">
+            <summary>
+            Преобразовать http-ссылки в поле script в задания для Jenkins
+            </summary>
+            <param name="stand">стенд</param>
+            <param name="version">версия с префиксом</param>
+            <param name="title">добавить в начало непонятных пунктов</param>
+            <returns>список заданий Jenkins у которых Order = 0</returns>
+        </member>
         <member name="M:SQLGen.Deployment.CheckJSON(System.Collections.Generic.List{SQLGen.DeploymentToJson},System.String,System.String,System.String@)">
             <summary>
             проверяем корректность содержимого загруженного json-файла и по возможности исправляем
@@ -5138,23 +5167,22 @@
             <param name="divider">разделитель</param>
             <returns></returns>
         </member>
-        <member name="M:SQLGen.ConfluenceHTML.ReplaceUrlToLiquibot(System.String,System.String,System.String)">
+        <member name="M:SQLGen.ConfluenceHTML.ReplaceUrlToLiquibot(System.String,System.String,System.String,System.String,System.Collections.Generic.List{SQLGen.JenkinsJob}@)">
             <summary>
             заменяем url на команду ликвибота
             </summary>
             <param name="value">строка</param>
             <param name="stand">стенд</param>
             <param name="version">версия с префиксом</param>
+            <param name="title">добавить в начало непонятных пунктов</param>
+            <param name="jobs">список заданий для Jeskins</param>
             <returns></returns>
         </member>
-        <member name="M:SQLGen.ConfluenceHTML.ExtractActionValue(System.String,System.String,System.String,System.Boolean)">
+        <member name="M:SQLGen.ConfluenceHTML.ExtractActionValue(System.String)">
             <summary>
             Извлечение значения Action
             </summary>
             <param name="value">строка, в которой хранится значение</param>
-            <param name="stand">стенд</param>
-            <param name="version">версия с префиксом</param>
-            <param name="isReplaceURLtoLiquibot">=true - заменить url на команду локвибота</param>
             <returns></returns>
         </member>
         <member name="M:SQLGen.ConfluenceHTML.ExtractRegionsValue(System.String)">
@@ -5947,6 +5975,27 @@
             Задание для Jenkins
             </summary>
         </member>
+        <member name="E:SQLGen.JenkinsJob.PropertyChanged">
+            <summary>
+            реализация OnPropertyChanged
+            </summary>
+        </member>
+        <member name="M:SQLGen.JenkinsJob.OnPropertyChanged(System.String)">
+            <summary>
+            реализация OnPropertyChanged
+            </summary>
+            <param name="prop">prop</param>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.isFiltered">
+            <summary>
+            Флаг для фильтрации
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.Order">
+            <summary>
+            Номер по порядку
+            </summary>
+        </member>
         <member name="P:SQLGen.JenkinsJob.JobName">
             <summary>
             Название задания Jenkins
@@ -5970,6 +6019,169 @@
         <member name="P:SQLGen.JenkinsJob.ExecutionMode">
             <summary>
             режим выполнения: true - выполнить, false - имитация выполнения
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.Project">
+            <summary>
+            Проект GIT
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.isExecuted">
+            <summary>
+            результат выполнения
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.Version">
+            <summary>
+            Версия, для которой создано задание
+            </summary>
+        </member>
+        <member name="P:SQLGen.JenkinsJob.Stand">
+            <summary>
+            Стенд, для которого создано задание
+            </summary>
+        </member>
+        <member name="T:SQLGen.WinJenkinsExec">
+            <summary>
+            Окно для сборки JSON-файла со списком заданий
+            </summary>
+            <summary>
+            WinJenkinsExec
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinJenkinsExec.logFile">
+            <summary>
+            лог-файл
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinJenkinsExec.listJenkinsJob">
+            <summary>
+            список заданий
+            </summary>
+        </member>
+        <member name="F:SQLGen.WinJenkinsExec._filteredJenkins">
+            <summary>
+            фильтрация заданий
+            </summary>
+        </member>
+        <member name="P:SQLGen.WinJenkinsExec.FilteredJenkins">
+            <summary>
+            фильтрация заданий
+            </summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.ShowOnlyFilter(System.Object)">
+            <summary>
+            =true - строка входит в фильтр
+            </summary>
+            <param name="e">экземпляр YMLFileInfo</param>
+            <returns></returns>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.#ctor(System.Collections.ObjectModel.ObservableCollection{SQLGen.JenkinsJob},System.String)">
+            <summary>Конструктор WinJenkinsExec</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.winJenkinsExec_Activated(System.Object,System.EventArgs)">
+            <summary>При открытии окна WinJenkinsExec</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.winJenkinsExec_Closed(System.Object,System.EventArgs)">
+            <summary>При закрытии окна WinJenkinsExec</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.JenkinsRefresh">
+            <summary>
+            обновление списка заданий
+            </summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.dgListRefresh">
+            <summary>Обновить список dgList</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.dgListSelect">
+            <summary>Выбрана запись в dgList </summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.dgList_SelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
+            <summary>Выбрана запись в dgList</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.dgList_MouseDoubleClick(System.Object,System.Windows.Input.MouseButtonEventArgs)">
+            <summary>Двойной клик мышью на строке в dgList</summary>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btUp_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Up
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btDown_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Down
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.ExecuteJenkins(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            выполнить задания Jenkins
+            </summary>
+            <param name="fromOrder"></param>
+            <param name="toOrder"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btRun_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Выполнить
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btAllLog_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Общий лог
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btCleanIsExecuted_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Выбран пункт контекстного меню "Снять флаг успешного выполнения"
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btRunTo_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Выбран пункт контекстного меню "Выполнять ПО это задание включительно"
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btDelRow_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Выбран пункт контекстного меню "Удалить строку"
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btDelBad_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Удалить ВСЕ лишние пункты
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.btCopyBad_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Нажата кнопка Скопировать в буфер ВСЕ лишние пункты
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.cbFilterStand_SelectionChanged(System.Object,System.Windows.Controls.SelectionChangedEventArgs)">
+            <summary>
+            Выбран Фильтр по стенду
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinJenkinsExec.InitializeComponent">
+            <summary>
+            InitializeComponent
             </summary>
         </member>
         <member name="T:SQLGen.WinAddFK">
@@ -6587,6 +6799,11 @@
             список проектов
             </summary>
         </member>
+        <member name="F:SQLGen.WinRelease.listJenkinsJob">
+            <summary>
+            список заданий Jenkins
+            </summary>
+        </member>
         <member name="F:SQLGen.WinRelease.old_NumVersion">
             <summary>
             предыдущий номер версии
@@ -6651,13 +6868,13 @@
             Видимость полей и кнопок для текущего выбранного проекта
             </summary>
         </member>
-        <member name="M:SQLGen.WinRelease.ListLiquibot(System.String,System.String,System.String)">
+        <member name="M:SQLGen.WinRelease.ListLiquibot(System.String,System.String,System.Collections.ObjectModel.ObservableCollection{SQLGen.JenkinsJob}@)">
             <summary>
             список команд бота по стенду, проекту и номеру версии
             </summary>
             <param name="stand">стенд</param>
             <param name="project">проект</param>
-            <param name="version">номер версии с префиксом</param>
+            <param name="jobs">накопительный список заданий для Jenkins</param>
             <returns></returns>
         </member>
         <member name="M:SQLGen.WinRelease.Fill_cbLiquibot(System.String)">
@@ -7143,6 +7360,13 @@
         <member name="M:SQLGen.WinRelease.btToDEV_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Нажата кнопка "Влить в dev"
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinRelease.btJenkins_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+             Нажата кнопка Jenkins
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -7845,9 +8069,22 @@
         <member name="M:SQLGen.WinUpdRelBD.winUpdRelBD_Closed(System.Object,System.EventArgs)">
             <summary>При закрытии окна WinUpdRelBD</summary>
         </member>
+        <member name="M:SQLGen.WinUpdRelBD.Generate(System.Boolean)">
+            <summary>
+            Разные сценарии генерации
+            </summary>
+            <param name="isJenkins">=false - заполняем tbList; =true - запускаем FormJenkinsExec</param>
+        </member>
         <member name="M:SQLGen.WinUpdRelBD.btGenerate_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
-            генерация списка комманд
+            генерация списка команд для liquibot
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:SQLGen.WinUpdRelBD.btJenkins_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Выполнение скриптов через Jenkins
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -11969,6 +12206,9 @@
         <member name="P:SQLGen.Task.LogFileRelease">
             <summary>log-файл для сборки версии</summary>
         </member>
+        <member name="P:SQLGen.Task.LogFileJenkins">
+            <summary>log-файл для Jenkins</summary>
+        </member>
         <member name="P:SQLGen.Task.LogFileTable">
             <summary>log-файл для информации о созданных таблицах</summary>
         </member>
@@ -13999,9 +14239,9 @@
             0 - выполнено успешно
             </summary>
         </member>
-        <member name="F:SQLGen.WinExecute.LastExecutedSuccess">
+        <member name="F:SQLGen.WinExecute.ListNumSuccess">
             <summary>
-            Номер по порядку последней выполненной успешно команды
+            Список внешних номеров выполненных успешно команд
             </summary>
         </member>
         <member name="F:SQLGen.WinExecute.LastError">
@@ -14054,7 +14294,7 @@
             </summary>
             <param name="_logfile">полный путь к лог-файлу. Если пустой, значит в App.AppLogFile</param>
         </member>
-        <member name="M:SQLGen.WinExecute.AddCommand(System.String,System.String,System.String,System.String)">
+        <member name="M:SQLGen.WinExecute.AddCommand(System.String,System.String,System.String,System.String,System.Int32)">
             <summary>
             Добавить команду для выполнения
             </summary>
@@ -14062,6 +14302,7 @@
             <param name="filename">исполняемый файл</param>
             <param name="param">параметры</param>
             <param name="show">строка, которую надо показывать на экранах и записывать в лог вместо оригинальной команды</param>
+            <param name="num">внешний номер задания</param>
         </member>
         <member name="M:SQLGen.WinExecute.btOk_Click(System.Object,System.Windows.RoutedEventArgs)">
             <summary>Нажата кнопка Ok</summary>

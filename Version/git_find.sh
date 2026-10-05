@@ -18,4 +18,9 @@ function script_main () {(
   find $2 -iname "*$3*"
 )}
 
+function pause(){
+   read -p "$*"
+}
+
 script_main "$ARG_REPO" "$ARG_PATH" "$ARG_SEARCH" | tee -a $ARG_TMPFILE
+# pause 'Press [Enter] key to continue...'
