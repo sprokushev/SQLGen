@@ -1012,6 +1012,11 @@ namespace SQLGen
         {
             bool result = false;
 
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                return result;
+            }
+
             string _path = Path.GetDirectoryName(filename);
             string _file = Path.GetFileName(filename);
 
