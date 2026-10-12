@@ -1206,6 +1206,9 @@ namespace SQLGen
             string path_ver = Path.Combine(MainWindow.APPinfo.GITFolder, ProjectFolder, "version");
             string prefix = Utilities.GITProjects.GetPrefixFileReleaseByProject(project);
 
+            MainWindow.Task.ListDeploymentMS = new ObservableCollection<Deployment>();
+            MainWindow.Task.ListDeploymentPG = new ObservableCollection<Deployment>();
+
             WinDeployment WinDeployment = new WinDeployment();
             WinDeployment.mainWindow = mainWindow;
             WinDeployment.logFile = MainWindow.Task.LogFileRelease;
@@ -1221,10 +1224,10 @@ namespace SQLGen
 
             if (project == this.ProjectDeploymentMS)
             {
-                if (MainWindow.Task.ListDeploymentMS == null)
+                /*if (MainWindow.Task.ListDeploymentMS == null)
                 {
                     MainWindow.Task.ListDeploymentMS = new ObservableCollection<Deployment>();
-                }
+                }*/
 
                 // Ищем существующий файл версии и загружаем его, если он существует
                 Deployment.LoadVersion(project, tbNumVersion.Text, MainWindow.Task.ListDeploymentMS, out string filename, MainWindow.Task.LogFileRelease, out bool isFound, out bool isError);
@@ -1232,10 +1235,10 @@ namespace SQLGen
 
             if (project == this.ProjectDeploymentPG)
             {
-                if (MainWindow.Task.ListDeploymentPG == null)
+                /*if (MainWindow.Task.ListDeploymentPG == null)
                 {
                     MainWindow.Task.ListDeploymentPG = new ObservableCollection<Deployment>();
-                }
+                }*/
 
                 // Ищем существующий файл версии и загружаем его, если он существует
                 Deployment.LoadVersion(project, tbNumVersion.Text, MainWindow.Task.ListDeploymentPG, out string filename, MainWindow.Task.LogFileRelease, out bool isFound, out bool isError);

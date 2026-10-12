@@ -2,7 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
 using ICSharpCode.AvalonEdit.Highlighting;
-using Microsoft.SqlServer.Management.Smo.Agent;
 using SQLGen.Controls;
 using SQLGen.Utilities;
 using System;

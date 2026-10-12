@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SQLGen"
         mc:Ignorable="d"
-        Title="WinMarker" Height="817" Width="1590" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Activated="winMarker_Activated" Closed="winMarker_Closed" >
+        Title="WinMarker" Height="800" Width="1590" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Activated="winMarker_Activated" Closed="winMarker_Closed" >
     <Grid x:Name="mainGrid">
         <TabControl x:Name="tabControl" SelectionChanged="TabControl_SelectionChanged">
             <TabItem x:Name="tiStructure" Header="Список маркеров" KeyDown="tiStructure_KeyDown">

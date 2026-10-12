@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SQLGen"
         xmlns:wpfCronExpressionUi="clr-namespace:WpfCronExpressionUI;assembly=WpfCronExpressionUI"
         mc:Ignorable="d"
-        Title="WinAddDeployment" Height="980" Width="950" Activated="winAddDeployment_Activated" Closed="winAddDeployment_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
+        Title="WinAddDeployment" Height="760" Width="1260" Activated="winAddDeployment_Activated" Closed="winAddDeployment_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
         >
     <Grid x:Name="mainGrid" Background="#FFE5E5E5">
         <Label Content="Номер задачи:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
@@ -53,7 +53,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Rectangle HorizontalAlignment="Left" Height="234" Margin="10,395,0,0" Stroke="Black" VerticalAlignment="Top" Width="600"/>
+        <Rectangle HorizontalAlignment="Left" Height="260" Margin="10,395,0,0" Stroke="Black" VerticalAlignment="Top" Width="600"/>
 
         <CheckBox x:Name="cbWhenFailed" Content="Блок действий в случае ошибки" HorizontalAlignment="Left" Margin="15,397,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=hasWhenFailed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
@@ -85,50 +85,50 @@
         <Button x:Name="btFindWhenFailedScriptAfter" Content="Найти" Margin="530,570,0,0" Click="btFindWhenFailedScriptAfter_Click" HorizontalAlignment="Left" Width="60" VerticalAlignment="Top" IsDefault="True" IsEnabled="{Binding Path=hasWhenFailed}"/>
 
 
-        <Rectangle HorizontalAlignment="Left" Height="260" Margin="10,630,0,0" Stroke="Black" VerticalAlignment="Top" Width="600"/>
-        <CheckBox x:Name="cbTimeout" Content="Добавить таймаут" HorizontalAlignment="Left" Margin="15,635,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=hasTimeout, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        <Rectangle HorizontalAlignment="Left" Height="260" Margin="614,395,0,0" Stroke="Black" VerticalAlignment="Top" Width="600"/>
+        <CheckBox x:Name="cbTimeout" Content="Добавить таймаут" HorizontalAlignment="Left" Margin="619,400,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=hasTimeout, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
-        <TextBox x:Name="tbHour" HorizontalAlignment="Left" Margin="145,635,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_hour, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
-        <Label Content="часов" HorizontalAlignment="Left" Margin="215,630,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbHour" HorizontalAlignment="Left" Margin="749,400,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_hour, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
+        <Label Content="часов" HorizontalAlignment="Left" Margin="819,395,0,0" VerticalAlignment="Top"/>
 
-        <TextBox x:Name="tbMinute" HorizontalAlignment="Left" Margin="275,635,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_minute, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
-        <Label Content="минут" HorizontalAlignment="Left" Margin="345,630,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbMinute" HorizontalAlignment="Left" Margin="879,400,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_minute, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
+        <Label Content="минут" HorizontalAlignment="Left" Margin="949,395,0,0" VerticalAlignment="Top"/>
 
-        <TextBox x:Name="tbSecond" HorizontalAlignment="Left" Margin="405,635,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_second, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
-        <Label Content="секунд" HorizontalAlignment="Left" Margin="475,630,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbSecond" HorizontalAlignment="Left" Margin="1009,400,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="66" PreviewTextInput="PreviewTextInput" DataObject.Pasting="TextBoxPasting" Text="{Binding Path=timeout_second, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasTimeout}"/>
+        <Label Content="секунд" HorizontalAlignment="Left" Margin="1079,395,0,0" VerticalAlignment="Top"/>
 
-        <CheckBox x:Name="cbWhenTimeout" Content="Блок действий в случае превышения таймаута" HorizontalAlignment="Left" Margin="15,655,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=hasWhenTimeout, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        <CheckBox x:Name="cbWhenTimeout" Content="Блок действий в случае превышения таймаута" HorizontalAlignment="Left" Margin="619,420,0,0" VerticalAlignment="Top" IsChecked="{Binding Path=hasWhenTimeout, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
-        <Label Content="Действие:" HorizontalAlignment="Left" Margin="15,670,0,0" VerticalAlignment="Top"/>
-        <ComboBox x:Name="cbWhenTimeoutActions" HorizontalAlignment="Left" Margin="180,672,0,0" VerticalAlignment="Top" Width="344" ItemsSource="{Binding ListActions}" SelectedItem="{Binding Path=when_timeout_action, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}" SelectionChanged="cbWhenTimeoutActions_SelectionChanged"/>
+        <Label Content="Действие:" HorizontalAlignment="Left" Margin="619,435,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="cbWhenTimeoutActions" HorizontalAlignment="Left" Margin="784,437,0,0" VerticalAlignment="Top" Width="344" ItemsSource="{Binding ListActions}" SelectedItem="{Binding Path=when_timeout_action, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}" SelectionChanged="cbWhenTimeoutActions_SelectionChanged"/>
 
-        <Label Content="Наименование (cron):" HorizontalAlignment="Left" Margin="15,696,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbWhenTimeoutName" HorizontalAlignment="Left" Margin="180,698,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_name, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Label Content="Наименование (cron):" HorizontalAlignment="Left" Margin="619,461,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbWhenTimeoutName" HorizontalAlignment="Left" Margin="784,463,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_name, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Label Content="Команда (cron):" HorizontalAlignment="Left" Margin="15,718,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbWhenTimeoutJob" HorizontalAlignment="Left" Margin="180,720,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_job, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Label Content="Команда (cron):" HorizontalAlignment="Left" Margin="619,483,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbWhenTimeoutJob" HorizontalAlignment="Left" Margin="784,485,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_job, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Label Content="Расписание (cron):" HorizontalAlignment="Left" Margin="15,740,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbWhenTimeoutSchedule" HorizontalAlignment="Left" Margin="180,742,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_schedule, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Label Content="Расписание (cron):" HorizontalAlignment="Left" Margin="619,505,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbWhenTimeoutSchedule" HorizontalAlignment="Left" Margin="784,507,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_schedule, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Button x:Name="btSetWhenTimeoutSchedule" ToolTip="Открыть калькулятор расписания cron" Margin="530,740,0,0" Width="21" Click="btSetWhenTimeoutSchedule_Click" HorizontalAlignment="Left" Height="21" VerticalAlignment="Top" IsEnabled="{Binding Path=hasWhenTimeout}">
+        <Button x:Name="btSetWhenTimeoutSchedule" ToolTip="Открыть калькулятор расписания cron" Margin="1134,505,0,0" Width="21" Click="btSetWhenTimeoutSchedule_Click" HorizontalAlignment="Left" Height="21" VerticalAlignment="Top" IsEnabled="{Binding Path=hasWhenTimeout}">
             <Image Source="../Images/schedule.png" ToolTip="Открыть калькулятор расписания cron"/>
         </Button>
 
-        <Label Content="Скрипт (liquibase):" HorizontalAlignment="Left" Margin="15,762,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbWhenTimeoutScript" HorizontalAlignment="Left" Margin="180,764,0,0" VerticalScrollBarVisibility="Visible" Height="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_script, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Label Content="Скрипт (liquibase):" HorizontalAlignment="Left" Margin="619,527,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbWhenTimeoutScript" HorizontalAlignment="Left" Margin="784,529,0,0" VerticalScrollBarVisibility="Visible" Height="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_script, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Button x:Name="btFindWhenTimeoutScript" Content="Найти" Margin="530,767,0,0" Click="btFindWhenTimeoutScript_Click" HorizontalAlignment="Left" Width="60" VerticalAlignment="Top" IsDefault="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Button x:Name="btFindWhenTimeoutScript" Content="Найти" Margin="1134,532,0,0" Click="btFindWhenTimeoutScript_Click" HorizontalAlignment="Left" Width="60" VerticalAlignment="Top" IsDefault="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Label Content="Скрипт, если предыдущий" HorizontalAlignment="Left" Margin="15,827,0,0" VerticalAlignment="Top" Width="158"/>
-        <Label Content="успешен (liquibase):" HorizontalAlignment="Left" Margin="15,844,0,0" VerticalAlignment="Top" Width="158"/>
-        <TextBox x:Name="tbWhenTimeoutScriptAfter" HorizontalAlignment="Left" Margin="180,827,0,0" VerticalScrollBarVisibility="Visible" Height="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_script_after, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Label Content="Скрипт, если предыдущий" HorizontalAlignment="Left" Margin="619,592,0,0" VerticalAlignment="Top" Width="158"/>
+        <Label Content="успешен (liquibase):" HorizontalAlignment="Left" Margin="619,609,0,0" VerticalAlignment="Top" Width="158"/>
+        <TextBox x:Name="tbWhenTimeoutScriptAfter" HorizontalAlignment="Left" Margin="784,592,0,0" VerticalScrollBarVisibility="Visible" Height="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="345" Text="{Binding Path=when_timeout_script_after, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" AcceptsReturn="True" AcceptsTab="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
-        <Button x:Name="btFindWhenTimeoutScriptAfter" Content="Найти" Margin="530,832,0,0" Click="btFindWhenTimeoutScriptAfter_Click" HorizontalAlignment="Left" Width="60" VerticalAlignment="Top" IsDefault="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
+        <Button x:Name="btFindWhenTimeoutScriptAfter" Content="Найти" Margin="1134,597,0,0" Click="btFindWhenTimeoutScriptAfter_Click" HorizontalAlignment="Left" Width="60" VerticalAlignment="Top" IsDefault="True" IsEnabled="{Binding Path=hasWhenTimeout}"/>
 
 
-        <Button x:Name="btSave" Content="Сохранить" Margin="98,910,0,0" Click="btSave_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsDefault="True"/>
-        <Button x:Name="btCancel" Content="Отмена" Margin="374,910,0,0" Click="btCancel_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsCancel="True"/>
+        <Button x:Name="btSave" Content="Сохранить" Margin="30,675,0,0" Click="btSave_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsDefault="True"/>
+        <Button x:Name="btCancel" Content="Отмена" Margin="185,675,0,0" Click="btCancel_Click" HorizontalAlignment="Left" Width="150" VerticalAlignment="Top" IsCancel="True"/>
 
     </Grid>
 </Window>

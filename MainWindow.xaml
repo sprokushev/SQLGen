@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SQLGen"
         xmlns:Fluent="urn:fluent-ribbon"
-        Title ="SQLGen" Height="1000" Width="1600" Activated="winMain_Activated" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Closed="winMain_Closed" HorizontalAlignment="Left" >
+        Title ="SQLGen" Height="800" Width="1600" Activated="winMain_Activated" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen" Closed="winMain_Closed" HorizontalAlignment="Left" >
 
   <Fluent:RibbonWindow.Resources>
     <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabItem.Background" Color="#FFE5E5E5" />

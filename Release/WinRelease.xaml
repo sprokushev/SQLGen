@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:SQLGen"
         mc:Ignorable="d"
-        Title="Сборка релиза" Height="860" Width="1500" Activated="winRelease_Activated" Closed="winRelease_Closed" WindowStartupLocation="CenterScreen">
+        Title="Сборка релиза" Height="800" Width="1500" Activated="winRelease_Activated" Closed="winRelease_Closed" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <converters:ValueColorConverter_YMLFile2 x:Key="colorconverter_ymlfile"/>

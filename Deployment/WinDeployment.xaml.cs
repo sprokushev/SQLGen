@@ -254,8 +254,14 @@ namespace SQLGen
             if (FilteredMS != null)
             {
                 var lcv = (ListCollectionView)FilteredMS;
-                if (lcv.IsAddingNew) lcv.CommitNew();
-                if (lcv.IsEditingItem) lcv.CommitEdit();
+                if (lcv.IsAddingNew)
+                {
+                    lcv.CommitNew();
+                }
+                if (lcv.IsEditingItem)
+                {
+                    lcv.CommitEdit();
+                }
                 FilteredMS.Refresh();
             }
 
@@ -616,11 +622,14 @@ namespace SQLGen
                 dgDeploymentMSRefresh();
                 dgDeploymentPGRefresh();
 
-                GridFocused.SelectedItem = deployment;
-                if (GridFocused.SelectedItem != null) //-V3022
+                if (deployment != null)
                 {
-                    GridFocused.UpdateLayout();
-                    GridFocused.ScrollIntoView(GridFocused.SelectedItem);
+                    GridFocused.SelectedItem = deployment;
+                    if (GridFocused.SelectedItem != null) //-V3022
+                    {
+                        GridFocused.UpdateLayout();
+                        GridFocused.ScrollIntoView(GridFocused.SelectedItem);
+                    }
                 }
 
                 // сохранить текущую задачу
@@ -628,7 +637,7 @@ namespace SQLGen
             }
         }
 
-        private void SaveDeployment(Deployment deploymentMS, Deployment deploymentPG)
+        private void SaveNewDeployment(Deployment deploymentMS, Deployment deploymentPG)
         {
             if (
                 deploymentMS != null &&
@@ -667,7 +676,7 @@ namespace SQLGen
 
             if (AddEditDeployment(DeploymentOperType.ADD_LAST, ref deploymentMS, ref deploymentPG))
             {
-                SaveDeployment(deploymentMS, deploymentPG);
+                SaveNewDeployment(deploymentMS, deploymentPG);
             }
         }
 
@@ -679,7 +688,7 @@ namespace SQLGen
 
             if (AddEditDeployment(DeploymentOperType.ADD_FIRST, ref deploymentMS, ref deploymentPG))
             {
-                SaveDeployment(deploymentMS, deploymentPG);
+                SaveNewDeployment(deploymentMS, deploymentPG);
             }
         }
 
@@ -714,7 +723,7 @@ namespace SQLGen
 
             if (AddEditDeployment(DeploymentOperType.INSERT, ref deploymentMS, ref deploymentPG))
             {
-                SaveDeployment(deploymentMS, deploymentPG);
+                SaveNewDeployment(deploymentMS, deploymentPG);
             }
         }
 
@@ -800,7 +809,7 @@ namespace SQLGen
 
             if (AddEditDeployment(DeploymentOperType.COPY, ref deploymentMS, ref deploymentPG))
             {
-                SaveDeployment(deploymentMS, deploymentPG);
+                SaveNewDeployment(deploymentMS, deploymentPG);
             }
         }
 
@@ -1170,10 +1179,8 @@ namespace SQLGen
                     }
                 }
 
-                // сохранить текущую задачу
-                MainWindow.SaveTask(MainWindow.Task, false);
-
-                dgDeploymentMSRefresh();
+                // сохранить
+                RefreshAndSave(null, true);
             }
         }
 
@@ -1209,10 +1216,8 @@ namespace SQLGen
                     }
                 }
 
-                // сохранить текущую задачу
-                MainWindow.SaveTask(MainWindow.Task, false);
-
-                dgDeploymentPGRefresh();
+                // сохранить
+                RefreshAndSave(null, true);
             }
         }
 
@@ -1241,10 +1246,8 @@ namespace SQLGen
                     }
                 }
 
-                // сохранить текущую задачу
-                MainWindow.SaveTask(MainWindow.Task, false);
-
-                dgDeploymentMSRefresh();
+                // сохранить
+                RefreshAndSave(null, true);
             }
         }
 
@@ -1273,10 +1276,8 @@ namespace SQLGen
                     }
                 }
 
-                // сохранить текущую задачу
-                MainWindow.SaveTask(MainWindow.Task, false);
-
-                dgDeploymentPGRefresh();
+                // сохранить
+                RefreshAndSave(null, true);
             }
         }
 

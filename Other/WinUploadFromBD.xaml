@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SQLGen"
         mc:Ignorable="d"
-        Title="WinUploadFromBD" Height="810" Width="1000" Activated="winUploadFromBD_Activated" Closed="winUploadFromBD_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
+            Title="WinUploadFromBD" Height="800" Width="1000" Activated="winUploadFromBD_Activated" Closed="winUploadFromBD_Closed" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" WindowStartupLocation="CenterScreen"
         >
     <Grid x:Name="mainGrid" Background="#FFE5E5E5">
         <Label Content="Подключение:" Margin="12,2,0,0" HorizontalAlignment="Left" Width="93" VerticalAlignment="Top" Height="26"/>
@@ -46,7 +46,7 @@
         <Button x:Name="btAdd" Content="Добавить выбранное" HorizontalAlignment="Left" Margin="238,317,0,0" VerticalAlignment="Top" Width="170" Click="btAdd_Click"/>
         <Button x:Name="btAddAll" Content="Добавить ВСЕ" HorizontalAlignment="Left" Margin="431,317,0,0" VerticalAlignment="Top" Width="128" Click="btAddAll_Click"/>
 
-        <TextBox x:Name="tbObjects" Margin="10,351,10,0" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" Height="290" VerticalAlignment="Top" />
+        <TextBox x:Name="tbObjects" Margin="10,351,10,0" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" Height="280" VerticalAlignment="Top" />
 
         <Grid Margin="20,0,20,110" VerticalAlignment="Bottom">
             <ProgressBar Name="pbStatus" Minimum="0" Maximum="100" Height="20"/>

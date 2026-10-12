@@ -51,7 +51,7 @@ namespace SQLGen
             this.tbProcText.AcceptsReturn = true;
             this.tbProcText.AcceptsTab = true;
             this.tbProcText.Location = new System.Drawing.Point(19, 111);
-            this.tbProcText.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbProcText.Margin = new System.Windows.Forms.Padding(4);
             this.tbProcText.Multiline = true;
             this.tbProcText.Name = "tbProcText";
             this.tbProcText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -62,7 +62,7 @@ namespace SQLGen
             // 
             this.btOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btOk.Location = new System.Drawing.Point(19, 666);
-            this.btOk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btOk.Margin = new System.Windows.Forms.Padding(4);
             this.btOk.Name = "btOk";
             this.btOk.Size = new System.Drawing.Size(199, 59);
             this.btOk.TabIndex = 0;
@@ -93,7 +93,7 @@ namespace SQLGen
             // 
             this.btCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btCancel.Location = new System.Drawing.Point(237, 666);
-            this.btCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btCancel.Name = "btCancel";
             this.btCancel.Size = new System.Drawing.Size(252, 59);
             this.btCancel.TabIndex = 1;
@@ -104,7 +104,7 @@ namespace SQLGen
             // tbWarning
             // 
             this.tbWarning.Location = new System.Drawing.Point(19, 426);
-            this.tbWarning.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbWarning.Margin = new System.Windows.Forms.Padding(4);
             this.tbWarning.Multiline = true;
             this.tbWarning.Name = "tbWarning";
             this.tbWarning.ReadOnly = true;
@@ -138,7 +138,7 @@ namespace SQLGen
             // 
             this.btAbort.DialogResult = System.Windows.Forms.DialogResult.Abort;
             this.btAbort.Location = new System.Drawing.Point(749, 666);
-            this.btAbort.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btAbort.Margin = new System.Windows.Forms.Padding(4);
             this.btAbort.Name = "btAbort";
             this.btAbort.Size = new System.Drawing.Size(225, 59);
             this.btAbort.TabIndex = 3;
@@ -168,7 +168,7 @@ namespace SQLGen
             // btExec
             // 
             this.btExec.Location = new System.Drawing.Point(509, 666);
-            this.btExec.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btExec.Margin = new System.Windows.Forms.Padding(4);
             this.btExec.Name = "btExec";
             this.btExec.Size = new System.Drawing.Size(217, 59);
             this.btExec.TabIndex = 2;
@@ -202,7 +202,7 @@ namespace SQLGen
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btCancel;
-            this.ClientSize = new System.Drawing.Size(1008, 757);
+            this.ClientSize = new System.Drawing.Size(1008, 753);
             this.Controls.Add(this.tbProcName);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btOk);
@@ -217,7 +217,7 @@ namespace SQLGen
             this.Controls.Add(this.btCancel);
             this.Controls.Add(this.tbWarning);
             this.Controls.Add(this.tbProcText);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "FormAskProc";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Сохранить хранимую процедуру или представление";
