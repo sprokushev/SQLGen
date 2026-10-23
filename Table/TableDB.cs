@@ -783,7 +783,7 @@ namespace SQLGen
 
                             ScriptIndex += Environment.NewLine +
                                 "\tWITH (" + Environment.NewLine +
-                                "\t\tMAXDOP = 12," + Environment.NewLine +
+                                "\t\tMAXDOP = 30," + Environment.NewLine +
                                 "\t\tONLINE = ON," + Environment.NewLine +
                                 "\t\tFILLFACTOR = 75," + Environment.NewLine +
                                 "\t\tSTATISTICS_NORECOMPUTE = ON" + Environment.NewLine +
@@ -8388,6 +8388,7 @@ WHERE (1 = 1)
                     case "SYSTEM.DECIMAL":
                         return Utilities.GeneralType.NUMBER;
 
+                    case "SMALLDATETIME":
                     case "TIMESTAMP WITHOUT TIME ZONE":
                     case "TIMESTAMP WITH TIME ZONE":
                     case "TIMESTAMPTZ":

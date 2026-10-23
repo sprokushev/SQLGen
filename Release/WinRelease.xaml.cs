@@ -162,6 +162,12 @@ namespace SQLGen
             NumVersionChanged();
 
             //TaskCalcCount();
+
+            // Блокируем изменение номера задачи
+            mainWindow.tbTaskNumber.IsEnabled = false;
+            mainWindow.btNewTask.IsEnabled = false;
+            mainWindow.rbOpenTask.IsEnabled = false;
+            mainWindow.btOpenTask.IsEnabled = false;
         }
 
         /// <summary>При закрытии окна WinRelease</summary>
@@ -172,6 +178,12 @@ namespace SQLGen
 
             // сохранить текущую задачу
             MainWindow.SaveTask(MainWindow.Task, true);
+
+            // Блокируем изменение номера задачи
+            mainWindow.tbTaskNumber.IsEnabled = true;
+            mainWindow.btNewTask.IsEnabled = true;
+            mainWindow.rbOpenTask.IsEnabled = true;
+            mainWindow.btOpenTask.IsEnabled = true;
         }
 
         /// <summary>
