@@ -107,17 +107,30 @@ namespace SQLGen
                 return;
             }
 
-            if (deployment.type == "liquibase")
+            if (
+                deployment.type == "liquibase" ||
+                deployment.type == "sql"
+            )
             {
                 if (
                     string.IsNullOrWhiteSpace(deployment.script) || 
                     (
-                        !deployment.script.TrimAllSpace().ToLower().EndsWith(".yml") && //-V3080
-                        !deployment.script.TrimAllSpace().ToLower().EndsWith(".sql") 
+                        deployment.type == "liquibase" &&
+                        (!deployment.script.TrimAllSpace().ToLower().EndsWith(".yml")) && //-V3080
+                        (!deployment.script.TrimAllSpace().ToLower().EndsWith(".sql"))
                     )
                 )
                 {
                     App.AddLog("Заполните поле \"Скрипт\" - в нем должна быть ссылка на yml или sql-файл из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
+                    return;
+                }
+
+                if (
+                    deployment.type == "sql" &&
+                    (!deployment.script.TrimAllSpace().ToLower().EndsWith(".sql"))
+                )
+                {
+                    App.AddLog("Заполните поле \"Скрипт\" - в нем должна быть ссылка на sql-файл из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
                     return;
                 }
 
