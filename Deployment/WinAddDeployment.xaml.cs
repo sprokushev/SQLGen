@@ -116,7 +116,7 @@ namespace SQLGen
                     string.IsNullOrWhiteSpace(deployment.script) || 
                     (
                         deployment.type == "liquibase" &&
-                        (!deployment.script.TrimAllSpace().ToLower().EndsWith(".yml")) &&
+                        (!deployment.script.TrimAllSpace().ToLower().EndsWith(".yml")) && //-V3080
                         (!deployment.script.TrimAllSpace().ToLower().EndsWith(".sql"))
                     )
                 )
@@ -130,7 +130,7 @@ namespace SQLGen
                     (!deployment.script.TrimAllSpace().ToLower().EndsWith(".sql"))
                 )
                 {
-                    App.AddLog("Заполните поле \"Скрипт\" - в нем должна быть ссылка sql-файл из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
+                    App.AddLog("Заполните поле \"Скрипт\" - в нем должна быть ссылка на sql-файл из проекта GIT", null, App.ShowMessageMode.SHOW, false, "");
                     return;
                 }
 
